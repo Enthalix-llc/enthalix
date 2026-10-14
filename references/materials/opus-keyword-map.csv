@@ -1,0 +1,101 @@
+opus_id,opus_name,category,keywords,target_key,target_name,target_source,matched_by
+MAT-001,Concrete Heavyweight 2240,Concrete,concrete;cast-in-place;in situ;C30;C25,osstd:8IN CONCRETE HW RefBldg,8IN CONCRETE HW RefBldg,osstd,"k, rho, cp within 1 % and a shared word"
+MAT-002,Concrete Reinforced 2pct Steel,Concrete,reinforced concrete;RC;structural concrete,,,,
+MAT-003,Concrete Mediumweight 1920,Concrete,concrete medium weight,,,,
+MAT-004,Concrete Lightweight 1280,Concrete,lightweight concrete;LWC,hof2005:M11 100mm lightweight concrete,M11 100mm lightweight concrete,hof2005,"k, rho, cp within 1 % and a shared word"
+MAT-005,Concrete Lightweight 640,Concrete,insulating concrete;foamed concrete,hof2005:M17 50mm lightweight concrete roof ballast,M17 50mm lightweight concrete roof ballast,hof2005,"k, rho, cp within 1 % and a shared word"
+MAT-006,Precast Concrete Panel,Concrete,precast;tilt-up;concrete panel,,,,
+MAT-007,Autoclaved Aerated Concrete 500,Concrete,AAC;aerated concrete;aircrete;Ytong;Hebel,,,,
+MAT-008,Cement Sand Screed,Concrete,screed;topping;leveling,,,,
+MAT-009,CMU Normal Weight Hollow 200mm,Masonry,CMU;concrete block;hollow block;blockwork,,,,
+MAT-010,CMU Normal Weight Grouted 200mm,Masonry,grouted CMU;solid grouted block,,,,
+MAT-011,CMU Lightweight Hollow 200mm,Masonry,lightweight block;breeze block,,,,
+MAT-012,Brick Common Clay,Masonry,brick;common brick;clay brick,hof2005:M01 100mm brick,M01 100mm brick,hof2005,"k, rho, cp within 1 % and a shared word"
+MAT-013,Brick Face,Masonry,face brick;facing brick;veneer,,,,
+MAT-014,Cement Mortar,Masonry,mortar,osstd:Mortar - Cement - 1 3/4 in.,Mortar - Cement - 1 3/4 in.,osstd,"k, rho, cp within 1 % and a shared word"
+MAT-015,Stucco Cement Render,Masonry,stucco;render;cement plaster exterior,osstd:1IN Stucco,1IN Stucco,osstd,"k, rho, cp within 1 % and a shared word"
+MAT-016,Terrazzo,Masonry,terrazzo,hof2005:F18 Terrazzo,F18 Terrazzo,hof2005,"k, rho, cp within 1 % and a shared word"
+MAT-017,Rammed Earth,Masonry,rammed earth;pise,osstd:Rammed Earth,Rammed Earth,osstd,name
+MAT-018,Adobe,Masonry,adobe;mud brick,,,,
+MAT-019,Granite,Stone,granite,,,,
+MAT-020,Marble,Stone,marble,,,,
+MAT-021,Limestone,Stone,limestone,,,,
+MAT-022,Sandstone,Stone,sandstone,,,,
+MAT-023,Slate,Stone,slate,,,,
+MAT-024,Steel Carbon,Metal,steel;structural steel;mild steel,,,,
+MAT-025,Steel Galvanized Sheet,Metal,galvanized;metal deck;steel sheet;cladding,,,,
+MAT-026,Stainless Steel,Metal,stainless;inox,,,,
+MAT-027,Aluminum Alloy,Metal,aluminium;aluminum;alloy panel;ACM skin,,,,
+MAT-028,Copper,Metal,copper,,,,
+MAT-029,Zinc,Metal,zinc;titanium zinc,,,,
+MAT-030,Softwood Pine Fir,Wood,softwood;pine;fir;spruce;SPF;timber;stud,,,,
+MAT-031,Hardwood Oak Maple,Wood,hardwood;oak;maple;beech;walnut,,,,
+MAT-032,Plywood,Wood,plywood;sheathing,hof2005:G02 16mm plywood,G02 16mm plywood,hof2005,"k, rho, cp within 1 % and a shared word"
+MAT-033,Oriented Strand Board,Wood,OSB;oriented strand,,,,
+MAT-034,Particleboard,Wood,particleboard;chipboard,,,,
+MAT-035,Medium Density Fiberboard,Wood,MDF;fiberboard;fibreboard,,,,
+MAT-036,Cross Laminated Timber,Wood,CLT;cross laminated;mass timber,,,,
+MAT-037,Glulam,Wood,glulam;glued laminated,,,,
+MAT-038,Laminated Veneer Lumber,Wood,LVL;veneer lumber,,,,
+MAT-039,Wood Siding,Wood,wood siding;clapboard;timber cladding,osstd:Wood Siding,Wood Siding,osstd,name
+MAT-040,Hardwood Strip Flooring,Wood,wood floor;hardwood flooring;parquet,,,,
+MAT-041,Gypsum Board,Finish,gypsum;drywall;plasterboard;GWB;sheetrock,osstd:1/2IN Gypsum,1/2IN Gypsum,osstd,"k, rho, cp within 1 % and a shared word"
+MAT-042,Gypsum Board Type X,Finish,type X;fire rated gypsum;firecode,,,,
+MAT-043,Gypsum Sheathing Exterior,Finish,exterior gypsum;densglass;sheathing board,hof2005:G01 16mm gypsum board,G01 16mm gypsum board,hof2005,"k, rho, cp within 1 % and a shared word"
+MAT-044,Gypsum Plaster,Finish,gypsum plaster;skim coat,,,,
+MAT-045,Lime Plaster,Finish,lime plaster;lime render,,,,
+MAT-046,Cement Plaster Sand Aggregate,Finish,cement plaster;sand cement render,osstd:Mortar - Cement - 1 3/4 in.,Mortar - Cement - 1 3/4 in.,osstd,"k, rho, cp within 1 % and a shared word"
+MAT-047,Perlite Plaster Lightweight,Finish,perlite plaster;lightweight plaster,,,,
+MAT-048,Fiber Cement Board,Finish,fiber cement;fibre cement;hardie;cladding board,,,,
+MAT-049,Cement Board Tile Backer,Finish,cement board;tile backer;durock,,,,
+MAT-050,Ceramic Tile,Finish,ceramic tile;tiling,,,,
+MAT-051,Vinyl Flooring,Finish,vinyl;VCT;LVT;PVC flooring,,,,
+MAT-052,Linoleum,Finish,linoleum;marmoleum,,,,
+MAT-053,Acoustic Ceiling Tile Mineral Fiber,Finish,acoustic tile;ceiling tile;ACT;suspended ceiling,hof2005:F16 Acoustic tile,F16 Acoustic tile,hof2005,"k, rho, cp within 1 % and a shared word"
+MAT-054,Carpet With Fibrous Pad,Finish,carpet;fibrous pad,hof2005:Carpet and fibrous pad,Carpet and fibrous pad,hof2005,R within 2 % and a shared word
+MAT-055,Carpet With Rubber Pad,Finish,carpet rubber pad;carpet tile,hof2005:Carpet and rubber pad,Carpet and rubber pad,hof2005,R within 2 % and a shared word
+MAT-056,EPS Expanded Polystyrene 16kg,Insulation,EPS;expanded polystyrene;beadboard;Type I,,,,
+MAT-057,EPS Expanded Polystyrene 24kg,Insulation,EPS Type II;EPS 24,,,,
+MAT-058,Graphite EPS,Insulation,graphite EPS;neopor;GPS,,,,
+MAT-059,XPS Extruded Polystyrene,Insulation,XPS;extruded polystyrene;styrofoam;foamular,,,,
+MAT-060,Polyisocyanurate Foil Faced,Insulation,polyiso;PIR;polyisocyanurate;ISO board,,,,
+MAT-061,Phenolic Foam Board,Insulation,phenolic;kooltherm;PF,,,,
+MAT-062,Spray Foam Closed Cell,Insulation,closed cell spray foam;ccSPF;SPF 2lb;PUR,,,,
+MAT-063,Spray Foam Open Cell,Insulation,open cell spray foam;ocSPF;SPF half pound,,,,
+MAT-064,Glass Fiber Batt 12kg,Insulation,fiberglass batt;glass wool;fibreglass;quilt,,,,
+MAT-065,Mineral Wool Batt,Insulation,mineral wool;rock wool batt;stone wool;rockwool,,,,
+MAT-066,Mineral Wool Rigid Board,Insulation,mineral wool board;rockwool board;comfortboard;slab,,,,
+MAT-067,Glass Fiber Loose Fill,Insulation,blown fiberglass;loose fill fiberglass,,,,
+MAT-068,Cellulose Loose Fill,Insulation,cellulose;blown cellulose;loose fill,,,,
+MAT-069,Cellulose Dense Pack,Insulation,dense pack cellulose,,,,
+MAT-070,Wood Fiber Insulation Board,Insulation,wood fiber;wood fibre;steico;gutex,,,,
+MAT-071,Cork Insulation Board,Insulation,cork;expanded cork,,,,
+MAT-072,Sheep Wool Batt,Insulation,sheep wool;wool insulation,,,,
+MAT-073,Straw Bale,Insulation,straw bale;straw,,,,
+MAT-074,Hempcrete,Insulation,hempcrete;hemp lime,,,,
+MAT-075,Aerogel Blanket,Insulation,aerogel;spaceloft,,,,
+MAT-076,Vacuum Insulation Panel,Insulation,VIP;vacuum insulation,,,,
+MAT-077,Cellular Glass,Insulation,cellular glass;foamglas;foam glass,,,,
+MAT-078,Perlite Loose Fill,Insulation,perlite,,,,
+MAT-079,Asphalt Shingles,Roofing,asphalt shingle;composition shingle,hof2005:Asphalt shingles,Asphalt shingles,hof2005,name
+MAT-080,Built Up Roofing,Roofing,built-up roof;BUR;tar and gravel,osstd:Built-up Roofing,Built-up Roofing,osstd,name
+MAT-081,Roof Gravel Ballast,Roofing,gravel;ballast;slag,,,,
+MAT-082,EPDM Membrane,Roofing,EPDM;rubber membrane,,,,
+MAT-083,TPO Membrane White,Roofing,TPO;single ply;cool roof membrane,,,,
+MAT-084,PVC Roof Membrane,Roofing,PVC membrane;sarnafil,,,,
+MAT-085,Modified Bitumen,Roofing,modified bitumen;SBS;APP;torch on,,,,
+MAT-086,Clay Roof Tile,Roofing,clay tile;terracotta roof,,,,
+MAT-087,Concrete Roof Tile,Roofing,concrete tile,,,,
+MAT-088,Standing Seam Metal Roof,Roofing,standing seam;metal roof,hof2005:F08 Metal surface,F08 Metal surface,hof2005,"k, rho, cp within 1 % and a shared word"
+MAT-089,Polyethylene Vapor Retarder,Membrane,polyethylene;vapor barrier;vapour barrier;VB;poly sheet,,,,
+MAT-090,Building Paper Felt,Membrane,building paper;felt;tar paper;WRB;house wrap,hof2005:Vaporpermeable felt,Vaporpermeable felt,hof2005,R within 2 % and a shared word
+MAT-091,Glass Float Opaque Use,Glass/Plastic,spandrel glass;glass panel,,,,
+MAT-092,Polycarbonate Sheet,Glass/Plastic,polycarbonate;PC sheet,,,,
+MAT-093,Acrylic PMMA,Glass/Plastic,acrylic;PMMA;plexiglass,,,,
+MAT-094,Fiberglass Reinforced Plastic,Glass/Plastic,FRP;GRP;fiberglass panel,,,,
+MAT-095,Asphalt Paving,Site,asphalt;paving;tarmac,,,,
+MAT-096,Soil Clay Silt,Site,soil;earth;clay;silt;backfill,,,,
+MAT-097,Sand And Gravel Fill,Site,sand;gravel;hardcore;granular fill;sub-base,,,,
+MAT-098,Air Gap Wall Vertical 20-100mm,Air Gap,air gap;cavity;air space wall,hof2005:F04 Wall air space resistance,F04 Wall air space resistance,hof2005,R within 2 % and a shared word
+MAT-099,Air Gap Ceiling Horizontal,Air Gap,plenum;ceiling air space;floor void,hof2005:F05 Ceiling air space resistance,F05 Ceiling air space resistance,hof2005,R within 2 % and a shared word
+MAT-100,Air Gap Reflective Foil Vertical,Air Gap,reflective air space;radiant barrier cavity,,,,

@@ -2,12 +2,36 @@
 
 **Where the model meets the meter.**
 
-Enthalix is open-source building energy modelling software: building models
-(IFC) in, EnergyPlus energy models out, and the building's measured operation
-compared back against the model.
+Enthalix is open-source building energy modelling software, organised as
+**BIM-BEM-BOM**: the building information model (IFC) in, the building energy
+model (EnergyPlus) out, and the building's measured operation compared back
+against the model.
 
-> **Status: in development.** The first public preview is being prepared. Code
-> will appear here when it's ready for review.
+> **Status: public preview.** Run from source; developed and tested on macOS
+> with EnergyPlus 26.1. Results are simulation estimates, not code-compliance
+> documentation.
+
+## What it does
+
+- **BIM** reads a building's IFC model: its rooms, walls, slabs, roofs, windows
+  and doors. It reduces each assembly to the single surface EnergyPlus needs,
+  and reports anything it can't place.
+- **BEM** builds the energy model: site and weather, constructions, schedules,
+  zones and systems. It then runs EnergyPlus, which you install separately.
+- **BOM** prices the simulated year with your utility's tariff, takes your bills
+  and PV production, and calibrates the model against ASHRAE Guideline 14.
+
+## Getting started
+
+See [SETUP.md](SETUP.md). In short: install Node.js, pnpm and EnergyPlus 26.1,
+then run `pnpm install` and `pnpm dev` in `program/`, and open the sample
+building in [`samples/`](samples/). To see what is installed and what is
+missing, run `pnpm setup:check`.
+
+Enthalix ships no copyrighted standards tables, weather files or manufacturer
+data. You get each from its publisher, under its own terms; SETUP.md says where.
+
+For how the program is built, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Who it's for
 

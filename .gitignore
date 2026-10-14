@@ -1,0 +1,14 @@
+node_modules/
+node_modules
+program/dist/
+program/public/wasm/
+release/
+data/
+/data
+Weather/
+/Weather
+references/ifc/*.ifc
+/references/ifc
+*.log
+.DS_Store
+EnergyPlus/

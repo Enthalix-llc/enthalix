@@ -1,0 +1,26 @@
+{
+  "readAt": "YYYY-MM-DD (the date you read the schedule)",
+  "utility": "Your utility's name",
+  "cards": [
+    {
+      "id": "MY-RESIDENTIAL-SCHEDULE",
+      "name": "Residential schedule with net metering",
+      "status": "template (change to \"in force\" once every value below is filled in)",
+      "effective": "the date the schedule took effect, as the schedule states it",
+      "fuel": "electricity",
+      "note": "",
+      "charges": {
+        "accessUsdMonth": { "value": null, "unit": "$/month", "cite": "the schedule's section for the customer (access) charge", "url": "https://the schedule's published PDF" },
+        "deliveryUsdKwh": { "value": null, "unit": "$/kWh", "cite": "the schedule's section for the energy delivery charge", "url": "https://the schedule's published PDF" },
+        "demandUsdKw": { "value": null, "unit": "$/kW", "cite": "the schedule's section for the demand charge (0 if it has none)", "url": "https://the schedule's published PDF" },
+        "supplySummerUsdKwh": { "value": null, "unit": "$/kWh", "cite": "the schedule's section for the supply charge in the summer months", "url": "https://the schedule's published PDF" },
+        "supplyWinterUsdKwh": { "value": null, "unit": "$/kWh", "cite": "the schedule's section for the supply charge in the other months", "url": "https://the schedule's published PDF" }
+      },
+      "summerMonths": [6, 7, 8, 9],
+      "demandWindow": { "fromHour": 0, "toHour": 24, "cite": "the schedule's definition of billing demand (the hours it is measured in)" },
+      "minimum": { "cite": "the schedule's minimum monthly charge" },
+      "pca": { "cite": "the schedule's power cost adjustment, if it has one (its monthly value is typed from your bills)", "url": "https://the schedule's published PDF" },
+      "netMetering": { "schedule": "your utility's net metering schedule", "url": "https://the net metering schedule's PDF", "maxKwAc": 0, "rules": ["each net metering rule, with its section"], "rulesUrl": "https://the rules' source" }
+    }
+  ]
+}
