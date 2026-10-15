@@ -72,6 +72,8 @@ interface Window {
   /** the BEM module's bridge: the contract file, the weather, its ledger, the engine */
   bem: {
     readDataFile(rel: string): Promise<Uint8Array | null>;
+    /** data/energy-codes/<name>.csv written (the previous kept as .bak); the paths written */
+    saveEnergyCodes(files: Partial<Record<"editions.csv" | "values.csv" | "state-adoptions.csv" | "state-overrides.csv", string>>): Promise<string[]>;
     readText(path: string): Promise<string | null>;
     /** a text file under references/ — the user's reference lists (references/materials/*.csv, 2026-09-16); null outside it or absent */
     readReference(rel: string): Promise<string | null>;

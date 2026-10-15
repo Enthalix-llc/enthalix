@@ -361,7 +361,7 @@ CREATE TABLE IF NOT EXISTS zones (
   volume_m3 REAL, volume_source TEXT NOT NULL,
   conditioned INTEGER NOT NULL, conditioned_source TEXT NOT NULL,
   heating_setpoint_c REAL, cooling_setpoint_c REAL, setpoint_source TEXT,
-  infiltration_ach REAL NOT NULL, infiltration_source TEXT NOT NULL,
+  infiltration_ach REAL, infiltration_source TEXT NOT NULL,
   infiltration_note TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS constructions (name TEXT PRIMARY KEY, kind TEXT NOT NULL, layers TEXT NOT NULL, u_w_m2k REAL, u_source TEXT NOT NULL);
@@ -448,6 +448,10 @@ export function writeModel(
   checks: CheckRow[] = [],
 ): string {
   for (const t of ["settings", "zones", "constructions", "schedules", "systems", "system_qa", "checks", "rooms", "surfaces", "subsurfaces", "not_emitted"]) db.run(`DELETE FROM ${t}`);
+  // a zone's infiltration may be NOT ENTERED (2026-10-15: the code's ACH50 not on record — the model is built, never run): a file made
+  // before then holds the column NOT NULL; the table is the model's, rewritten on every build, so it is made again as the DDL states
+  const zDdl = (db.exec("SELECT sql FROM sqlite_master WHERE name='zones'")[0]?.values[0]?.[0] as string | undefined) ?? "";
+  if (/infiltration_ach REAL NOT NULL/.test(zDdl)) { db.run("DROP TABLE zones"); db.run(DDL); }
   for (const [k, v] of Object.entries({
     schema_version: "8",
     source_name: meta.sourceName,
@@ -890,7 +894,7 @@ export function queryRuns(db: Database): BemRun[] {
   st.free();
   return out;
 }
-export function queryBemZones(db: Database): Array<{ name: string; epName: string; kind: string; volumeM3: number; conditioned: boolean; conditionedSource: string; heatingSetpointC: number | null; coolingSetpointC: number | null; setpointSource: string | null; infiltrationAch: number; infiltrationSource: string; infiltrationNote: string }> {
+export function queryBemZones(db: Database): Array<{ name: string; epName: string; kind: string; volumeM3: number; conditioned: boolean; conditionedSource: string; heatingSetpointC: number | null; coolingSetpointC: number | null; setpointSource: string | null; infiltrationAch: number | null; infiltrationSource: string; infiltrationNote: string }> {
   const out: ReturnType<typeof queryBemZones> = [];
   const st = db.prepare("SELECT name, ep_name, kind, volume_m3, conditioned, conditioned_source, heating_setpoint_c, cooling_setpoint_c, setpoint_source, infiltration_ach, infiltration_source, infiltration_note FROM zones ORDER BY name");
   while (st.step()) {

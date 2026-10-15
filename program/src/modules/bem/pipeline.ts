@@ -257,6 +257,8 @@ export async function runBemPipeline(
 ): Promise<BemOutcome> {
   const engine = await window.bem.engine();
   const m = await buildBemModel(SQL, { ...opts, engineVersion: engine?.version });
+  // the code's values incomplete: the model is built for the tabs, never run (2026-10-15)
+  if (m.report.codeGap) throw new Error(m.report.codeGap);
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..*$/, "");
   opts.onProgress(`writing in.idf (${(m.idf.length / 1e3).toFixed(0)} kB) · ${engine ? engine.version : "NO ENGINE FOUND"}`);
   const res = await window.bem.run({ stamp, idf: withReportUnits(m.idf, opts.reportUnits ?? "si"), epw: m.weather?.epw ?? null, expand: m.built.model.idealLoads });
@@ -312,6 +314,7 @@ export async function runCalibration(SQL: SqlJsStatic, opts: { epwPath: string; 
   if (!store.weather?.amy) throw new Error(`${texts.path.split("/").pop()} is not an actual-year file — a calibration runs on the year the bills were metered under`);
   const mi = store.built.input;
   const w = writeIdf(mi.faces, mi.elements, mi.zoneVolumesM3, mi.site, mi.trueNorth, mi.sourceIfcName, store.weather, store.built.model);
+  if (w.report.codeGap) throw new Error(w.report.codeGap);
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..*$/, "");
   opts.onProgress(`calibration run · ${store.weather.amy.begin} → ${store.weather.amy.end} · ${(w.idf.length / 1e3).toFixed(0)} kB · ${engine ? engine.version : "NO ENGINE FOUND"}`);
   const res = await window.bem.run({ stamp, idf: w.idf, epw: store.weather.epw, expand: store.built.model.idealLoads });

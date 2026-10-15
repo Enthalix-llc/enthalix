@@ -65,7 +65,7 @@ export const fmtFlowAir = (m3s: number, imperial: boolean): string => (imperial 
 export const fmtFlowWater = (m3s: number, imperial: boolean): string => (imperial ? `${(m3s * 15850.3).toFixed(1)} gpm` : `${(m3s * 1000).toFixed(2)} L/s`);
 
 /** °C for the model, °F at the display edge when the user reads imperial */
-export const fmtTemp = (c: number, imperial: boolean, digits = 1): string => (imperial ? `${(c * 9 / 5 + 32).toFixed(digits)} °F` : `${c.toFixed(digits)} °C`);
+export const fmtTemp = (c: number, imperial: boolean, digits = 1): string => (Number.isNaN(c) ? "not entered" : imperial ? `${(c * 9 / 5 + 32).toFixed(digits)} °F` : `${c.toFixed(digits)} °C`);
 /** a length at the eye: feet under Show Imperial, metres otherwise */
 export const fmtLen = (m: number, imperial: boolean, digits = 2): string => (imperial ? `${(m / 0.3048).toFixed(digits)} ft` : `${m.toFixed(digits)} m`);
 /** a speed: mph under imperial, m/s otherwise */

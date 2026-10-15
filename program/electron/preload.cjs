@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld("bem", {
   readDataFile: (rel) => ipcRenderer.invoke("bem:read-data-file", rel),
   readText: (p) => ipcRenderer.invoke("bem:read-text", p),
   readReference: (rel) => ipcRenderer.invoke("bem:read-reference", rel),
+  saveEnergyCodes: (files) => ipcRenderer.invoke("bem:save-energy-codes", files),
   exists: (p) => ipcRenderer.invoke("bem:exists", p),
   pickEpw: () => ipcRenderer.invoke("bem:pick-epw"),
   loadDecisions: (sha) => ipcRenderer.invoke("bem:load-decisions", sha),

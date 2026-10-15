@@ -57,15 +57,19 @@ beside it in `Weather/`.
 No code table ships with Enthalix, because each code belongs to its publisher.
 You enter the values of the code your project is under:
 
-1. Copy `references/energy-codes/*.csv` to `data/energy-codes/`.
-2. Read the code; the IECC is free to read at
-   [codes.iccsafe.org](https://codes.iccsafe.org/). Enter its values as
-   `references/energy-codes/README.md` describes.
-3. In BEM › SITE, open the energy code, choose the edition, enter the climate
-   zone that your county's row in the code's table (IECC Table R301.1) states,
-   and click Use.
+1. Read the code; the IECC is free to read at
+   [codes.iccsafe.org](https://codes.iccsafe.org/).
+2. In BEM › SITE › energy code, click **Edit values…**. Give the code an id
+   and a name, pick your climate zone's row, and enter each value with the
+   table or section it is from. Save writes `data/energy-codes/`; the CSV
+   format is in `references/energy-codes/README.md`, if you prefer to edit
+   the files directly.
+3. Click **Choose…**, choose the edition, enter the climate zone that your
+   county's row in the code's table (IECC Table R301.1) states, and click Use.
 
-Without code values, the model is not written, and the app says so.
+Without code values, the model is still built, so you can set up zones,
+schedules and systems, but it cannot run, and the app names the values
+that are missing.
 
 ## 5. Costs and calibration (optional)
 

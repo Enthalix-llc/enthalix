@@ -1782,6 +1782,9 @@ export function App(): React.ReactElement {
       const out = await buildBemModel(SQL, { ledger: bemLedgerRef.current, commit, epw: null, readMeta, engineVersion: bemEngine?.version, zone: countyZoneRef.current, library: libRef.current, materialsSha256: materialsRef.current?.sha, schema: schemaRef.current, tariff: appliedTariff() });
       if (out.idfMeta) idfMetaRef.current = out.idfMeta;   // a commit restamped idf.db: the chain and the staleness test read the new sha
       bemModelRef.current = out; setBemModel(out);
+      // built, but the code's values are incomplete: the tabs work, the run refuses — said where the user looks first
+      if (out.report.codeGap) setStatus(`BEM model built — it cannot run yet: ${out.report.codeGap}`);
+      else setStatus((s) => (s.startsWith("BEM model") ? "" : s));   // a gap said before, now filled
       const links = checkChain({ ifc: dbRef.current ? readMeta(dbRef.current) : null, idf: idfMetaRef.current, bem: out.bemMeta, materials: materialsRef.current?.meta ?? null });
       chainRef.current = links; setChain(links);
       // the last stored run, read back, so the loads paint the zone model on load
@@ -2222,6 +2225,7 @@ export function App(): React.ReactElement {
   const validateModel = async (): Promise<void> => {
     const m = bemModelRef.current;
     if (!m) return;
+    if (m.report.codeGap) { setValidation(`not validated: ${m.report.codeGap}`); return; }
     setValidation("validating…");
     try {
       const r = await window.bem.validate(m.idf);
@@ -4290,7 +4294,7 @@ export function App(): React.ReactElement {
           {/* the tabs above stay put; only what is under them scrolls (user, 2026-10-02) */}
           <div className="editScroll">
           {tab === "bem-site" && (
-            <BemSite model={bemModel} county={countyZone} site={runRef.current?.site ?? null} elevation={runRef.current ? projectElevation(runRef.current) : null} trueNorth={runRef.current?.trueNorth ?? null}
+            <BemSite model={bemModel} onCodesSaved={() => { energyCodesReadRef.current = null; void energyCodesRead().then(() => refreshBemModel()); }} county={countyZone} site={runRef.current?.site ?? null} elevation={runRef.current ? projectElevation(runRef.current) : null} trueNorth={runRef.current?.trueNorth ?? null}
               epw={bemLedger?.weather?.epw ?? null} epwList={epwList} ruling={bemLedger?.site ?? EMPTY_SITE} busy={bemBusy || bemRunning} imperial={imperial}
               onEpw={chooseEpw} onPickEpw={() => void pickEpw()} onApply={applySite} staged={bemLedger?.staged?.site} onStage={setSiteStage}
               sun={sun} onSun={setSun} cycle={cycle} onCycle={setCycle} deciduous={deciduous} onDeciduous={setDeciduous} intensity={intensity} onIntensity={setIntensity}

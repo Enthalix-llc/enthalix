@@ -341,7 +341,7 @@ Turns on the site view with the terrain, the shading elements and the sun, for a
 The engine's settings: timesteps per hour, the shadow calculation, the terrain and the solar distribution. The code defaults govern until you rule otherwise.
 
 ## SITE › energy code
-The energy code your project is under: its edition and the climate zone your county's row in the code states, which you enter. The code's values come from your own tables in `data/energy-codes/` (see SETUP.md); they govern every input you have not ruled. Without them the model is not written, and the app says so.
+The energy code your project is under: its edition and the climate zone your county's row in the code states, which you enter. The code's values are your own: **Edit values…** opens a table where you enter them (each U-factor, the SHGC, slab insulation, air leakage and the reference thermostat) with the table or section of the code each is from; they are kept in `data/energy-codes/`. They govern every input you have not ruled. Without them the model is still built, so ZONES, SCHEDULES and SYSTEMS can be set up, but it cannot run; RUN names the missing values.
 
 ## CONSTRUCTIONS › Roof
 The roof's construction types (skylights included), with the area of each and what governs its U-factor.

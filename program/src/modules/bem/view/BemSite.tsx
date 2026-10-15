@@ -14,6 +14,7 @@ import type { BemModelOutcome } from "../pipeline.js";
 import type { SiteRuling } from "../core/bemDb.js";
 import { resolveCode } from "../core/energyCodes.js";
 import { EnergyCodeDialog } from "./EnergyCodeDialog.js";
+import { EnergyCodeEditor } from "./EnergyCodeEditor.js";
 import type { CountyZoneRead } from "../../../core/climateZone.js";
 import { ENGINE_DEFAULTS, CODE_DEFAULTS, SHADOW_METHODS, TERRAINS, SOLAR_DISTRIBUTIONS } from "../core/bemModel.js";
 import { KV, Fold, Step, baseName, fmtTemp, fmtLen, fmtSpeed, srcClass } from "./bemUi.js";
@@ -25,6 +26,8 @@ import type { SiteFocus, Located } from "./SiteViews.js";
 
 export interface BemSiteProps {
   model: BemModelOutcome | null;
+  /** the energy code's values saved in Edit values… (2026-10-15): the app reads data/energy-codes/ again and rebuilds the model */
+  onCodesSaved?: () => void;
   /** the county the location in force falls in, with its state and IECC zone (2026-09-29: the code dialog reads the state) */
   county?: CountyZoneRead | null;
   site: { latitude: number; longitude: number; elevationM: number } | null;
@@ -88,6 +91,7 @@ export function BemSite(p: BemSiteProps): React.ReactElement {
   const [stage, setStage] = useState<SiteRuling>(p.staged ?? p.ruling);
   const [showDays, setShowDays] = useState(false);
   const [codeOpen, setCodeOpen] = useState(false);
+  const [codeEdit, setCodeEdit] = useState(false);
   const [groundText, setGroundText] = useState("");
   useEffect(() => { setStage(p.staged ?? p.ruling); }, [p.ruling, p.staged]);
   useEffect(() => { p.onStage?.(stage); }, [stage]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -157,10 +161,15 @@ export function BemSite(p: BemSiteProps): React.ReactElement {
               {cur?.referenceDate ? <span className="muted"> · permit date {cur.referenceDate}</span> : <span className="muted"> · not confirmed — the app's default</span>}
               <span className="src-dataset"> · zone {p.county?.zone || "not read"}{p.county?.state ? ` (${p.county.state})` : ""}</span>
               {" "}<button className="qaBtn" onClick={() => setCodeOpen(true)}>Choose…</button>
+              {" "}<button className="qaBtn" onClick={() => setCodeEdit(true)} title="enter or correct the code's values — U-factors, SHGC, slab, air leakage, thermostat — as you read them in the code">Edit values…</button>
+              {r.edition.id === "none" && <div className="bad">no energy code is on record — Edit values… to enter the one your project is under; the model is built, but cannot run without it</div>}
               {moved && <div className="bad">the location is in {p.county!.state}; this is {r.adoption!.state}'s code — confirm the code</div>}
             </div>
           );
         })()}
+        {codeEdit && (() => { const cur = typeof stage.energyCode === "string" ? { adoption: stage.energyCode } : stage.energyCode; const r = resolveCode(cur?.adoption ?? null);
+          return <EnergyCodeEditor zone={cur?.climateZone ?? p.county?.zone ?? null} edition={r.edition.id === "none" ? null : r.edition.id} imperial={p.imperial}
+            onSaved={() => { setCodeEdit(false); p.onCodesSaved?.(); }} onCancel={() => setCodeEdit(false)} />; })()}
         {codeOpen && <EnergyCodeDialog state={p.county?.state || null} county={p.county?.county || null} zone={p.county?.zone || null} imperial={p.imperial}
           current={typeof stage.energyCode === "string" ? { adoption: stage.energyCode } : stage.energyCode}
           onUse={(v) => { set("energyCode", v); setCodeOpen(false); }} onCancel={() => setCodeOpen(false)} />}

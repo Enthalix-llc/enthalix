@@ -172,6 +172,9 @@ export interface IdfWriteReport {
   /** subsurfaces with an edge ON their base's outline: an opening the carve
    *  cut through, half in each cell. Emitted; the engine's CHKSBS warns. */
   holesOnBaseEdge: number;
+  /** the energy code's values the writer needs and the user's tables do not hold (energyCodeGap) — null when complete. A model with a
+   *  gap is built for the tabs to read; it is never run */
+  codeGap: string | null;
   /** surfaces given Ground on the site terrain's word: below-grade wall parts
    *  and slabs at or under the ground line */
   groundFromTerrain: { count: number; areaM2: number };
@@ -762,8 +765,9 @@ export function writeIdf(
   // THE CODE'S ROW FOR THE ZONE (2026-09-16): the zone the user entered for the county; zone 4's row when none is entered — the names
   // carry the row's U. A row the user's tables leave incomplete is REFUSED here, before a line is written: no value is invented
   const irc = ieccFor(model.climateZone, model.energyCode);
+  // A ROW THE USER'S TABLES LEAVE INCOMPLETE (2026-10-15): the model is still built, so ZONES, SCHEDULES and SYSTEMS can be worked on
+  // before a code is entered; the gap is named on the report, and the RUN (and the IDF written out) refuses it — no value is invented
   const codeGap = energyCodeGap(irc);
-  if (codeGap) throw new Error(codeGap);
   // THE SLAB'S INSULATION (2026-10-10): the method (Kiva unless ruled) and where the insulation lies — at the edge, the code's distance under
   // the slab from the wall's inside face, or under the full slab — read before any construction is dressed
   const gm = groundMethodOf(model.ground);
@@ -981,6 +985,7 @@ export function writeIdf(
   const cellCount = new Map<string, number>();
 
   const report: IdfWriteReport = {
+    codeGap,
     zones: zoneNames.length, zonesWithVolume, surfaces: 0,
     byBc: { Outdoors: { count: 0, areaM2: 0 }, Ground: { count: 0, areaM2: 0 }, Surface: { count: 0, areaM2: 0 }, Adiabatic: { count: 0, areaM2: 0 }, GroundFCfactorMethod: { count: 0, areaM2: 0 }, Foundation: { count: 0, areaM2: 0 } },
     byType: { Wall: 0, Floor: 0, Ceiling: 0, Roof: 0 },

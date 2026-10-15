@@ -143,8 +143,11 @@ export function adoptionsFor(state: string | null | undefined, date: string, dat
 /** WHAT THE WRITER NEEDS AND THE USER HAS NOT ENTERED — null when the code's row is complete. Said in words the user can act on */
 export function energyCodeGap(t: { missing: string[]; edition: Edition; row: string }): string | null {
   if (!t.missing.length) return null;
-  const where = "data/energy-codes/ (the templates and how to fill them: references/energy-codes/README.md)";
+  const where = "BEM › SITE › energy code › Edit values… (kept in data/energy-codes/)";
+  const words: Record<string, string> = { fenestrationU: "window U", skylightU: "skylight U", ceilingU: "ceiling U", frameWallU: "frame wall U", massWallU: "mass wall U", floorU: "floor U",
+    basementWallU: "basement wall U", crawlWallU: "crawl space wall U", fenestrationSHGC: "window SHGC", slabR: "slab R", slabDepthFt: "slab depth", ach50: "air leakage (ACH50)",
+    heatingSetpointC: "heating thermostat", coolingSetpointC: "cooling thermostat" };
   return t.edition.id === NO_EDITION.id
     ? `no energy code is on record — enter the code your project is under, and its values, in ${where}; the code's text is free to read at codes.iccsafe.org`
-    : `the energy code ${t.edition.label}, climate zone row ${t.row}, has no value for ${t.missing.join(", ")} — enter them in ${where}`;
+    : `the energy code ${t.edition.label}, climate zone row ${t.row}, has no value for ${t.missing.map((f) => words[f] ?? f).join(", ")} — enter them in ${where}`;
 }

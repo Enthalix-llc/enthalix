@@ -223,6 +223,23 @@ const within = (p) => { const r = path.resolve(DATA_DIR, p); if (!inside(DATA_DI
 ipcMain.handle("bem:read-data-file", async (_ev, rel) => {
   try { return fs.readFileSync(within(rel)); } catch { return null; }
 });
+// THE ENERGY CODE'S VALUES, as the user types them in SITE › energy code › Edit values (2026-10-15): written to data/energy-codes/
+// under the template's names only; the file it replaces is kept beside it first (*.csv.<stamp>.bak) — the user's own table
+const ENERGY_CODE_NAMES = new Set(["editions.csv", "values.csv", "state-adoptions.csv", "state-overrides.csv"]);
+ipcMain.handle("bem:save-energy-codes", async (_ev, files) => saveUser("your energy code values", () => {
+  const dir = path.join(DATA_DIR, "energy-codes");
+  fs.mkdirSync(dir, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const written = [];
+  for (const [name, text] of Object.entries(files)) {
+    if (!ENERGY_CODE_NAMES.has(name) || typeof text !== "string") throw new Error(`not an energy-code file: ${name}`);
+    const p = path.join(dir, name);
+    if (fs.existsSync(p)) { if (fs.readFileSync(p, "utf8") === text) continue; fs.copyFileSync(p, `${p}.${stamp}.bak`); }
+    fs.writeFileSync(p, text);
+    written.push(p);
+  }
+  return written;
+}));
 // a text file under references/ — the user's reference lists (references/materials/*.csv, 2026-09-16); nothing outside it
 ipcMain.handle("bem:read-reference", async (_ev, rel) => {
   try { const r = path.resolve(REF_DIR, rel); if (!inside(REF_DIR, r)) throw new Error("outside references/"); return fs.readFileSync(r, "utf8"); } catch { return null; }

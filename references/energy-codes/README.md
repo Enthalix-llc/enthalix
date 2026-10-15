@@ -9,10 +9,14 @@ publisher. The IECC is free to read online, read-only, at
 [codes.iccsafe.org](https://codes.iccsafe.org/). Many states also publish the
 code they adopted.
 
-If a value the model needs is missing from your table, the model stops with a
-message naming that value. Enthalix never invents a value.
+If a value the model needs is missing from your table, the model is still
+built, but it cannot run; the app names the missing value. Enthalix never invents a value.
 
 ## Setting up
+
+The simplest way is in the app: BEM › SITE › energy code › **Edit values…**
+writes these files for you, one climate zone's row at a time, and keeps the
+file it replaces beside it as a `.bak`. To edit the files directly instead:
 
 1. Create the folder `data/energy-codes/` in the repository and copy the four
    CSV files from this folder into it. `data/` holds your own files and is never

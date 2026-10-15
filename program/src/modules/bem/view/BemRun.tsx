@@ -121,7 +121,9 @@ export function BemRun(p: BemRunProps): React.ReactElement {
         {/* ACTION NEEDED (user, 2026-10-10: "track any upstream changes so that the Run EnergyPlus button background changes to red"): no
             run yet, the model changed since the last run (any applied ruling, the file, the weather, the materials — all move the model's
             sha), or rulings staged on a tab and not yet applied */}
-        <button className={`apply${needs.length && !p.running ? " needsRun" : ""}`} onClick={p.onRun} disabled={p.running || !p.idfReady || p.engine === null}
+        {/* THE CODE'S VALUES INCOMPLETE (2026-10-15): the model is built for the tabs, but never run — the gap named, and where to enter it */}
+        {m?.report.codeGap && <div className="idfInfo bad" title="the default constructions, the infiltration and the reference thermostat are the code's values — none is invented">cannot run: {m.report.codeGap}</div>}
+        <button className={`apply${needs.length && !p.running ? " needsRun" : ""}`} onClick={p.onRun} disabled={p.running || !p.idfReady || p.engine === null || !!m?.report.codeGap}
           title={needs.length ? `action needed: ${needs.join(" · ")}` : "the last run is of the model as it stands"}>
           {p.running ? "running…" : "Run simulation"}
         </button>

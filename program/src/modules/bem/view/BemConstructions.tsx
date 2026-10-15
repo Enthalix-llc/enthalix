@@ -25,7 +25,8 @@ import { EnvelopeLosses } from "./EnvelopeLosses.js";
 import type { GlazingProduct } from "../core/materialsDb.js";
 
 const U_IP = 5.678263;
-export const fmtU = (u: number | null, imperial: boolean): string => (u === null ? "—" : imperial ? `${(u / U_IP).toFixed(3)}` : `${u.toFixed(3)}`);
+// NaN: the code's value is not on record (2026-10-15) — said, never a number
+export const fmtU = (u: number | null, imperial: boolean): string => (u === null ? "—" : Number.isNaN(u) ? "not entered" : imperial ? `${(u / U_IP).toFixed(3)}` : `${u.toFixed(3)}`);
 
 /** the dataset constructions a section may take: composites and the HOF sets for the opaque sections, the window constructs for glass */
 function candidates(lib: Library | null, sec: TypeSection, glazed: boolean): Array<{ name: string; file: string; note: string }> {
