@@ -131,6 +131,7 @@ import { BomBillsPanel, BomCalibrationPanel } from "./modules/bom/view/BomPanels
 import { describeEpw, readEpw } from "./modules/bem/core/epwRead.js";
 import type { BillColumnMap } from "./modules/bom/core/csvRead.js";
 import type { BomLedger } from "./modules/bom/core/bomDb.js";
+import { ExplainLayer } from "./explain/ExplainLayer";
 
 // pane-2 default: the envelope + structure classes plane assignment will care
 // about. A VIEW filter only — the DB stores every streamed element
@@ -574,6 +575,9 @@ export function App(): React.ReactElement {
   // length unit); the module stores metres. Display is the user's choice.
   const [imperial, setImperial] = useState(() => window.localStorage.getItem("bim-units") === "ft");
   useEffect(() => { window.localStorage.setItem("bim-units", imperial ? "ft" : "m"); }, [imperial]);
+  // EXPLAIN (user, 2026-10-15): hover help on every section's header while on — the button beside the units toggle
+  const [explain, setExplain] = useState(() => window.localStorage.getItem("bim-explain") === "1");
+  useEffect(() => { window.localStorage.setItem("bim-explain", explain ? "1" : "0"); }, [explain]);
   const FT = 1 / 0.3048;
   const lu = imperial ? "ft" : "m";
   const fmtL = (m: number): string => (imperial ? (m * FT).toFixed(3) : m.toFixed(3));
@@ -1096,13 +1100,13 @@ export function App(): React.ReactElement {
   const shownViews = vset.filter((k) => views[k]);
   const eff = new Set<ViewKey>(shownViews.length ? shownViews : vset);
   if (module === "bem" && tab === "bem-constructions") { eff.clear(); eff.add(consView === "plan" ? "idf" : "detail"); }
-  // SYSTEMS › MECHANICAL: the assembly sheet or the model with the services drawn in it, one at a time (user, 2026-09-10)
-  if (module === "bem" && tab === "bem-systems") { eff.clear(); eff.add(sysView === "assembly" ? "assembly" : "idf"); }
-  // SCHEDULES: the calendar or the model, one at a time (user, 2026-09-13)
-  if (module === "bem" && tab === "bem-schedules") { eff.clear(); eff.add(schedView === "calendar" ? "calendar" : "idf"); }
+  // SYSTEMS: the assembly sheet alone — the model with the services drawn in it showed nothing of use (user, 2026-10-15)
+  if (module === "bem" && tab === "bem-systems") { eff.clear(); eff.add("assembly"); }
+  // SCHEDULES: the calendar alone — the zone model has no bearing on a schedule (user, 2026-10-15)
+  if (module === "bem" && tab === "bem-schedules") { eff.clear(); eff.add("calendar"); }
   if (module === "bem" && tab === "bem-run") { eff.clear(); eff.add(runView === "graphs" ? "graphs" : runView === "report" ? "report" : "idf"); }
-  // BOM (user, 2026-10-03): the main view is ENERGY & COST — the model's two views a click away
-  if (module === "bom" && bomView === "cost") { eff.clear(); eff.add("cost"); }
+  // BOM: the main view is ENERGY & COST alone — the model's two views served no purpose there (user, 2026-10-15)
+  if (module === "bom") { eff.clear(); eff.add("cost"); }
   const costView = eff.has("cost");
   const asmView = eff.has("assembly");
   // the ELECTRICAL sheet (2026-10-02) is the same canvas, bench and column over its own cards
@@ -3700,6 +3704,7 @@ export function App(): React.ReactElement {
 
   return (
     <div className="app">
+      <ExplainLayer on={explain} scope={tab === "bim-edit" ? "BIM" : tab === "bom-ops" ? "BOM" : tab.replace(/^bem-/, "").toUpperCase()} />
       {recovered && (
         <div className="projectNote warn" role="status">
           <span>The app recovered at {new Date(recovered.at).toLocaleTimeString()}: {recovered.why}. The page was reloaded{recovered.reopened ? ` and ${recovered.reopened.split(/[\\/]/).pop()} reopened` : ""}; your rulings and drafts were on disk.</span>
@@ -3784,6 +3789,10 @@ export function App(): React.ReactElement {
         )}
         <button className="unitsBtn" onClick={() => setImperial((v) => !v)}>
           {imperial ? "Show Metric" : "Show Imperial"}
+        </button>
+        <button className={`unitsBtn explainBtn${explain ? " on" : ""}`} onClick={() => setExplain((v) => !v)}
+          title={explain ? "Explain is on: rest the mouse on a section's header to read what it is — click to turn it off" : "Explain: rest the mouse on a section's header to read what it is"}>
+          Explain
         </button>
         {gate && <span className={`gate ${gate.ok ? "ok" : "bad"}`}>{gate.ok ? "✓" : "✗"} {gate.text}</span>}
       </div>
@@ -3971,8 +3980,8 @@ export function App(): React.ReactElement {
         {module !== "bem" ? (
           <>
             {module === "bom" && <button className={costView ? "on" : ""} onClick={() => setBomView("cost")} title="the run's months and the bills, priced by the tariff applied in UTILITY below">ENERGY &amp; COST{pricedBom ? ` · ${pricedBom.card.name}` : ""}</button>}
-            <button className={eff.has("ifc") ? "on" : ""} onClick={() => { if (module === "bom" && costView) { setBomView("model"); return; } toggleView("ifc"); }} title={eff.has("ifc") ? "collapse the IFC view" : "show the IFC view"}>IFC — FRAGMENTS</button>
-            <button className={eff.has("idf") ? "on" : ""} onClick={() => { if (module === "bom" && costView) { setBomView("model"); return; } toggleView("idf"); }} title={eff.has("idf") ? "collapse the IDF-DB view" : "show the IDF-DB view"}>IDF-DB — SINGLE PLANE</button>
+            {module !== "bom" && <button className={eff.has("ifc") ? "on" : ""} onClick={() => toggleView("ifc")} title={eff.has("ifc") ? "collapse the IFC view" : "show the IFC view"}>IFC — FRAGMENTS</button>}
+            {module !== "bom" && <button className={eff.has("idf") ? "on" : ""} onClick={() => toggleView("idf")} title={eff.has("idf") ? "collapse the IDF-DB view" : "show the IDF-DB view"}>IDF-DB — SINGLE PLANE</button>}
           </>
         ) : (
           <>
@@ -3985,9 +3994,8 @@ export function App(): React.ReactElement {
             {tab === "bem-run" && <button className={graphView && runGraph.section === "annual" ? "on" : ""} onClick={() => { setRunView("graphs"); setRunGraph({ ...runGraph, section: "annual" }); }} title="the run's year graphed by the hour: outside temperature, heating and cooling, ventilation, occupant loads, PV, bought and sold — the frame below picks the lines and the window">GRAPHS · ANNUAL</button>}
             {tab === "bem-run" && <button className={graphView && runGraph.section === "peak" ? "on" : ""} onClick={() => { setRunView("graphs"); setRunGraph({ ...runGraph, section: "peak" }); }} title="peak conditioning per structure and per zone on the design days — the frame below picks the parts">GRAPHS · PEAK</button>}
             {tab === "bem-run" && <button className={reportView ? "on" : ""} onClick={() => setRunView("report")} title="EnergyPlus's own tabular report (eplustbl.htm) for the run, as the engine wrote it — the end uses, the zone and space component loads, sizing, envelope; a run that ended Fatal shows its error file">REPORT · ENGINE</button>}
-            {tab !== "bem-constructions" && <button className={eff.has("idf") ? "on" : ""} onClick={() => (tab === "bem-systems" ? setSysView("model") : tab === "bem-schedules" ? setSchedView("model") : tab === "bem-run" ? (setRunView("model"), lens !== "surface-temp-winter" && lens !== "surface-temp-summer" && applyLens("surface-temp-winter")) : toggleView("idf"))} title={`the zone model: every cell painted by ${lens === "none" ? "the zone behind it" : LENSES.find((l) => l.id === lens)?.label ?? lens}`}>
+            {tab !== "bem-constructions" && tab !== "bem-schedules" && tab !== "bem-systems" && <button className={eff.has("idf") ? "on" : ""} onClick={() => (tab === "bem-run" ? (setRunView("model"), lens !== "surface-temp-winter" && lens !== "surface-temp-summer" && applyLens("surface-temp-winter")) : toggleView("idf"))} title={`the zone model: every cell painted by ${lens === "none" ? "the zone behind it" : LENSES.find((l) => l.id === lens)?.label ?? lens}`}>
               {tab === "bem-site" ? (siteView === "location" ? "SITE · the project location — OpenStreetMap" : siteView === "weather" ? "SITE · the weather stations — EnergyPlus's weather repository" : siteView === "solar" ? "IDF-DB — SITE · terrain, shading elements, the sun" : "IDF-DB — SITE · the model; the files beside the house below")
-                : tab === "bem-systems" ? `IDF-DB — SYSTEMS · ${MAIN_OF[sysFocus].toUpperCase()} › ${SECTION_LABELS[sysFocus]} · the file's services by discipline, the focus lit`
                 : tab === "bem-zones" ? `IDF-DB — ZONES · the model alone, no site · ${lens === "none" ? "by the sheet's Zones, rooms in none grey" : LENSES.find((l) => l.id === lens)?.label ?? lens}` : tab === "bem-run" ? `SURFACE TEMPERATURES · the ${lens === "surface-temp-summer" ? "summer" : "winter"} design day` : `IDF-DB — ZONE MODEL · ${lens === "none" ? "by zone" : LENSES.find((l) => l.id === lens)?.label ?? lens}`}
             </button>}
           </>
@@ -4427,13 +4435,13 @@ export function App(): React.ReactElement {
               </div>
             )}
             <button className={`qaBtn sec${open.has("steps") ? " on" : ""}`} onClick={() => toggleSection("steps")} disabled={steps.length === 0}>
-              {open.has("steps") ? "▾" : "▸"} {steps.length ? `storey steps (${steps.length})` : "storey steps"}
+              {open.has("steps") ? "▾" : "▸"} {steps.length ? `storey alignment QA (${steps.length})` : "storey alignment QA"}
             </button>
             {open.has("steps") && steps.length > 0 && (
               <div className="qaPanel steps">
                 <p>
-                  <b>{steps.length} storey steps.</b> Two wall planes stack but are
-                  offset — they are parallel, so no intersection can join them and
+                  <b>{steps.length} stacked wall{steps.length === 1 ? "" : "s"} out of alignment.</b> A wall stands
+                  over another on the storey below, parallel but offset — no intersection can join them and
                   nothing may be invented. <b>Keep</b> closes the step with the strip
                   between them (the walls' own vertices). <b>Align</b> slides one
                   plane onto the other, which moves a surface off the coordinates
@@ -4492,13 +4500,13 @@ export function App(): React.ReactElement {
               </div>
             )}
             <button className={`qaBtn sec${open.has("qa") ? " on" : ""}`} onClick={() => toggleSection("qa")} disabled={qaRows.length === 0}>
-              {open.has("qa") ? "▾" : "▸"} {qaRows.length === 0 ? "wall QA" : `wall QA (${qaRows.filter((r) => r.worstGapM > 1e-3).length} with a gap of ${qaRows.length})`}
+              {open.has("qa") ? "▾" : "▸"} {qaRows.length === 0 ? "wall QA" : ((n) => `wall QA (${n} gap${n === 1 ? "" : "s"})`)(qaRows.filter((r) => r.worstGapM > 1e-3).length)}
             </button>
             {open.has("qa") && qaRows.length > 0 && (
               <div className="qaPanel">
                 <table>
                   <thead>
-                    <tr><th>el #</th><th>space</th><th>dir</th><th>above</th><th>below</th><th>lost</th><th>gap</th><th>open boundary → meets</th></tr>
+                    <tr><th>el #</th><th>space</th><th title="the way the wall faces, on the project grid">dir</th><th title="the wall's area above grade">above</th><th title="the wall's area below grade (and against fill)">below</th><th title="authored length lost from the wall's exterior face">lost</th><th title="the widest open boundary between this wall's plane and what it should meet">gap</th><th>open boundary → meets</th></tr>
                   </thead>
                   <tbody>
                     {qaRows.slice(0, 40).map((r, i) => (
@@ -4549,7 +4557,7 @@ export function App(): React.ReactElement {
                 {zonePending > 0 && <button onClick={() => setZoneStage({})}>revert</button>}
               </div>
               <table>
-                <thead><tr><th>assign to</th><th className="wrap">zone</th><th>surf</th><th>closed</th><th>gap</th><th>miss</th></tr></thead>
+                <thead><tr><th>assign to</th><th className="wrap">zone</th><th title="the number of surfaces that bound the zone">surfaces</th><th title="the share of the zone's boundary edges shared by exactly two of its own surfaces — EnergyPlus's enclosure test">closed %</th><th title="open boundary length with a parallel edge of the same zone close by — the two sides of one gap">gap {lu}</th><th title="open boundary length with no counterpart edge — a surface the zone does not have">missing {lu}</th></tr></thead>
                 <tbody>
                   {allZoneNames.map((name) => {
                     const applied = currentZoneTarget(name);
@@ -4584,8 +4592,8 @@ export function App(): React.ReactElement {
                           : stagedMerge ? "staged: it is still its own zone until Apply rebuilds the model"
                           : undefined}>{z ? (stagedMerge ? `${z.surfaces} →` : z.surfaces) : merged ? "merged" : "—"}</td>
                         <td>{z && z.edgeLenM > 0 ? `${((100 * z.closedLenM) / z.edgeLenM).toFixed(0)}%` : ""}</td>
-                        <td>{z ? z.openByKind.gap.toFixed(1) : ""}</td>
-                        <td>{z ? z.openByKind.missing.toFixed(1) : ""}</td>
+                        <td>{z ? (z.openByKind.gap * (imperial ? FT : 1)).toFixed(1) : ""}</td>
+                        <td>{z ? (z.openByKind.missing * (imperial ? FT : 1)).toFixed(1) : ""}</td>
                       </tr>
                     );
                   })}

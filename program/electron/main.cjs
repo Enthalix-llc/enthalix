@@ -8,6 +8,7 @@ const crypto = require("node:crypto");
 const path = require("node:path");
 const engines = require("./engineLocate.cjs");   // the engine and the weather files, found one way for the app and the gate (2026-09-23)
 const projectStore = require("./projectStore.cjs");   // the ledgers by project and version, with their lineage (2026-09-30)
+const explainWindow = require("./explainWindow.cjs");   // the Explain help in a window of its own, for a second monitor (2026-10-15)
 
 // <repo>/data — the module contract's output location
 const REPO_DIR = path.resolve(__dirname, "..", "..");
@@ -88,6 +89,7 @@ async function createWindow() {
   // code's text, a source cited) gets the user's browser for http(s) and nothing else; the app's page never navigates away from itself
   win.webContents.setWindowOpenHandler(({ url }) => { if (/^https?:\/\//i.test(url)) void shell.openExternal(url); return { action: "deny" }; });
   win.webContents.on("will-navigate", (ev, url) => { if (!url.startsWith(DEV_URL) && !url.startsWith("file:") && !url.startsWith("data:")) { ev.preventDefault(); if (/^https?:\/\//i.test(url)) void shell.openExternal(url); } });
+  win.on("closed", () => explainWindow.closeWithApp());
   win.webContents.on("render-process-gone", (_e, d) => { if (d.reason !== "clean-exit") recover(`the page's renderer exited (${d.reason}, exit ${d.exitCode})`); });
   win.webContents.on("context-menu", (_ev, params) => {
     if (!params.isEditable) return;
@@ -476,6 +478,7 @@ ipcMain.handle("project:import", async () => {
   return saveUser("project imported", () => ({ file: r.filePaths[0], ...projects.importProject(r.filePaths[0]) }));
 });
 
+explainWindow.register(app, () => mainWin);
 app.whenReady().then(async () => {
   try { await openProjects(); }
   catch (e) {

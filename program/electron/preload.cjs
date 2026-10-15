@@ -54,6 +54,11 @@ contextBridge.exposeInMainWorld("bom", {
   loadLedger: (sha) => ipcRenderer.invoke("bom:load-ledger", sha),
   saveLedger: (sha, json) => ipcRenderer.invoke("bom:save-ledger", sha, json),
 });
+// the Explain help in its own window (2026-10-15): the text of the header the mouse rests on, and closing it
+contextBridge.exposeInMainWorld("explainWin", {
+  show: (title, html) => ipcRenderer.invoke("explain:show", title, html),
+  hide: () => ipcRenderer.invoke("explain:hide"),
+});
 // the project store (2026-09-30): projects by the IfcProject GlobalId, versions by sha, the lineage, export and import
 contextBridge.exposeInMainWorld("projects", {
   info: () => ipcRenderer.invoke("project:info"),

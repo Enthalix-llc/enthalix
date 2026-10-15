@@ -16,7 +16,7 @@ import { resolveCode } from "../core/energyCodes.js";
 import { EnergyCodeDialog } from "./EnergyCodeDialog.js";
 import type { CountyZoneRead } from "../../../core/climateZone.js";
 import { ENGINE_DEFAULTS, CODE_DEFAULTS, SHADOW_METHODS, TERRAINS, SOLAR_DISTRIBUTIONS } from "../core/bemModel.js";
-import { KV, Fold, baseName, fmtTemp, fmtLen, fmtSpeed, srcClass } from "./bemUi.js";
+import { KV, Fold, Step, baseName, fmtTemp, fmtLen, fmtSpeed, srcClass } from "./bemUi.js";
 import { GEOKISS, estimateGroundTemps, groundInputsFromAir, ftToM } from "../core/groundTemp.js";
 import type { ProjectElevation } from "../../../core/levels.js";
 import { MONTH_NAMES, fmtHour, northAxisFromTrueNorth, type SunPosition } from "../../../core/sun.js";
@@ -79,6 +79,9 @@ const MONTHS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
 /** THE ROLL-UPS (user, 2026-09-15, S10): every SITE section folds behind its head, remembered here */
 const STORE = "bem-site-folds";
 
+const BUILDING_TYPES: ReadonlyArray<readonly [string, string]> = [["residential", "Residential"], ["commercial", "Commercial"], ["industrial", "Industrial"], ["healthcare", "Healthcare"], ["laboratory", "Laboratory"], ["other", "Other"]];
+const BUILDING_TYPE_TIP = "Only Residential is active now — the other types are greyed until they are built. The type decides the inputs that follow: Residential, for example, marks bedrooms (on ZONES), which set the whole-house ventilation rate (ASHRAE 62.2: bedrooms + 1), the occupants and the hot-water use.";
+
 export function BemSite(p: BemSiteProps): React.ReactElement {
   const m = p.model;
   const setting = (k: string): { value: string; source: string } | undefined => m?.settings.find((s) => s.key === k);
@@ -113,6 +116,16 @@ export function BemSite(p: BemSiteProps): React.ReactElement {
   const tempStrip = (vals: number[]): string => vals.map((x) => (p.imperial ? (x * 9 / 5 + 32).toFixed(0) : x.toFixed(1))).join(" ");
   return (
     <div className="idfBar bemCol">
+      {/* THE BUILDING TYPE (user, 2026-10-15): it decides the inputs that follow — Residential alone is built; the others are named,
+          greyed, and say so. View only: nothing is ruled or written until a second type exists. */}
+      <Step head="building type">
+        <label className="lensRow" title={BUILDING_TYPE_TIP}>
+          type
+          <select value="residential" onChange={() => { /* only Residential is active */ }} title={BUILDING_TYPE_TIP}>
+            {BUILDING_TYPES.map(([v, label]) => <option key={v} value={v} disabled={v !== "residential"}>{label}{v !== "residential" ? " — not yet available" : ""}</option>)}
+          </select>
+        </label>
+      </Step>
       <Fold id="location" store={STORE} head="location — the IfcSite" summary={p.site ? `lat ${p.site.latitude.toFixed(4)} · lon ${p.site.longitude.toFixed(4)}${stage.location ? " · located on the map" : ""}` : "not stated"}>
         <KV k="site" src="file" v={p.site ? `lat ${p.site.latitude.toFixed(4)} · lon ${p.site.longitude.toFixed(4)}` : "not stated"} />
         <KV k="project elev" src="file" title="the project's elevation is set by its lowest occupied level (elevators and shafts are not occupied space — the user's rule); the IfcSite's own RefElevation is shown beside it; the weather station's elevation is its own, under the weather file"

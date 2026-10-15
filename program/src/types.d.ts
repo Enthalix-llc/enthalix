@@ -51,6 +51,8 @@ interface CorrectionsLedger {
 /** a save or a backup, as the main process reports it (2026-09-23): a failure is shown on every tab until dismissed */
 interface SaveStatus { kind: "save" | "backup"; ok: boolean; what?: string; error?: string; committed?: boolean; pushed?: boolean; at: string }
 interface Window {
+  /** the Explain help in a window of its own (2026-10-15); absent → the dialog inside the page */
+  explainWin?: { show(title: string, html: string): Promise<{ ok: boolean }>; hide(): Promise<{ ok: boolean }> };
   appStatus: { onSaveStatus(cb: (s: SaveStatus) => void): () => void };
   bim: {
     openIfc(): Promise<{ name: string; path: string; bytes: Uint8Array } | null>;
