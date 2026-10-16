@@ -451,6 +451,10 @@ export interface IdfModel {
   site?: IdfSiteSettings;
   /** the RULED types' constructions, by type id (2026-09-08); a type absent here takes the code default */
   constructions?: Map<number, ResolvedConstruction>;
+  /** A VEGETATED ROOF (user, 2026-10-16: "If it is a green roof, then we need to create a definition for the energyplus model"): the roof
+   *  types whose outermost layer the file names as planting or soil, by type id — the soil's thickness and the layer's name as the file
+   *  states them. Written as the engine's ecoroof (Material:RoofVegetation) over the code's insulation */
+  vegetated?: Map<number, { soilM: number; material: string; typeName: string | null }>;
   /** a door type's TYPED glass share, by type id (2026-10-07) — honoured exactly: 1 whole glass, 0 solid, between split */
   doorGlass?: Map<number, number>;
   /** how the ground-coupled surfaces are modelled (slice 4): unset = plain Ground */
@@ -590,7 +594,11 @@ export function writeIdf(
   obj("SimulationControl", model.idealLoads ? "Yes" : "No", model.systems?.needSystemSizing ? "Yes" : "No", model.systems?.needPlantSizing ? "Yes" : "No", "Yes", weather?.runYear ? "Yes" : "No", "No", "1");
   obj("Building", name(sourceName.replace(/\.[^.]+$/, "")), northAxis.toFixed(2), site$.terrain, "0.04", "0.4",
     site$.solarDistribution, "25", "6");
-  obj("Timestep", String(site$.timestep));
+  // a GREEN ROOF wants at least 12 timesteps an hour (the IDD's note on Timestep; the engine warns "CalcEcoRoof: Too few time steps
+  // per hour for stability") — raised to 12 when the file has one, and said in the IDF
+  const ecoTs = model.vegetated?.size && site$.timestep < 12 ? 12 : null;
+  if (ecoTs) L.push(`! Timestep ${site$.timestep} raised to ${ecoTs}: a vegetated roof (Material:RoofVegetation) wants at least 12 per hour`);
+  obj("Timestep", String(ecoTs ?? site$.timestep));
   // the space heat balance for sizing: the Space Sensible tables of the sizing summary
   obj("ZoneAirHeatBalanceAlgorithm", "ThirdOrderBackwardDifference", model.idealLoads ? "Yes" : "No", "No");
   // Relative, with every zone at the origin and no relative north: the ONLY
@@ -704,6 +712,17 @@ export function writeIdf(
   };
   const gypsum = (): string => mass("gypsum board 12.7 mm", "Smooth", 0.0127, 0.16, 800, 1090);
   const builtUp = (): string => mass("built-up roofing 9.5 mm", "Rough", 0.0095, 0.16, 1120, 1460);
+  /** THE ENGINE'S VEGETATED ROOF (Material:RoofVegetation), its plant and soil properties those of the engine's own example
+   *  (ExampleFiles/EcoroofOrlando.idf, BaseEco) — the soil's thickness the file's; the Simple moisture diffusion, which the engine
+   *  advises when Advanced would need more than its 60 timesteps an hour; then an EPDM membrane, the insulation to the code's
+   *  U (the soil's and the membrane's R taken out), gypsum. The engine wants the vegetated layer outermost */
+  const greenRoof = (soilM: number): string[] => {
+    const soil = Math.max(0.05, Math.min(0.7, soilM)), kSoil = 0.4;
+    const veg = material(`green roof vegetation ${(soil * 1000).toFixed(0)} mm soil`, () => obj("Material:RoofVegetation", materials.get(`green roof vegetation ${(soil * 1000).toFixed(0)} mm soil`)!,
+      "0.5", "5", "0.2", "0.95", "180", "green roof soil", "MediumSmooth", soil.toFixed(4), kSoil.toFixed(2), "641", "1100", "0.95", "0.8", "0.7", "0.4", "0.01", "0.2", "Simple"), soil / kSoil);
+    const epdm = mass("EPDM membrane 6 mm", "Smooth", 0.006, 0.25, 1150, 2000);
+    return [veg, epdm, nomass("roof insulation under a green roof", Math.max(0.1, rOf(irc.ceilingU) - FILM.ceiling - soil / kSoil - 0.006 / 0.25 - R_GYP)), gypsum()];
+  };
   const plywood = (): string => mass("plywood 19 mm", "MediumSmooth", 0.019, 0.12, 540, 1210);
   const concrete = (thick: number): string => mass(`concrete ${(thick * 1000).toFixed(0)} mm`, "MediumRough", thick, 1.7, 2300, 900);
   const constructions = new Map<string, string>();
@@ -900,6 +919,9 @@ export function writeIdf(
     const cd = codeDress(cat, bc, zoneA, zoneB, thick, type, kivaBound);
     const rc = typeId !== null && typeId !== undefined ? model.constructions?.get(typeId) : undefined;
     if (rc) return { ...ruled(rc, type, kivaBound), code: cd.kind };
+    // the file's GREEN ROOF, unruled: the engine's vegetated roof outside, the code's insulation under it, the U the code's
+    const veg = cat === "roof" && bc === "Outdoors" && typeId !== null && typeId !== undefined ? model.vegetated?.get(typeId) : undefined;
+    if (veg) return { kind: `green roof · ${kinds.roof[0]!}`, layers: greenRoof(veg.soilM), film: FILM.ceiling, code: cd.kind };
     return { kind: cd.kind, layers: cd.layers(), film: cd.film, code: cd.kind };
   };
   // the code-default glazing and doors; a skylight and an exterior door register on first use so an

@@ -93,7 +93,7 @@ import { LocationFrame, LocationLocator, WeatherStationsMap, StationList, SiteFi
 import type { MapBounds } from "./view/TileMap.js";
 import { parseStationListing, groupStations, nearestStations, wmoOfEpw, stationId, newestFile, WEATHER_LISTING_URL, STATIONS_CACHE, type Station, type NearStation, type StationFile } from "./core/weatherStations.js";
 import { projectSiteFile, roomSolids, isProjected } from "./core/siteProject.js";
-import { isShaft, projectElevation } from "./core/levels.js";
+import { isShaft, projectElevation, spacesOnRoof } from "./core/levels.js";
 import { parseCounties, climateZoneAt, COUNTIES_URL, COUNTIES_CACHE, type CountyFeature, type CountyZoneRead } from "./core/climateZone.js";
 import { parseEnergyCodes, mergeEnergyCodes, setEnergyCodeData, ENERGY_CODE_FILES } from "./modules/bem/core/energyCodes.js";
 import PNNL_EDITIONS_CSV from "./modules/bem/reference/pnnl-editions.csv?raw";
@@ -912,6 +912,7 @@ export function App(): React.ReactElement {
       }, () => setBemEngine(null));
       window.__BIM__ = {
         census: () => ({
+          onRoof: [...onRoofRef.current],
           ifc: ifcPane.census(),
           camera: ifcPane.cameraState(),
           db: panes?.census(),
@@ -1162,6 +1163,8 @@ export function App(): React.ReactElement {
   });
   // Phase 2 — collapse to single planes per the four dropdowns, write idf.db,
   // render pane 3 FROM the idf.db rows (the view proves the DB).
+  /** the spaces standing on a roof — outside the envelope, no room (spacesOnRoof) */
+  const onRoofRef = useRef<Set<string>>(new Set());
   const rebuildIdf = useCallback(async (ch: Choices, opacity: number, useShell: boolean) => {
     const run = runRef.current;
     const panes = dbPanesRef.current;
@@ -1172,8 +1175,12 @@ export function App(): React.ReactElement {
     // rooms as ruled, never a mix
     const spaced = applySpaceExtensions(run.spaces, spaceEditsRef.current, spaceLabelOfRef.current, run.faces.map((f) => ({ elementId: f.expressId, n: f.n, outer: f.outer })));
     setSpaceEditLog(spaced.report.lines);
-    ruledSpacesRef.current = spaced.out;
-    const spaces = spaced.out;
+    // a space standing on a roof is no room: the roof under it is the building's top (2026-10-16)
+    const roofIds = new Set(run.elements.filter((e) => /^IFCROOF$/i.test(e.ifcClass) || (/^IFCSLAB$/i.test(e.ifcClass) && (e.predefinedType ?? "").toUpperCase() === "ROOF")).map((e) => e.expressId));
+    const onRoof = spacesOnRoof(spaced.out, [...roofIds].map((id) => ({ expressId: id, faces: run.faces.filter((f) => f.expressId === id) })));
+    onRoofRef.current = new Set(spaced.out.filter((sp) => onRoof.has(sp.expressId)).map((sp) => sp.longName ?? sp.name ?? `#${sp.expressId}`));
+    ruledSpacesRef.current = spaced.out.filter((sp) => !onRoof.has(sp.expressId));
+    const spaces = ruledSpacesRef.current;
     const col = collapse(
       run.faces.map((f) => ({
         elementId: f.expressId, n: f.n, areaM2: f.areaM2, rgba: f.rgba,
@@ -3923,6 +3930,12 @@ export function App(): React.ReactElement {
                 {lv.elevM !== null && <span className="elev" title={`elevation the file states${lv.heightM !== null ? ` · h: ${fmtL2(lv.heightM)} ${lu} to the ceiling ${lv.heightRooms} of ${lv.spaces.length - lv.shafts.length} occupied rooms share${lv.heightOthers.length ? ` (${lv.heightOthers.map((o) => `${o.name} ${fmtL2(o.heightM)}`).join(", ")})` : ""}` : ""}${lv.shafts.length ? ` · not occupied: ${lv.shafts.map((x) => `${x.name} ${fmtL2(x.bottomM)}–${fmtL2(x.topM)} ${lu}`).join(", ")}` : ""}${lv.nextM !== null ? ` · the floor above: ${lv.nextName} ${fmtL2(lv.nextM)} ${lu} up` : ""}`}>{fmtL2(lv.elevM)} {lu}{lv.heightM !== null ? <i> · h {fmtL2(lv.heightM)}</i> : null}</span>}
               </div>
               {lv.spaces.map((sp) => {
+                // a space standing on a roof is no room (spacesOnRoof): listed as the file names it, said so, never a zone
+                if (onRoofRef.current.has(sp.name)) return (
+                  <div key={sp.name} className="row space off" title="this space stands on the roof — outside the envelope: the roof under it is the building's top, and the space is not a room in the energy model">
+                    <span className="swatch" style={{ background: "transparent" }} /><span className="name muted"><i>{sp.name}</i> · on the roof, not a room</span>
+                  </div>
+                );
                 const soff = off || hiddenSpaces.has(sp.name);
                 return (
                   <div key={sp.name} className={`row space${soff ? " off" : ""}${related.spaces.has(sp.name) ? " sel" : ""}`}>

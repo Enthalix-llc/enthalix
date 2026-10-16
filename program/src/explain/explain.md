@@ -243,6 +243,8 @@ Changes on this tab are **staged** first: they show in amber, are kept on disk a
 ## CONSTRUCTIONS
 A construction for each kind of surface: the file's own U-values, the library's constructions, or the code's defaults.
 
+**Roofs.** A roof the file does not define is a standard flat roof: built-up asphalt roofing outside, insulation to the code's U, gypsum inside. A **green roof** — a roof type whose outermost layer the file names as planting or soil (grass, sedum, soil…) — is written as EnergyPlus's vegetated roof (*Material:RoofVegetation*): the plants and soil of the engine's own example green roof, the soil as thick as the file states, an EPDM membrane, then insulation to the code's U. A model with a green roof runs at 12 timesteps an hour, as the engine asks.
+
 Changes on this tab are **staged** first: they show in amber, are kept on disk as you work, and change nothing in the model. Clicking **Apply** commits them to `idf.db` — the record the EnergyPlus input file is written from — and the model is rebuilt from it. **revert** drops what is staged.
 
 ## SCHEDULES
@@ -352,6 +354,8 @@ EnergyPlus runs a zone that is not enclosed, with a warning; the QA shows where 
 - **Extend Space to Space**: with **spaces** on in the top bar, right-click a room's face in a view and choose **Select Extend Space to Space**, then click the face of the room it should meet. The room's face moves to the other's; the room stays a closed solid.
 - Gaps that come from walls are corrected in the **wall QA** (Extend to Surface).
 - A **?** beside a space's name in LEVELS · SPACES asks where an attic's insulation is; right-click it to answer.
+
+A space the file draws **on the roof** (a roof area modelled as a space) is not a room: the roof under it is the building's top. LEVELS · SPACES lists it as *on the roof, not a room*.
 
 The **Attic** zones: over each room whose ceiling has a roof or floor above it, the program builds the column from the top of the ceiling to that plane, carved like a room. A cathedral ceiling that lies under its roof takes the roof as its ceiling, and gets no attic.
 

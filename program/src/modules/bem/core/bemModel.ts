@@ -359,6 +359,14 @@ export function buildModel(rawInput: BemInput, ledger: BemLedger | null, weather
   const unresolvedZones: string[] = [];
   const cons = resolveConstructions(input, ledger?.constructions ?? {}, library);
   // A DOOR'S TYPED GLASS SHARE (2026-10-07), by type id — whatever the type's Reference, the code default included
+  // THE FILE'S GREEN ROOFS (2026-10-16): a roof type whose OUTERMOST layer is planting or soil, by the material's name
+  const VEG = /\b(grass|turf|sedum|vegetat\w*|planting|plants?|soil|growing medium|green roof|live roof|eco ?roof)\b/i;
+  const vegetated = new Map<number, { soilM: number; material: string; typeName: string | null }>();
+  for (const t of input.types.values()) {
+    const top = t.layers.find((l) => !l.part);
+    if (!/ROOF|SLAB/i.test(t.ifcClass) || !top || !VEG.test(top.material)) continue;
+    vegetated.set(t.id, { soilM: top.thicknessM ?? 0.1, material: top.material, typeName: t.name });
+  }
   const doorGlass = new Map<number, number>();
   for (const t of input.types.values()) {
     const g = t.name ? ledger?.constructions?.[t.name]?.glassShare : undefined;
@@ -534,7 +542,7 @@ export function buildModel(rawInput: BemInput, ledger: BemLedger | null, weather
   const checks = modelChecks({ drawn, nodes: ledger?.systems?.assembly?.nodes ?? [], sys, gains, conditioned: (z) => ledger?.zones?.[z]?.conditioned ?? isConditioned(z), plumbing: dhw,
     unresolved: [{ where: "ZONES", items: unresolvedZones }, { where: "CONSTRUCTIONS", items: cons.unresolved }, { where: "SCHEDULES", items: sched.unresolved },
       { where: "SYSTEMS", items: sys.unresolved.filter((x) => !x.startsWith("PLUMBING: ")) }, { where: "ZONES › gains", items: gains.unresolved }] });
-  return { checks, model: { ...base, climateZone: countyZone?.zone || undefined, energyCode: codeId, zones, site, constructions: cons.map, ...(doorGlass.size ? { doorGlass } : {}), ground: ledger?.ground, schedules: sched.map, holidays: projectHolidayDays(ledger).length ? projectHolidayDays(ledger) : undefined, systems: sys, systemSchedules, gains, shading: input.siteElements, pv, voidRulings, ...(tariff?.card.charges ? { tariff } : {}) }, input, settings, unresolvedZones, unresolvedConstructions: cons.unresolved, unresolvedSchedules: sched.unresolved, unresolvedSystems: sys.unresolved, unresolvedGains: gains.unresolved };
+  return { checks, model: { ...base, climateZone: countyZone?.zone || undefined, energyCode: codeId, zones, site, constructions: cons.map, ...(doorGlass.size ? { doorGlass } : {}), ...(vegetated.size ? { vegetated } : {}), ground: ledger?.ground, schedules: sched.map, holidays: projectHolidayDays(ledger).length ? projectHolidayDays(ledger) : undefined, systems: sys, systemSchedules, gains, shading: input.siteElements, pv, voidRulings, ...(tariff?.card.charges ? { tariff } : {}) }, input, settings, unresolvedZones, unresolvedConstructions: cons.unresolved, unresolvedSchedules: sched.unresolved, unresolvedSystems: sys.unresolved, unresolvedGains: gains.unresolved };
 }
 
 /** the model the user asked for (2026-09-03): the 2018 IRC climate-zone-4
