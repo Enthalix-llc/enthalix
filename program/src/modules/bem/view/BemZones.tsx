@@ -60,6 +60,8 @@ export function BemZones(p: { model: BemModelOutcome | null; selectedZone: strin
   lens: Lens; legend: Legend | null; hasRun: boolean; onLens: (l: Lens) => void;
   /** the SYSTEMS assembly's components and the zones' assignment to them (user, 2026-09-10: zones are assigned here, not drawn on the sheet) */
   assembly: Assembly; assign: ZoneAssign; onAssign: (zone: string, ids: string[]) => void; pending: number; onApply: () => void; onRevert: () => void; busy: boolean;
+  /** ZONES BY LEVEL (2026-10-16): one zone per level, holding the level's rooms in no zone — staged */
+  onByLevel?: () => void;
   /** THE ZONES DRAWN ON THE SHEET (2026-09-10): each with its rooms and its thermostat, edited on its node */
   compiled: CompiledAssembly; onAssembly: (a: Assembly) => void;
   /** THE FRAME'S SUBJECT (2026-09-13): a room's name under a zone's card selects it; the gains staged in the frame apply here */
@@ -93,6 +95,7 @@ export function BemZones(p: { model: BemModelOutcome | null; selectedZone: strin
           {p.pending === 0 ? "✓ saved — no changes" : `Save · ${p.pending} change${p.pending > 1 ? "s" : ""}`}
         </button>
         {p.pending > 0 && <button className="chip" onClick={p.onRevert}>revert</button>}
+        {p.onByLevel && <button className="qaBtn" disabled={p.busy} onClick={p.onByLevel} title="one zone per level, named for it, holding the level's rooms that are in no zone yet — the attics stay their own zones. Staged: Save keeps it, revert drops it">Zones by level</button>}
         <span className="muted">{systems.length ? `${systems.length} zone equipment or terminal${systems.length === 1 ? "" : "s"} on the SYSTEMS sheet` : "no zone equipment or terminal on the SYSTEMS sheet — every conditioned zone runs on ideal loads"}{fans.length ? ` · ${fans.length} exhaust fan${fans.length === 1 ? "" : "s"}` : ""}</span>
       </div>
       <div className="allRow">

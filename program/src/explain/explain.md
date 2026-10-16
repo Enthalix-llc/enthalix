@@ -144,7 +144,13 @@ The construction types: what governs each one (the code, the library or the file
 ## SCHEDULES ·
 The **daily schedule** of the card selected in the right column: its 24 hourly values, as applied for the part picked over the bars — **All Days**, **Weekdays**, **Weekends**, **Holiday**, **Seasonal** (a summer or winter season you set), **Summer DD** or **Winter DD** (the design days used to size the equipment).
 
-The calendar above shows where in the year each part applies: click a month, a week or a day to go in, double-click to go back out. Editing a bar makes a custom copy of the schedule, which you name and save to your own library.
+The calendar above shows where in the year each part applies: click a month, a week or a day to go in, double-click to go back out.
+
+**Editing:** click an hour's bar and type its value; **Enter**/**Tab** to the next hour; right-drag from a bar to copy its value across. Then type a **Name** and **Save as yours** — the copy goes to your library and is staged for the role (**Apply** in the column). Blank hours are counted, with a button to set them to 0.
+
+**Holidays:** pick **Holiday**, and choose the project's list under the graph — none, the US federal holidays, a list of yours, or **Custom…** (give it an ID and click days in the calendar). **keep in your library** saves a custom list (`data/calendars-user.json`). One list serves every schedule in the project; Apply in the column.
+
+**Seasons:** pick **Seasonal**, and choose the schedule's season — Summer (Jun 1 – Sep 30), Winter (Dec 1 – Mar 31) or a custom one. On the season's days it replaces Weekdays, Weekends and Holiday.
 
 ## ZONES ·
 The selected zone's settings — occupancy, envelope, lighting, loads. Every room in the zone takes them; a room's own ruling overrides its zone's. Pick a zone in the right column, or a room in the view.
@@ -244,15 +250,43 @@ The schedules each role runs on (occupancy, lighting, equipment, thermostat…):
 
 Changes on this tab are **staged** first: they show in amber, are kept on disk as you work, and change nothing in the model. Clicking **Apply** commits them to `idf.db` — the record the EnergyPlus input file is written from — and the model is rebuilt from it. **revert** drops what is staged.
 
+**To change the schedule a role runs on:** open the dropdown on the role's card and pick one — the code default, one of the engine's schedules (grouped by file), or one of yours (under *your schedules*). The card turns amber; **Apply**.
+
+**To edit a schedule, or make a new one:**
+1. Click the role's card. The calendar paints its schedule, and the frame under the view shows its hours.
+2. In the frame, pick the part to edit — **All Days**, or **Weekdays**, **Weekends**, **Holiday**, **Seasonal**, **Summer DD**, **Winter DD**. On an All Days schedule, picking another part splits it into parts.
+3. Click an hour's bar and type its value (a fraction 0–1, or a temperature). **Enter** or **Tab** moves to the next hour, **Shift** back, **Esc** closes. Right-drag from a bar copies its value across the bars you pass. **×** puts an hour back.
+4. Type a **Name** and click **Save as yours**. The edited copy is saved to your library (`data/schedules-user.idf`), appears under *your schedules* in every card's dropdown, and is staged for the role — **Apply** to use it. A role on the code default offers **start a new schedule…**, a blank profile to type in. **discard edits** drops the edits.
+
+To change a schedule of yours, edit it and save it again under its own name.
+
 ## ZONES
 What each zone runs on — conditioning, thermostat, infiltration, people and loads — and which rooms each zone holds.
 
-Rooms are assigned to zones by right-clicking a room that is in no zone (in LEVELS · SPACES, on any tab) and picking a zone from the list. Zones themselves are created and deleted on **SYSTEMS › MECHANICAL** (see the zone cards' header below). The zone settings are saved with **Save**; the room gains (people, lights, equipment, the **Bed** ticks) are staged and applied with **Apply gains** to `idf.db`, the record the EnergyPlus input file is written from.
+A **zone** is one or more rooms that EnergyPlus treats as one air volume, on one thermostat. Every room in no zone is its own zone.
+
+**To combine rooms into zones:**
+- **Zones by level** makes one zone per level, named for it, holding that level's rooms that are in no zone yet (the attics stay their own zones). This is the quickest start — for the sample file, one zone for Level 1 and one for Level 2. Then adjust by hand.
+- **By hand:** right-click a room that is in no zone (in LEVELS · SPACES, on any tab) and pick the zone it joins. Or, on **SYSTEMS › ASSEMBLY · MECHANICAL**, drag a room from LEVELS · SPACES onto a zone's card — or onto an empty part of the sheet, which makes a new zone holding it.
+- **To take a room out:** click **×** beside it on the zone's card, or right-click it and choose **Un-assign … from …**.
+- **To make, rename or delete a zone:** on SYSTEMS › ASSEMBLY · MECHANICAL, drag the **Zone** tile from the bench's ZONE EQUIPMENT shelf onto the sheet; select a card to rename it (its name and **ID** in the column); select a card and press **Delete** to delete it — its rooms return to no zone.
+
+Zone changes are staged until **Save · n changes** (here or on SYSTEMS), which writes the zones and the systems sheet into `idf.db`, the record the EnergyPlus input file is written from; **revert** drops them. The room gains (people, lights, equipment, the **Bed** ticks) are staged in the frame below the view and applied with **Apply · n gain rulings**.
+
+**What serves a zone:** the **system** column of the zones table picks it for a zone that is a single room; a zone drawn on the sheet is served by what its card is joined to on SYSTEMS (see SYSTEMS). A conditioned zone served by nothing runs on ideal loads.
 
 ## SYSTEMS
 The mechanical, electrical and plumbing systems. Each is **assembled in the view**: drag components from the bench under the view onto the sheet, and link their connectors — drag from one connector to another, or right-click a connector and choose **Connect to …** — to define the system. Select a component on the sheet: its EnergyPlus inputs are shown in this column for editing.
 
 The sheet is saved with **Save · n changes**, which writes it — and the system it compiles to — into `idf.db`, the record the EnergyPlus input file is written from; **revert** puts the drawing back to the saved one.
+
+**To assign zones to a card — for example Ideal loads:**
+1. Open **ASSEMBLY · MECHANICAL** (the view tab). The zones are cards on the sheet (see ZONES for making them).
+2. Drag **Ideal loads** from the bench's ZONE EQUIPMENT shelf onto the sheet.
+3. Join its **Loc** connector to a zone card's **Loc**: drag from one to the other, or right-click the connector, choose **Connect to …**, and click the zone's Loc. Repeat for each zone it serves — one card can serve many zones; a zone takes one.
+4. The card shows **serves …**, and so does the column when it is selected. **Save · n changes**.
+
+A card that serves no zone is refused, and the refusal says so ("… serves no zone — join its Loc to a Zone's"). Equipment with air connections (an air terminal, a unit) joins the zone's **Air in**, and an exhaust fan its **Air out**.
 
 ## RUN
 Build the model, check it, run EnergyPlus, and read the results.
@@ -377,15 +411,17 @@ The floor types, those on the ground included.
 The schedule each role runs on: the code default until you pick one of the engine's own schedules.
 
 ## SCHEDULES › library
-The engine's own schedules, read from its files. Pick one for a role above.
+Every schedule you can pick: the engine's own, read from its files (its DataSets and its single-family example), and yours. Filter by role (**fits …**) or by name. Clicking a row shows the schedule as the engine reads it; the pick itself is made in the dropdown on the role's card above.
 
 ## ZONES › ZONES ON THE SYSTEMS SHEET
 The zones drawn on the SYSTEMS sheet, one card each, with the rooms it holds. Click a card for its settings in the frame below the view.
 
 - **Creating a zone**: on SYSTEMS › MECHANICAL, drag a **Zone** card from the bench's ZONE EQUIPMENT shelf onto the sheet, or drag a room from LEVELS · SPACES onto an empty part of the sheet (that makes a zone holding it).
-- **Deleting a zone**: right-click its card on the sheet and choose **Remove**; its rooms return to no zone.
+- **Deleting a zone**: select its card on the sheet and press **Delete** (or Backspace); its rooms return to no zone.
+- **Renaming a zone**: select its card; its name and **ID** are in the column.
+- **Zones by level**: one zone per level, holding the level's rooms in no zone — staged until Save.
 - **Assigning rooms**: right-click a room that is in no zone (in LEVELS · SPACES, on any tab) and pick the zone; or drag the room onto the zone's card on the sheet. Right-click a room in a zone to **Un-assign** it.
-- **Bed** (residential): tick each room that is a bedroom. The bedrooms set the whole-house ventilation rate (ASHRAE 62.2: bedrooms + 1), count in the occupants (Building America, 2014) and in the hot-water use of the dwelling (30 + 10 × bedrooms gal/day). Rooms named "Bed n" start ticked. Ticks are applied with **Apply gains**.
+- **Bed** (residential): tick each room that is a bedroom. The bedrooms set the whole-house ventilation rate (ASHRAE 62.2: bedrooms + 1), count in the occupants (Building America, 2014) and in the hot-water use of the dwelling (30 + 10 × bedrooms gal/day). Rooms named "Bed n" start ticked. Ticks are applied with **Apply · n gain rulings**.
 
 ## SYSTEMS › system QA
 Checks of the assembled systems: what is connected, what is missing, and what the writer would refuse.

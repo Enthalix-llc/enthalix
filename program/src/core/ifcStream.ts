@@ -319,6 +319,20 @@ export function readTypes(
     }
     return { setId, name: str(set.LayerSetName) ?? str(set.Name), layers };
   };
+  // AN ASSEMBLY'S SET REACHES ITS PARTS (2026-10-16): Revit writes a roof as an IfcRoof that carries the layer set and no geometry,
+  // aggregating the IfcSlab (.ROOF.) that carries the geometry and no set — the part takes its whole's set when it has none of its own
+  const aggParts = new Map<number, number[]>();   // the whole → its meshed parts
+  try {
+    const ag = api.GetLineIDsWithType(modelID, IFCRELAGGREGATES);
+    for (let i = 0; i < ag.size(); i++) {
+      try {
+        const rel = api.GetLine(modelID, ag.get(i)) as { RelatingObject?: unknown; RelatedObjects?: unknown };
+        const whole = idOf(rel.RelatingObject);
+        const parts = ids(rel.RelatedObjects).filter((o) => targets.has(o));
+        if (whole !== null && parts.length && !targets.has(whole)) aggParts.set(whole, parts);
+      } catch { /* unreadable rel */ }
+    }
+  } catch { /* no aggregation */ }
   try {
     const rels = api.GetLineIDsWithType(modelID, IFCRELASSOCIATESMATERIAL);
     for (let i = 0; i < rels.size(); i++) {
@@ -326,7 +340,7 @@ export function readTypes(
         const rel = api.GetLine(modelID, rels.get(i)) as { RelatingMaterial?: unknown; RelatedObjects?: unknown };
         const mId = idOf(rel.RelatingMaterial);
         if (mId === null) continue;
-        const objs = ids(rel.RelatedObjects).filter((o) => types.has(o) || targets.has(o));
+        const objs = ids(rel.RelatedObjects).filter((o) => types.has(o) || targets.has(o) || aggParts.has(o));
         if (!objs.length) continue;
         const set = readSet(mId);
         if (!set) continue;
@@ -334,6 +348,7 @@ export function readTypes(
       } catch { /* unreadable rel */ }
     }
   } catch { /* no material associations */ }
+  for (const [whole, parts] of aggParts) { const set = setOf.get(whole); if (set) for (const pt of parts) if (!setOf.has(pt)) setOf.set(pt, set); }
   // 3 · a type's layers: its own set, else the set its elements carry
   for (const t of types.values()) {
     const own = setOf.get(t.expressId);

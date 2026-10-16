@@ -126,7 +126,9 @@ function categoryOf(el: CollapseElementIn): Category | null {
   const c = el.ifcClass.toUpperCase();
   if (c.startsWith("IFCWALL")) return el.isExternal === true ? "exteriorWall" : "interiorWall";
   if (c === "IFCROOF") return "roof";
-  if (c === "IFCSLAB") return "floor";
+  // a slab the file types .ROOF. is a roof (2026-10-16: Revit writes a roof as an IfcRoof aggregating an IfcSlab .ROOF. that holds the
+  // geometry — read as a floor before, the roof was lost to the model)
+  if (c === "IFCSLAB") return (el.predefinedType ?? "").toUpperCase() === "ROOF" ? "roof" : "floor";
   // a ceiling covering — READ from PredefinedType, or from the type name the
   // file gives it when PredefinedType is unset. A roof soffit is a covering
   // too and is not a ceiling; it bounds no room.

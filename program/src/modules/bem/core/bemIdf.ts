@@ -532,7 +532,7 @@ export function codeCatalogue(zone: string | null | undefined, code?: string | n
     { kind: k.wall[0]!, section: "wall", uWm2k: ip(t.frameWallU), shgc: null, vt: null, layers: "cavity insulation to the code's U + gypsum board 12.7 mm" },
     { kind: k.wall[1]!, section: "wall", uWm2k: ip(t.basementWallU), shgc: null, vt: null, layers: "wall insulation to the code's U + concrete 200 mm" },
     { kind: k.wall[2]!, section: "wall", uWm2k: null, shgc: null, vt: null, layers: "gypsum board · air 0.18 · gypsum board — not the thermal envelope, no code U" },
-    { kind: k.roof[0]!, section: "roof", uWm2k: ip(t.ceilingU), shgc: null, vt: null, layers: "roof insulation to the code's U + gypsum board 12.7 mm" },
+    { kind: k.roof[0]!, section: "roof", uWm2k: ip(t.ceilingU), shgc: null, vt: null, layers: "built-up asphalt roofing 9.5 mm + roof insulation to the code's U + gypsum board 12.7 mm — a standard flat roof" },
     { kind: k.roof[1]!, section: "roof", uWm2k: null, shgc: null, vt: null, layers: "shingles · plywood 19 mm — the attic floor under it carries the code's U" },
     { kind: k.roof[2]!, section: "roof", uWm2k: ip(t.ceilingU), shgc: null, vt: null, layers: "ceiling insulation to the code's U + gypsum board 12.7 mm" },
     { kind: k.roof[3]!, section: "roof", uWm2k: null, shgc: null, vt: null, layers: "air 0.18 · gypsum board 12.7 mm — a ceiling under a void the user ruled INSIDE the envelope: the roof over it carries the insulation, so this is not the thermal envelope and has no code U" },
@@ -703,6 +703,7 @@ export function writeIdf(
     return n;
   };
   const gypsum = (): string => mass("gypsum board 12.7 mm", "Smooth", 0.0127, 0.16, 800, 1090);
+  const builtUp = (): string => mass("built-up roofing 9.5 mm", "Rough", 0.0095, 0.16, 1120, 1460);
   const plywood = (): string => mass("plywood 19 mm", "MediumSmooth", 0.019, 0.12, 540, 1210);
   const concrete = (thick: number): string => mass(`concrete ${(thick * 1000).toFixed(0)} mm`, "MediumRough", thick, 1.7, 2300, 900);
   const constructions = new Map<string, string>();
@@ -831,7 +832,7 @@ export function writeIdf(
   };
   const src = (set: boolean): Source => (set ? "user" : "code-default");
   const consList: IdfConstructionOut[] = [];
-  const R_GYP = 0.0127 / 0.16, R_PLY = 0.019 / 0.12, R_CONC200 = 0.2 / 1.7;
+  const R_GYP = 0.0127 / 0.16, R_BUR = 0.0095 / 0.16, R_PLY = 0.019 / 0.12, R_CONC200 = 0.2 / 1.7;
   interface Dress { kind: string; layers: string[]; film: number; stated?: { u: number | null; source: Source }; /** the code default's kind this surface would take, whatever governs (2026-09-16) */ code: string }
   /** THE CODE DEFAULT for a surface, its layers LAZY (2026-09-16): the kind is decided for EVERY surface — a ruled one too, so the
    *  PLAN's CODE column can name it — and the materials are made only when the code construction is actually written. A thunk makes
@@ -859,7 +860,9 @@ export function writeIdf(
       // a roof over a void the user put INSIDE the envelope carries the insulation, as any other roof does; over a void
       // they ruled a vented attic (or left unruled) it is the bare deck the vented convention wants
       if (voidVented(zoneA) || voidVented(zoneB)) return { kind: kinds.roof[1]!, layers: () => [nomass("shingles", 0.08), plywood()], film: FILM.ceiling };
-      return { kind: kinds.roof[0]!, layers: () => [nomass("roof insulation", rOf(irc.ceilingU) - FILM.ceiling - R_GYP), gypsum()], film: FILM.ceiling };
+      // A STANDARD FLAT ROOF (user, 2026-10-16: "Assume a standard flat roof if not clarified or defined (asphalt)"): a built-up asphalt
+      // membrane outside (ASHRAE HOF 2005 F13 built-up roofing 9.5 mm), the insulation to the code's U, gypsum inside — the U unchanged
+      return { kind: kinds.roof[0]!, layers: () => [builtUp(), nomass("roof insulation", rOf(irc.ceilingU) - FILM.ceiling - R_GYP - R_BUR), gypsum()], film: FILM.ceiling };
     }
     // a ceiling under a void inside the envelope is an INTERIOR surface: the insulation is on the roof above it, and
     // insulating both planes would insulate the same heat path twice

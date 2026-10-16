@@ -75,7 +75,7 @@ import { PlumbingColumn, type PlumbRoom } from "./modules/bem/view/PlumbingSheet
 import { readPlumbCatalogue, compilePlumbing, sheetFromFile as plumbFromFile, isFileWaterHeater, PLUMB_SHELVES, PLUMB_CLASS } from "./modules/bem/core/plumbSheet.js";
 import { readPanels } from "./modules/bem/core/pvArrays.js";
 import { startPaletteDrag } from "./modules/bem/view/assemblyDrag.js";
-import { compileAssembly, stageAssembly, sanitizeStage, diagramRows, diagramDiff, removeRoom, addRoom, type Assembly, type ZoneAssign, refusedByNode } from "./modules/bem/core/assembly.js";
+import { compileAssembly, stageAssembly, sanitizeStage, diagramRows, diagramDiff, removeRoom, addRoom, addNode, type Assembly, type ZoneAssign, refusedByNode } from "./modules/bem/core/assembly.js";
 import { readJournal, writeJournal, newestStaged, stagedEmpty, stagedContent, type Staged } from "./modules/bem/core/stageJournal.js";
 import { parseEpSchema, SCHEMA_FILE, IDD_FILE, type EpSchema } from "./modules/bem/core/epSchema.js";
 import { parseIoReferenceIndex, ioRefVersionOf, ioRefIndexUrl, ioRefCacheName, type IoReference } from "./modules/bem/core/ioReference.js";
@@ -2468,6 +2468,24 @@ export function App(): React.ReactElement {
     return [...map.values()].sort((a, b) => (b.elevM ?? -1e9) - (a.elevM ?? -1e9));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attics, gate]);
+  /** ZONES BY LEVEL (user, 2026-10-16: "can we assign spaces to zones by level"): one Zone card per level, named for it, holding the level's
+   *  rooms that are in no zone yet — the attics stay their own zones; staged like any sheet change, kept by Save */
+  const zonesByLevel = (): number => {
+    const inModel = new Set(bemModelRef.current?.input.zones.map((z) => z.name) ?? []);
+    const held = new Set(asm.nodes.flatMap((n) => (n.kind === "zone" ? n.rooms ?? [] : [])));
+    let a = asm, made = 0;
+    const y0 = Math.max(40, ...asm.nodes.map((n) => n.y + 200));
+    for (const l of [...levels].reverse()) {
+      const rooms = l.spaces.map((x) => x.name).filter((r) => inModel.has(r) && !held.has(r));
+      if (!rooms.length) continue;
+      const r = addNode(a, { node: "zone", label: l.name }, 40 + made * 280, y0);
+      a = r.asm;
+      for (const room of rooms) a = addRoom(a, r.id, room);
+      made++;
+    }
+    if (made) setAssembly(a);
+    return made;
+  };
   const hideElement = useCallback((elementId: number) => {
     hiddenRef.current.add(elementId);
     setSel((s) => (s?.elementId === elementId ? null : s));
@@ -4320,7 +4338,7 @@ export function App(): React.ReactElement {
           {tab === "bem-schedules" && <BemSchedules model={bemModel} library={libRef.current} stage={schedStage} onStage={(role, ref) => setSchedStage((st) => { const n = { ...st }; if (ref) n[role] = ref; else delete n[role]; return n; })} onRevert={() => { setSchedStage(bemLedger?.schedules ?? {}); setHolStage(appliedHolidays(bemLedger)); setCopyStage({}); }} onApply={applySchedules} busy={bemBusy} ledger={bemLedger} imperial={imperial} card={schedCard} onCard={setSchedCard}
             holidays={holStage} holidaysApplied={appliedHolidays(bemLedger)} seasons={userCal.seasons} copiesPending={Object.keys(copyStage).filter((k) => Object.values(schedStage).some((r) => r?.file === USER_SCHEDULE_FILE && r.name.toLowerCase() === k))} />}
           {tab === "bem-zones" && <BemZones model={bemModel} selectedZone={selZone} onZone={pickZone} imperial={imperial} lens={lens} legend={legend} hasRun={bem !== null} onLens={(l) => applyLens(l)}
-            assembly={asm} assign={asmAssign} onAssign={setZoneAssign} pending={diagramDiff(sysStage, bemLedger?.systems).pending} onApply={() => { void applySystems(sysStage); }} onRevert={() => setSysStage(bemLedger?.systems ?? {})} busy={bemBusy} compiled={asmCompiled} onAssembly={setAssembly}
+            assembly={asm} assign={asmAssign} onAssign={setZoneAssign} onByLevel={() => { const n = zonesByLevel(); setStatus(n ? `${n} zone${n === 1 ? "" : "s"} made, one per level — staged: Save on ZONES keeps them` : "every room is already in a zone"); }} pending={diagramDiff(sysStage, bemLedger?.systems).pending} onApply={() => { void applySystems(sysStage); }} onRevert={() => setSysStage(bemLedger?.systems ?? {})} busy={bemBusy} compiled={asmCompiled} onAssembly={setAssembly}
             selectedSpace={selSpaceName} onSpace={(room, zone) => { selectSpaceName(room); setSelZone(zone); }} gainPending={gainPending} isBedroom={(room) => isBedroom(room, bedroomMarksOf(gainStage))} onBedroom={tickBedroom} onApplyGains={() => { void applyGains(gainStage); }} onRevertGains={() => setGainStage(bemLedger?.gains ?? {})} />}
           {tab === "bem-systems" && MAIN_OF[sysFocus] === "electrical" && (
             <ElectricalColumn imperial={imperial} asm={elecAsm} onChange={setElecAssembly} sel={elecSel} onSel={setElecSel} compiled={elecCompiled} panels={pvPanels} catalogueLabel={(c) => elecCatalogue.of(c)?.label ?? c}
