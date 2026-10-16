@@ -9,8 +9,9 @@
 // enter one.
 
 import { useEffect, useState } from "react";
-import { ENERGY_CODE_DATA, adoptionsFor, codeFor, resolveCode, DEFAULT_EDITION } from "../core/energyCodes.js";
+import { ENERGY_CODE_DATA, adoptionsFor, codeFor, resolveCode } from "../core/energyCodes.js";
 import { ZONE_TABLE_URL } from "../../../core/climateZone.js";
+import { PNNL_NOTICE } from "../core/energyCodes.js";
 import type { EnergyCodeRuling } from "../core/bemDb.js";
 
 const today = (): string => new Date().toISOString().slice(0, 10);
@@ -36,8 +37,9 @@ export function EnergyCodeDialog(p: {
   const [zone, setZone] = useState((p.current?.climateZone ?? p.zone ?? "").toUpperCase());
   const okZone = /^[0-8][ABC]?$/.test(zone.trim());
   const noTables = ENERGY_CODE_DATA.editions.length === 0;
+  const ownEditions = ENERGY_CODE_DATA.editions.filter((e) => !e.shipped), shippedEditions = ENERGY_CODE_DATA.editions.filter((e) => e.shipped);
   // unconfirmed, the dialog opens on the state's adoption in force today — the proposal, never staged until Use
-  const [pick, setPick] = useState<string>(() => p.current?.adoption ?? (p.state ? adoptionsFor(p.state, today()).find((a) => a.inForce && a.usable)?.id : undefined) ?? DEFAULT_EDITION);
+  const [pick, setPick] = useState<string>(() => p.current?.adoption ?? (p.state ? adoptionsFor(p.state, today()).find((a) => a.inForce && a.usable)?.id : undefined) ?? resolveCode(null).edition.id);
   useEffect(() => { const h = (e: KeyboardEvent): void => { if (e.key === "Escape") p.onCancel(); }; window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h); }, [p]);
   const okDate = /^\d{4}-\d{2}-\d{2}$/.test(date);
   const rows = p.state && okDate ? adoptionsFor(p.state, date) : [];
@@ -50,10 +52,21 @@ export function EnergyCodeDialog(p: {
     return s.kind === "u" ? (p.imperial ? v.toFixed(3) : (v * U_IP).toFixed(3)) : s.kind === "r" ? (v > 0 ? `R-${v}` : "none") : s.kind === "ach" ? `${v} ACH50` : s.kind === "f" ? (p.imperial ? `${(v * 1.8 + 32).toFixed(0)} °F` : `${v.toFixed(1)} °C`) : v.toFixed(2);
   };
   const pickLabel = resolveCode(pick).adoption?.label ?? resolveCode(pick).edition.label;
+  const editionRow = (e: (typeof ENERGY_CODE_DATA.editions)[number]): React.ReactElement => (
+    <tr key={e.id} className={pick === e.id ? "on" : ""} onClick={() => setPick(e.id)} title={e.shipped ? PNNL_NOTICE : undefined}>
+      <td><input type="radio" checked={pick === e.id} onChange={() => setPick(e.id)} /></td>
+      <td>{e.label}{e.id === resolveCode(null).edition.id ? <span className="muted"> · the default when none is ruled</span> : null}</td><td>{e.ircEquivalent}</td><td>—</td><td>—</td>
+      <td>{e.sourceUrl ? <a href={e.sourceUrl} target="_blank" rel="noreferrer">read {e.readOn}</a> : "—"}</td>
+    </tr>
+  );
   return (
     <div className="menuScrim dialogScrim" onPointerDown={p.onCancel}>
       <div className="dialog codeDialog" role="dialog" aria-label="the energy code" onPointerDown={(e) => e.stopPropagation()}>
         <div className="dialogHead">the energy code for this project</div>
+        {!noTables && ownEditions.length === 0 && <div className="muted" style={{ margin: "6px 0 10px" }}>
+          No code table of your own is on record: the DOE/PNNL prototype values that ship with Enthalix are offered below, by IECC edition. To use
+          the code your project is under as the code states it, enter its values with SITE › energy code › Edit values….
+        </div>}
         {noTables && <div className="bad" style={{ margin: "6px 0 10px" }}>
           No energy code is on record. Enthalix ships no code tables: a code is its publisher's. Read the code your project is under — the
           IECC is free to read (read-only) at <a href={ZONE_TABLE_URL} target="_blank" rel="noreferrer">codes.iccsafe.org</a> — and enter
@@ -86,13 +99,10 @@ export function EnergyCodeDialog(p: {
             {p.state && rows.length === 0 && <tr><td /><td colSpan={5} className="bad">no adoption of {p.state}'s is on record in data/energy-codes — choose a model code below, or add the state's rows</td></tr>}
             {p.state && rows.length > 0 && !inForce && okDate && <tr><td /><td colSpan={5} className="bad">none of {p.state}'s adoptions on record was in force on {md(date)}</td></tr>}
             <tr className="grp"><td colSpan={6}>model codes, as published — not a state's law; for a study or a comparison</td></tr>
-            {ENERGY_CODE_DATA.editions.map((e) => (
-              <tr key={e.id} className={pick === e.id ? "on" : ""} onClick={() => setPick(e.id)}>
-                <td><input type="radio" checked={pick === e.id} onChange={() => setPick(e.id)} /></td>
-                <td>{e.label}{e.id === DEFAULT_EDITION ? <span className="muted"> · the default when none is ruled</span> : null}</td><td>{e.ircEquivalent}</td><td>—</td><td>—</td>
-                <td>{e.sourceUrl ? <a href={e.sourceUrl} target="_blank" rel="noreferrer">read {e.readOn}</a> : "—"}</td>
-              </tr>
-            ))}
+            {ownEditions.map((e) => editionRow(e))}
+            {ownEditions.length === 0 && <tr><td /><td colSpan={5} className="muted">none of your own — Edit values… enters one</td></tr>}
+            {shippedEditions.length > 0 && <tr className="grp"><td colSpan={6} title={PNNL_NOTICE}>DOE/PNNL residential prototype values, by IECC edition — shipped with Enthalix; not a state's law</td></tr>}
+            {shippedEditions.map((e) => editionRow(e))}
           </tbody>
         </table>
         <div className="muted">what the code default reads in zone {next.zone} (row {next.row}{next.note ? `: ${next.note}` : ""}) — U in {p.imperial ? "Btu/h·ft²·°F" : "W/m²K"}; a changed value in amber:</div>

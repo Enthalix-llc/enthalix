@@ -1,13 +1,31 @@
 # Energy code values
 
-Enthalix reads the prescriptive values of the energy code your project is under
-from tables you enter. These cover the envelope U-factors, the window SHGC, slab
-insulation, air leakage and the reference thermostat.
+Enthalix reads the prescriptive values of the energy code your project is under:
+the envelope U-factors, the window SHGC, slab insulation, air leakage and the
+reference thermostat.
 
-**No code table ships with Enthalix**, because each code belongs to its
-publisher. The IECC is free to read online, read-only, at
+**What ships with Enthalix:** the values of the DOE/PNNL Residential Prototype
+Building Models ([energycodes.gov](https://www.energycodes.gov/prototype-building-models)),
+for each IECC edition from 2006 to 2024 and each climate zone, in
+`program/src/modules/bem/reference/`. They are public domain, and DOE and PNNL are
+acknowledged in the app under BEM › SITE › energy code. A project with no table
+of your own reads the 2021 edition. Each value cites the prototype file it was
+read from; `program/scripts/pnnl-codes/` re-reads them.
+
+They are the prototypes' values, not the code's own tables. The windows,
+skylights, slab, air leakage and thermostat are the requirements the prototypes
+state. The wall, ceiling, floor and basement-wall U-factors are what EnergyPlus
+computed for the prototypes' assemblies, which are built to the code's
+insulation R-values. They can differ from the code's U-factor table. For
+example, the basement wall in zones 4 to 7 is built to R-13 or R-19 cavity
+insulation and reads U 0.087 or 0.063, where the code's U-factor table
+states 0.059 or 0.050.
+
+**Your own code's values:** each code belongs to its publisher, so its own
+tables do not ship. The IECC is free to read online, read-only, at
 [codes.iccsafe.org](https://codes.iccsafe.org/). Many states also publish the
-code they adopted.
+code they adopted. Enter the values as described below. A table of your own is
+read before the shipped values.
 
 If a value the model needs is missing from your table, the model is still
 built, but it cannot run; the app names the missing value. Enthalix never invents a value.

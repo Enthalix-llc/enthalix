@@ -12,7 +12,7 @@
 import { useEffect, useState } from "react";
 import type { BemModelOutcome } from "../pipeline.js";
 import type { SiteRuling } from "../core/bemDb.js";
-import { resolveCode } from "../core/energyCodes.js";
+import { resolveCode, PNNL_NOTICE, PNNL_SOURCE_URL } from "../core/energyCodes.js";
 import { EnergyCodeDialog } from "./EnergyCodeDialog.js";
 import { EnergyCodeEditor } from "./EnergyCodeEditor.js";
 import type { CountyZoneRead } from "../../../core/climateZone.js";
@@ -162,6 +162,9 @@ export function BemSite(p: BemSiteProps): React.ReactElement {
               <span className="src-dataset"> · zone {p.county?.zone || "not read"}{p.county?.state ? ` (${p.county.state})` : ""}</span>
               {" "}<button className="qaBtn" onClick={() => setCodeOpen(true)}>Choose…</button>
               {" "}<button className="qaBtn" onClick={() => setCodeEdit(true)} title="enter or correct the code's values — U-factors, SHGC, slab, air leakage, thermostat — as you read them in the code">Edit values…</button>
+              {r.edition.shipped && <div className="muted codeNotice" title={PNNL_NOTICE}>values: DOE/PNNL Residential Prototype Building Models (<a href={PNNL_SOURCE_URL} target="_blank" rel="noreferrer">energycodes.gov</a>),
+                modelled to the {r.edition.base.replace(/^IECC-/, "")} IECC — public domain, with acknowledgement to the U.S. Department of Energy and Pacific Northwest
+                National Laboratory. Not a state's adopted code: confirm the code your project is under, or enter its values with Edit values….</div>}
               {r.edition.id === "none" && <div className="bad">no energy code is on record — Edit values… to enter the one your project is under; the model is built, but cannot run without it</div>}
               {moved && <div className="bad">the location is in {p.county!.state}; this is {r.adoption!.state}'s code — confirm the code</div>}
             </div>

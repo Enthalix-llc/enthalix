@@ -85,6 +85,14 @@ files.
 | [spdlog](https://github.com/gabime/spdlog), with [{fmt}](https://github.com/fmtlib/fmt) | MIT |
 | [stduuid](https://github.com/mariusbancila/stduuid) | MIT |
 
+## Data included in the application
+
+| Data | Source | Terms | How Enthalix uses it |
+| --- | --- | --- | --- |
+| Residential energy-code values by IECC edition (2006–2024) and climate zone: `program/src/modules/bem/reference/pnnl-*.csv` | The Residential Prototype Building Models developed by Pacific Northwest National Laboratory (PNNL) for the U.S. Department of Energy (DOE), [energycodes.gov](https://www.energycodes.gov/prototype-building-models) | DOE publishes the information on its websites as public domain and asks that DOE be acknowledged in any later use ([energy.gov/web-policies](https://www.energy.gov/web-policies)). Enthalix acknowledges DOE and PNNL here and in the app, under BEM › SITE › energy code. DOE and PNNL do not endorse Enthalix. | The default values when no energy-code table of the user's own is on record. The window, skylight, slab, air-leakage and thermostat values are those the prototypes state. The wall, ceiling, floor and basement-wall U-factors are those EnergyPlus computed for the prototypes' assemblies. Each value cites the prototype file it was read from. `program/scripts/pnnl-codes/` re-reads them from the published files. |
+
+The prototypes model codes as published. They are not a state's adopted code.
+
 ## The application runtime
 
 | Component | Version | Licence | How Enthalix uses it |

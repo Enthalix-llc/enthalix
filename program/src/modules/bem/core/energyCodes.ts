@@ -21,8 +21,13 @@ export const ROW_FACTORS = ["fenestrationU", "skylightU", "ceilingU", "frameWall
 export const SHARED_FACTORS = ["ach50", "heatingSetpointC", "coolingSetpointC"] as const;
 /** a factor that may be the code's "NR" (no requirement) — stated as null */
 const NULLABLE = new Set<string>(["fenestrationSHGC"]);
+/** factors the model's writer never reads (2026-10-15): a table may leave them out — the DOE/PNNL prototypes state the mass and crawl
+ *  space walls only as an insulation R (their crawl space is vented, its wall uninsulated) — and the model still runs */
+const NOT_REQUIRED = new Set<string>(["massWallU", "crawlWallU"]);
 
-export interface Edition { id: string; label: string; base: string; publisher: string; ircEquivalent: string; sourceUrl: string; readOn: string; readFrom: string }
+export interface Edition { id: string; label: string; base: string; publisher: string; ircEquivalent: string; sourceUrl: string; readOn: string; readFrom: string;
+  /** shipped with the program (the DOE/PNNL prototype values), not the user's own table */
+  shipped?: boolean }
 export interface CodeValue { edition: string; zone: string; factor: string; value: number | null; unit: string; cite: string; note: string }
 /** `usable` false: the adoption is LISTED (a state-developed code, an edition the table has no values for) and cannot be picked —
  *  `why` says so; `from` empty: the source states no date; `graceUntil`: the previous edition may still be used until then (VA 103.2) */
@@ -76,14 +81,34 @@ export function parseEnergyCodes(csv: { editions: string; values: string; adopti
  *  imports it sees the tables once they are read */
 export let ENERGY_CODE_DATA: EnergyCodeData = { editions: [], values: [], adoptions: [], overrides: [], problems: [] };
 export function setEnergyCodeData(d: EnergyCodeData): void { ENERGY_CODE_DATA = d; }
-/** the edition read when none is ruled — when the user's table has it; otherwise the table's first edition */
+/** the edition read when none is ruled — when the user's table has it; otherwise the user's first edition, else SHIPPED_DEFAULT */
 export const DEFAULT_EDITION = "IECC-2018";
+/** the shipped edition a project with no table of its own reads (2026-10-15): the DOE/PNNL prototype values for the 2021 IECC */
+export const SHIPPED_DEFAULT = "PNNL-IECC-2021";
+/** THE NOTICE the shipped values carry wherever they are offered or read (user, 2026-10-15: "the notice could be under the energy code") */
+export const PNNL_SOURCE_URL = "https://www.energycodes.gov/prototype-building-models";
+export const PNNL_NOTICE = "Values from the Residential Prototype Building Models developed by Pacific Northwest National Laboratory (PNNL) for the "
+  + "U.S. Department of Energy (DOE), energycodes.gov/prototype-building-models — information DOE publishes as public domain, used here with "
+  + "acknowledgement to DOE and PNNL. The wall, ceiling, floor and basement-wall U-factors are those EnergyPlus computed for the prototypes' "
+  + "assemblies, built to the edition's insulation R-values; the window, skylight, slab, air-leakage and thermostat values are the requirements "
+  + "the prototypes state. A model code as published, not a state's adopted code; Enthalix is not endorsed by DOE or PNNL.";
+/** THE SHIPPED VALUES BESIDE THE USER'S (2026-10-15): the user's editions and values first — a row of theirs is read before a shipped
+ *  one — then the shipped editions, marked, and their values; a state's adoptions and overrides are only ever the user's */
+export function mergeEnergyCodes(user: EnergyCodeData, shipped: EnergyCodeData): EnergyCodeData {
+  const ids = new Set(user.editions.map((e) => e.id));
+  return {
+    editions: [...user.editions, ...shipped.editions.filter((e) => !ids.has(e.id)).map((e) => ({ ...e, shipped: true }))],
+    values: [...user.values, ...shipped.values.filter((v) => !ids.has(v.edition))],
+    adoptions: user.adoptions, overrides: user.overrides,
+    problems: [...user.problems, ...shipped.problems.map((p) => `shipped values: ${p}`)],
+  };
+}
 /** what reads when the user's table holds no edition at all */
 export const NO_EDITION: Edition = { id: "none", label: "no energy code on record", base: "none", publisher: "", ircEquivalent: "", sourceUrl: "", readOn: "", readFrom: "" };
 
 /** a code id → the edition whose table it reads and the adoption (a state's) it is, if it is one */
 export function resolveCode(id: string | null | undefined, data: EnergyCodeData = ENERGY_CODE_DATA): { edition: Edition; adoption: Adoption | null; note: string | null } {
-  const fallback = data.editions.find((e) => e.id === DEFAULT_EDITION) ?? data.editions[0] ?? NO_EDITION;
+  const fallback = data.editions.find((e) => e.id === DEFAULT_EDITION) ?? data.editions.find((e) => !e.shipped) ?? data.editions.find((e) => e.id === SHIPPED_DEFAULT) ?? data.editions[0] ?? NO_EDITION;
   const want = id || fallback.id;
   const found = data.adoptions.find((a) => a.id === want) ?? null;
   const adoption = found?.usable ? found : null;
@@ -127,7 +152,7 @@ export function codeFor(code: string | null | undefined, zone: string | null | u
   };
   for (const f of ROW_FACTORS) put(f, [row]);
   for (const f of SHARED_FACTORS) put(f, f === "ach50" ? keys : ["all"]);
-  const missing = [...ROW_FACTORS, ...SHARED_FACTORS].filter((f) => !(f in out) || (out[f] === null && !NULLABLE.has(f)));
+  const missing = [...ROW_FACTORS, ...SHARED_FACTORS].filter((f) => !NOT_REQUIRED.has(f) && (!(f in out) || (out[f] === null && !NULLABLE.has(f))));
   // A FACTOR WITH NO VALUE ON RECORD reads NaN — never a number invented — and is named, so the writer can refuse (energyCodeGap)
   for (const f of missing) out[f] = NaN;
   return { ...(out as unknown as IeccRow & CodeShared), row, zone: z || "4A", note: codeNote ? `${codeNote}${note ? `; ${note}` : ""}` : note, cites, edition, adoption, missing };

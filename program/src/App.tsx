@@ -95,7 +95,9 @@ import { parseStationListing, groupStations, nearestStations, wmoOfEpw, stationI
 import { projectSiteFile, roomSolids, isProjected } from "./core/siteProject.js";
 import { isShaft, projectElevation } from "./core/levels.js";
 import { parseCounties, climateZoneAt, COUNTIES_URL, COUNTIES_CACHE, type CountyFeature, type CountyZoneRead } from "./core/climateZone.js";
-import { parseEnergyCodes, setEnergyCodeData, ENERGY_CODE_FILES } from "./modules/bem/core/energyCodes.js";
+import { parseEnergyCodes, mergeEnergyCodes, setEnergyCodeData, ENERGY_CODE_FILES } from "./modules/bem/core/energyCodes.js";
+import PNNL_EDITIONS_CSV from "./modules/bem/reference/pnnl-editions.csv?raw";
+import PNNL_VALUES_CSV from "./modules/bem/reference/pnnl-values.csv?raw";
 import { buildSunView } from "./view/sunView.js";
 import { constructionTypes, typeKey, type TypeRow } from "./modules/bem/constructionTypes.js";
 import { ConstructionOptions, type MaterialsApi } from "./modules/bem/view/ConstructionOptions.js";
@@ -380,7 +382,8 @@ export function App(): React.ReactElement {
     if (!energyCodesReadRef.current) energyCodesReadRef.current = (async () => {
       const text = async (rel: string): Promise<string> => { const b = await window.bem.readDataFile(rel); return b ? new TextDecoder().decode(b) : ""; };
       const [editions, values, adoptions, overrides] = await Promise.all([text(ENERGY_CODE_FILES.editions), text(ENERGY_CODE_FILES.values), text(ENERGY_CODE_FILES.adoptions), text(ENERGY_CODE_FILES.overrides)]);
-      const data = parseEnergyCodes({ editions, values, adoptions, overrides });
+      // the DOE/PNNL prototype values ship with the program (2026-10-15); the user's own tables are read first and win
+      const data = mergeEnergyCodes(parseEnergyCodes({ editions, values, adoptions, overrides }), parseEnergyCodes({ editions: PNNL_EDITIONS_CSV, values: PNNL_VALUES_CSV, adoptions: "", overrides: "" }));
       setEnergyCodeData(data);
       if (data.problems.length) console.warn(`[energy codes] ${data.problems.length} row(s) refused:\n${data.problems.join("\n")}`);
     })();

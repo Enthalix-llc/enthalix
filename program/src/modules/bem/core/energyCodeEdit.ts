@@ -13,13 +13,13 @@ export const VALUE_HEADER = ["edition", "zone", "factor", "value", "unit", "cite
 export type Rec = Record<string, string>;
 
 /** what each factor is, the unit the file holds it in, and the key its row is read at (the zone's number, or "all") */
-export interface FactorDef { factor: string; label: string; unit: string; kind: "u" | "r" | "ft" | "shgc" | "ach" | "f"; at: "zone" | "all"; nullable?: boolean; tip: string }
+export interface FactorDef { factor: string; label: string; unit: string; kind: "u" | "r" | "ft" | "shgc" | "ach" | "f"; at: "zone" | "all"; nullable?: boolean; /** the writer never reads it: a run does not wait on it */ optional?: boolean; tip: string }
 export const FACTOR_DEFS: FactorDef[] = [
   { factor: "ceilingU", label: "ceiling / roof U", unit: "Btu/h·ft²·°F", kind: "u", at: "zone", tip: "the ceiling's assembly U-factor — every roof and ceiling the model builds by default is made to it" },
   { factor: "frameWallU", label: "wood frame wall U", unit: "Btu/h·ft²·°F", kind: "u", at: "zone", tip: "the above-grade wall's assembly U-factor" },
-  { factor: "massWallU", label: "mass wall U", unit: "Btu/h·ft²·°F", kind: "u", at: "zone", tip: "the mass (concrete, masonry) wall's U-factor" },
+  { factor: "massWallU", label: "mass wall U", unit: "Btu/h·ft²·°F", kind: "u", at: "zone", optional: true, tip: "the mass (concrete, masonry) wall's U-factor — recorded; the model does not read it yet" },
   { factor: "basementWallU", label: "basement wall U", unit: "Btu/h·ft²·°F", kind: "u", at: "zone", tip: "the below-grade wall's U-factor" },
-  { factor: "crawlWallU", label: "crawl space wall U", unit: "Btu/h·ft²·°F", kind: "u", at: "zone", tip: "the crawl space wall's U-factor" },
+  { factor: "crawlWallU", label: "crawl space wall U", unit: "Btu/h·ft²·°F", kind: "u", at: "zone", optional: true, tip: "the crawl space wall's U-factor — recorded; the model does not read it yet" },
   { factor: "floorU", label: "floor U", unit: "Btu/h·ft²·°F", kind: "u", at: "zone", tip: "a floor over unconditioned space or outside air" },
   { factor: "fenestrationU", label: "window U", unit: "Btu/h·ft²·°F", kind: "u", at: "zone", tip: "the window's U-factor (also the default exterior door's)" },
   { factor: "skylightU", label: "skylight U", unit: "Btu/h·ft²·°F", kind: "u", at: "zone", tip: "the skylight's U-factor" },
@@ -88,7 +88,7 @@ export function entryProblems(entries: Record<string, Entry>): string[] {
 
 /** the factors a zone row still lacks — the model cannot run until each is entered (SHGC's empty is NR when it is cited) */
 export const missingOf = (entries: Record<string, Entry>): string[] =>
-  FACTOR_DEFS.filter((d) => { const e = entries[d.factor]; return !e || (e.value === null && !(d.nullable && e.cite.trim())); }).map((d) => d.label);
+  FACTOR_DEFS.filter((d) => { if (d.optional) return false; const e = entries[d.factor]; return !e || (e.value === null && !(d.nullable && e.cite.trim())); }).map((d) => d.label);
 
 /** THE WRITE: the edition's record put in (replacing one of the same id), the zone row's entries put in (each factor at its own key,
  *  replacing the row there; an empty entry removes it — "not entered"), every other row kept, in its order */

@@ -30,6 +30,9 @@ missing, run `pnpm setup:check`.
 
 Enthalix ships no copyrighted standards tables, weather files or manufacturer
 data. You get each from its publisher, under its own terms; SETUP.md says where.
+For the energy code it ships public-domain reference values: those of the
+DOE/PNNL residential prototype models, for each IECC edition from 2006 to 2024.
+With them, a model runs before you enter your own code.
 
 For how the program is built, see [ARCHITECTURE.md](ARCHITECTURE.md).
 

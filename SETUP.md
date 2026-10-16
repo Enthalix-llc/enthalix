@@ -54,8 +54,11 @@ beside it in `Weather/`.
 
 ## 4. The energy code
 
-No code table ships with Enthalix, because each code belongs to its publisher.
-You enter the values of the code your project is under:
+Enthalix ships the DOE/PNNL residential prototype values for each IECC
+edition (2006 to 2024), so a model runs from the start; a project reads the
+2021 edition until you choose another. They are the prototypes' values, not a
+state's code (see `references/energy-codes/README.md`). To use the code your
+project is under as the code states it, enter its values:
 
 1. Read the code; the IECC is free to read at
    [codes.iccsafe.org](https://codes.iccsafe.org/).
@@ -67,9 +70,9 @@ You enter the values of the code your project is under:
 3. Click **Choose…**, choose the edition, enter the climate zone that your
    county's row in the code's table (IECC Table R301.1) states, and click Use.
 
-Without code values, the model is still built, so you can set up zones,
-schedules and systems, but it cannot run, and the app names the values
-that are missing.
+If a code of your own is missing a value, the model is still built, so you can
+set up zones, schedules and systems, but it cannot run, and the app names the
+values that are missing.
 
 ## 5. Costs and calibration (optional)
 
