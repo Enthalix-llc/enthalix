@@ -16,7 +16,7 @@ const PAGE_W = 700;
 
 export function BomReport({ priced: P, tariff, project, runStamp, weather }: { priced: Priced | null; tariff: BomLedger["tariff"] | undefined; project: string; runStamp: string | null; weather: string }): React.ReactElement {
   const C = P?.card.charges;
-  const applied = !!P && tariff?.card === P.card.id;
+  const applied = !!P && (tariff?.card === P.card.id || (!tariff && !!P.card.sample));   // the sample is the run's card when none is applied
   const pca = tariff?.pca;
   const page = (
     <div className="printReport">

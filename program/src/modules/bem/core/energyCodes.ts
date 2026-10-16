@@ -168,7 +168,7 @@ export function adoptionsFor(state: string | null | undefined, date: string, dat
 /** WHAT THE WRITER NEEDS AND THE USER HAS NOT ENTERED — null when the code's row is complete. Said in words the user can act on */
 export function energyCodeGap(t: { missing: string[]; edition: Edition; row: string }): string | null {
   if (!t.missing.length) return null;
-  const where = "BEM › SITE › energy code › Edit values… (kept in data/energy-codes/)";
+  const where = "BEM › SITE › energy code › Choose… › Edit values… (kept in data/energy-codes/)";
   const words: Record<string, string> = { fenestrationU: "window U", skylightU: "skylight U", ceilingU: "ceiling U", frameWallU: "frame wall U", massWallU: "mass wall U", floorU: "floor U",
     basementWallU: "basement wall U", crawlWallU: "crawl space wall U", fenestrationSHGC: "window SHGC", slabR: "slab R", slabDepthFt: "slab depth", ach50: "air leakage (ACH50)",
     heatingSetpointC: "heating thermostat", coolingSetpointC: "cooling thermostat" };

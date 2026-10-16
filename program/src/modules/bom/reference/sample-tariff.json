@@ -1,0 +1,37 @@
+{
+  "readAt": "2026-10-16",
+  "utility": "Sample — not any utility",
+  "cards": [
+    {
+      "id": "SAMPLE-RESIDENTIAL",
+      "name": "Sample residential rate with net metering",
+      "status": "in force",
+      "sample": true,
+      "effective": "a sample: example values, not a published schedule",
+      "fuel": "electricity",
+      "note": "Shipped with Enthalix so a run can be priced before you have your utility's schedule. The values are an example of a residential cooperative rate (2025): a monthly access charge, a delivery charge per kWh, a small demand charge, and a supply charge per kWh that is higher in summer. They are not any utility's rates. Use Search… to find your own utility's schedule, and enter it as a card of your own.",
+      "charges": {
+        "accessUsdMonth": { "value": 31.0, "unit": "$/month", "cite": "sample: the monthly access (customer) charge", "url": "" },
+        "deliveryUsdKwh": { "value": 0.02566, "unit": "$/kWh", "cite": "sample: the energy delivery charge, every kWh delivered", "url": "" },
+        "demandUsdKw": { "value": 1.5, "unit": "$/kW", "cite": "sample: the demand charge, on the month's highest hourly kW between 6:00 and 23:00", "url": "" },
+        "supplySummerUsdKwh": { "value": 0.0927, "unit": "$/kWh", "cite": "sample: the supply charge, June–September", "url": "" },
+        "supplyWinterUsdKwh": { "value": 0.08019, "unit": "$/kWh", "cite": "sample: the supply charge, October–May", "url": "" }
+      },
+      "summerMonths": [6, 7, 8, 9],
+      "demandWindow": { "fromHour": 6, "toHour": 23, "cite": "sample: billing demand is the highest 60-minute kW in any hour from 6:00 to 23:00 in the month" },
+      "minimum": { "cite": "sample: the minimum monthly charge is the access charge" },
+      "netMetering": {
+        "schedule": "sample net metering",
+        "url": "",
+        "maxKwAc": 20,
+        "rules": [
+          "you are billed on the residential rate above",
+          "in a billing period when generation exceeds use, only the fixed charges are paid, and the excess is a credit",
+          "credits carry forward to the next billing periods with net use",
+          "at the end of a 12-month period, credits beyond that period's billed use are not paid for"
+        ],
+        "rulesUrl": ""
+      }
+    }
+  ]
+}

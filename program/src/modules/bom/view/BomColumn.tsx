@@ -7,12 +7,16 @@
 // column map is the user's: the reader guesses from the header, the user
 // confirms, and the mapping is kept in the ledger beside the imported file.
 
+import { utilityLinks, zipIn } from "../../../core/localSearch.js";
+import { useState } from "react";
 import type { BomImport, BomOutcome } from "../pipeline.js";
 import type { BillColumnMap } from "../core/csvRead.js";
 import type { BillFormat, StatementsLedger } from "../core/statement.js";
 import { BomStatements } from "./BomStatements.js";
 
 export interface BomColumnProps {
+  /** where the site is (SITE's location): the address the file states, the county and state — for Search… (2026-10-16) */
+  place?: { address: string | null; county: string | null; state: string | null };
   imports: BomImport[];
   pending: BomImport | null;
   outcome: BomOutcome | null;
@@ -47,6 +51,28 @@ const FIELDS: Array<{ key: keyof BillColumnMap; label: string; required: boolean
   { key: "cost", label: "cost $", required: false },
 ];
 
+/** SEARCH… (user, 2026-10-16: "offer a Search button (in Tariff section in right column) for local utility based on listed location (provide a
+ *  browser link for that search)"): the utility serving the site and its residential schedule, looked up in the user's browser by the ZIP
+ *  code (read from the address, or typed) and the county */
+function UtilitySearch({ place }: { place?: BomColumnProps["place"] }): React.ReactElement {
+  const [open, setOpen] = useState(false);
+  const [zip, setZip] = useState(zipIn(place?.address) ?? "");
+  const where = [place?.county ? `${place.county} County` : "", place?.state ?? ""].filter(Boolean).join(", ");
+  return (
+    <div className="utilSearch">
+      <button className="qaBtn" onClick={() => setOpen((x) => !x)} title="find the utility that serves the site, and its published residential rate schedule — in your browser">Search…</button>
+      {open && <>
+        <span className="muted"> {where ? `the site: ${where}` : "the site is in no county yet — SITE › locate on the map"} · </span>
+        <label title="the site's ZIP code — read from the address when it states one">ZIP <input value={zip} onChange={(e) => setZip(e.target.value.replace(/[^\d]/g, "").slice(0, 5))} placeholder="5 digits" style={{ width: 60 }} /></label>
+        <div>{utilityLinks(zip, place?.state ?? null, place?.county ?? null).map((l) => (
+          <button key={l.label} className="chip" title={`${l.tip}\n${l.url}`} onClick={() => void window.bem.openBrowser(l.url)}>{l.label} ↗</button>
+        ))}</div>
+        <div className="muted">enter what you find as a card of your own: data/tariffs/tariff.json, from references/tariffs/tariff.template.json</div>
+      </>}
+    </div>
+  );
+}
+
 export function BomColumn(p: BomColumnProps): React.ReactElement {
   const o = p.outcome;
   const cal = o?.calibration ?? null;
@@ -61,7 +87,8 @@ export function BomColumn(p: BomColumnProps): React.ReactElement {
       </div>
       <div className="step">
         <div className="stepHead">2 · tariff &amp; PV</div>
-        <div className="idfInfo">the tariff: UTILITY below — select a card for its charges, the PCA and Apply; the PV is on BEM › SYSTEMS › ELECTRICAL</div>
+        <div className="idfInfo">the tariff: UTILITY below — select a card for its charges, the PCA and Apply; until you apply one, the Sample card prices the run. The PV is on BEM › SYSTEMS › ELECTRICAL</div>
+        <UtilitySearch place={p.place} />
       </div>
 
       <div className="step">

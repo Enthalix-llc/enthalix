@@ -156,7 +156,7 @@ export function BomCostView({ priced, calibrated = null, withoutPv, applied, why
             : <span className="runKey dim">Calibrated: run the calibration year in the column (4 · calibration)</span>}
           {P.bills.length > 0 && <span className="runKey"><i style={{ background: "#b8401f", borderColor: "#f6a88b" }} />Billed {usd(billedYear)} w/ PV over {P.bills.length} bills{noOk.length ? ` · w/o PV ${usd(noOk.reduce((t, x) => t + x.usd!, 0))} over ${noOk.length} (estimate)` : ""}</span>}
           {P.bills.length > 0 && noOk.length < P.bills.length && noWhy && <span className="runKey dim">Billed w/o PV: {noWhy}</span>}
-          {missing && <span className="runKey dim">the PCA is not typed — left out of every total (type it from a bill in the column)</span>}
+          {missing && P.card.pca && <span className="runKey dim">the PCA is not typed — left out of every total (type it from a bill in the column)</span>}
           {hover && <span className="runKey">{hover}</span>}
         </div>
         <div className="runGraphBody" ref={ref}>
@@ -312,7 +312,7 @@ export function BomFrame({ rail, onRail, sel, onSel, cards, weather, imports }: 
       <div className="bomCards">
         {rail === "UTILITY" && cards.map(({ card, applied }) => (
           <button key={card.id} className={`bomCard${on("UTILITY", card.id) ? " sel" : ""}${card.status !== "in force" ? " pending" : ""}`} onClick={() => onSel(on("UTILITY", card.id) ? null : { rail: "UTILITY", id: card.id })}>
-            <b>{card.name}</b><span>{card.status === "in force" ? `in force · ${card.effective}` : `${card.status} · ${card.effective}`}</span><span className={applied ? "src-user" : "muted"}>{applied ? "✓ applied — in the run's IDF" : card.status === "in force" ? "not applied" : "cannot be applied: no published rates"}</span>
+            <b>{card.name}</b><span>{card.status === "in force" ? `in force · ${card.effective}` : `${card.status} · ${card.effective}`}</span><span className={applied ? "src-user" : "muted"}>{applied ? (card.sample ? "✓ in use — the sample, until you apply a card of your own" : "✓ applied — in the run's IDF") : card.status === "in force" ? "not applied" : "cannot be applied: no published rates"}</span>
           </button>
         ))}
         {rail === "WEATHER" && (
@@ -366,6 +366,8 @@ export function TariffDetails({ card, ledger, onApply, onRemove, busy, billedPca
           </tbody></table>
           {card.demandWindow && <div className="idfInfo">billing demand: {card.demandWindow.cite}</div>}
           {card.minimum && <div className="idfInfo">minimum: {card.minimum.cite}</div>}
+          {/* a card with no power cost adjustment (the Sample) has nothing to type here */}
+          {card.pca && <>
           <div className="stepHead">power cost adjustment — typed from a bill</div>
           <div className="idfInfo">{card.pca?.cite}</div>
           <table className="pvFields"><tbody>
@@ -379,6 +381,7 @@ export function TariffDetails({ card, ledger, onApply, onRemove, busy, billedPca
               {MONTHS.map((m, i) => <tr key={m}><td>{m} ¢/kWh</td><td><input type="text" className="numIn" value={byMonth[String(i + 1)] ?? ""} placeholder="—" onChange={(e) => setByMonth((b) => ({ ...b, [String(i + 1)]: e.target.value }))} /></td></tr>)}
             </tbody></table>
           </details>
+          </>}
           {card.netMetering && (
             <>
               <div className="stepHead">net metering · {card.netMetering.schedule}</div>

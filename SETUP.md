@@ -62,7 +62,7 @@ project is under as the code states it, enter its values:
 
 1. Read the code; the IECC is free to read at
    [codes.iccsafe.org](https://codes.iccsafe.org/).
-2. In BEM › SITE › energy code, click **Edit values…**. Give the code an id
+2. In BEM › SITE › energy code, click **Choose…**, then **Edit values…**. Give the code an id
    and a name, pick your climate zone's row, and enter each value with the
    table or section it is from. Save writes `data/energy-codes/`; the CSV
    format is in `references/energy-codes/README.md`, if you prefer to edit

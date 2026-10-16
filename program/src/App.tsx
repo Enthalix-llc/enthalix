@@ -104,7 +104,8 @@ import { ConstructionOptions, type MaterialsApi } from "./modules/bem/view/Const
 import { ConstructionDetail, describeStage } from "./modules/bem/view/constructionDetail.js";
 import { ConstructionReading } from "./modules/bem/view/ConstructionReading.js";
 import { ieccFor, codeCatalogue, catalogueKindOf, type IdfModel } from "./modules/bem/core/bemIdf.js";
-import { parseTariffs } from "./modules/bom/core/tariff.js";
+import { parseTariffs, withSample, cardInForce } from "./modules/bom/core/tariff.js";
+import SAMPLE_TARIFF_JSON from "./modules/bom/reference/sample-tariff.json?raw";
 import { BomCostView, BomFrame, TariffDetails, WeatherMaker, priceBoth, type BomRail, type BomCardSel } from "./modules/bom/view/BomCost.js";
 import { withLayers, nextAddedSeq, climateZoneOf, type BemLedger, type SiteRuling, type ConstructionRuling, type GroundRuling, type LayerPick, type LayerCustom, type SystemsRuling, type GenerationRuling, type GainRulings } from "./modules/bem/core/bemDb.js";
 import { SCHEDULE_FILES, parseScheduleObjects, profileFor, readProfiles, fitsRole, scheduleFileName, ROLE_KIND, ROLE_LABELS, CODE_DEFAULT_SCHEDULE, DEFAULT_PROFILE_REF, type ScheduleRole, type ScheduleRef } from "./modules/bem/core/schedules.js";
@@ -374,7 +375,8 @@ export function App(): React.ReactElement {
   // UtilityCost objects. No card ships with the program.
   const [tariffRead, setTariffRead] = useState<ReturnType<typeof parseTariffs> | null>(null);
   const tariffReadRef = useRef<ReturnType<typeof parseTariffs> | null>(null);
-  useEffect(() => { void window.bem.readDataFile("tariffs/tariff.json").then((b) => { const t = b ? new TextDecoder().decode(b) : null; const r = t ? parseTariffs(t) : null; tariffReadRef.current = r; setTariffRead(r); }); }, []);
+  // the SAMPLE card ships with the program (2026-10-16): offered beside the user's, and the one a run is priced by when none is applied
+  useEffect(() => { void window.bem.readDataFile("tariffs/tariff.json").then((b) => { const t = b ? new TextDecoder().decode(b) : null; const r = withSample(t ? parseTariffs(t) : null, parseTariffs(SAMPLE_TARIFF_JSON)); tariffReadRef.current = r; setTariffRead(r); }); }, []);
   // THE ENERGY CODE'S VALUES, THE USER'S OWN (data/energy-codes/*.csv; the empty templates and how to fill them: references/energy-codes/):
   // read once at start, and awaited before any model is built — no code table ships with the program. A file absent reads empty
   const energyCodesReadRef = useRef<Promise<void> | null>(null);
@@ -391,7 +393,7 @@ export function App(): React.ReactElement {
   };
   useEffect(() => { void energyCodesRead(); }, []);   // eslint-disable-line react-hooks/exhaustive-deps
   const appliedTariff = (): IdfModel["tariff"] => {
-    const t = bomLedgerRef.current?.tariff, card = t ? tariffReadRef.current?.usable.find((c) => c.id === t.card) : undefined;
+    const t = bomLedgerRef.current?.tariff, card = cardInForce(tariffReadRef.current, t?.card);
     return card ? { card, ...(t?.pca ? { pca: t.pca } : {}) } : null;
   };
   /** the lens applies to pane 3 only outside BIM mode; in BEM the ZONES view
@@ -1063,7 +1065,7 @@ export function App(): React.ReactElement {
   const bomPricing = useMemo(() => {
     const usable = tariffRead?.usable ?? [];
     const pick = bomSel?.rail === "UTILITY" ? bomSel.id : bomTariff?.card;
-    const card = usable.find((c) => c.id === pick) ?? usable.find((c) => c.id === bomTariff?.card) ?? usable[0];
+    const card = usable.find((c) => c.id === pick) ?? cardInForce(tariffRead, bomTariff?.card) ?? usable[0];
     if (!card) return null;
     // the PCA billed prices the model's month too (2026-10-09) — a bill's month over a value typed on the card
     const t = bomTariff?.card === card.id ? bomTariff : undefined, billed = pcaFromStatements(bomStatements.bills);
@@ -1774,6 +1776,12 @@ export function App(): React.ReactElement {
   };
   /** `commit` (an Apply): the applied rulings, the library objects they read and the weather go INTO idf.db, and the model is
    *  built from idf.db alone (2026-10-07); without it the model is built from what idf.db already holds */
+  // BOM's Search… names the site's county (2026-10-16): read it when BOM is opened before any BEM build has
+  useEffect(() => {
+    if (module !== "bom" || countyZone) return;
+    const loc = bemLedgerRef.current?.site?.location ?? runRef.current?.site ?? null;
+    if (loc) void countyZoneFor(loc).then((z) => { if (z && !countyZoneRef.current) { countyZoneRef.current = z; setCountyZone(z); } });
+  }, [module, countyZone, siteAddress]);   // eslint-disable-line react-hooks/exhaustive-deps
   const refreshBemModel = useCallback(async (commit = false) => {
     if (idfRowsRef.current.length === 0) return;
     setBemBusy(true);
@@ -4030,7 +4038,7 @@ export function App(): React.ReactElement {
         )}
         {costView && (
           <div className="paneHtml paneMapSlot runPane">
-            <BomCostView statements={bomStatements.bills} priced={pricedBom} calibrated={pricedCal} withoutPv={{ standard: pricedStdNo, calibrated: pricedCalNo, bills: billNoPv }} applied={!!bomTariff && pricedBom?.card.id === bomTariff.card} why={!bem ? "no run yet — run the model on BEM › RUN; its months are priced here" : !tariffRead?.usable.length ? "no tariff card is readable (references/tariffs/)" : null} />
+            <BomCostView statements={bomStatements.bills} priced={pricedBom} calibrated={pricedCal} withoutPv={{ standard: pricedStdNo, calibrated: pricedCalNo, bills: billNoPv }} applied={(!!bomTariff && pricedBom?.card.id === bomTariff.card) || (!bomTariff && !!pricedBom?.card.sample)} why={!bem ? "no run yet — run the model on BEM › RUN; its months are priced here" : !tariffRead?.usable.length ? "no tariff card is readable (references/tariffs/)" : null} />
           </div>
         )}
         {reportView && (
@@ -4222,7 +4230,7 @@ export function App(): React.ReactElement {
             <section className="asmSection">
               <h4>BOM · {bomRail} · {bomRail === "UTILITY" ? "the tariff cards — select one for its details in the column" : bomRail === "WEATHER" ? "the weather the run used, and an actual year" : "the bills imported"}</h4>
               <BomFrame rail={bomRail} onRail={setBomRail} sel={bomSel} onSel={setBomSel}
-                cards={(tariffRead?.file?.cards ?? []).map((card) => ({ card, applied: bomTariff?.card === card.id }))}
+                cards={(tariffRead?.file?.cards ?? []).map((card) => ({ card, applied: bomTariff?.card === card.id || (!bomTariff && !!card.sample) }))}
                 weather={epwLine ? { name: (bem?.run.epw ?? bemEpw ?? "").split("/").pop() || "the weather file", line: epwLine } : null}
                 imports={bomImports.map((i) => ({ sha256: i.sha256, name: i.name, rows: i.csv.rows.length }))} />
             </section>
@@ -4351,7 +4359,7 @@ export function App(): React.ReactElement {
             </div>
           )}
           {module === "bom" && (
-            <BomColumn
+            <BomColumn place={{ address: siteAddress ?? null, county: countyZone?.county || null, state: countyZone?.state || null }}
               imports={bomImports} pending={bomPending} outcome={bom} bemStamp={bem?.stamp ?? null}
               metersAvailable={[...new Set((bem?.daily ?? []).map((d) => d.name))]} meters={bomMeters} epwLine={epwLine} busy={bomBusy}
               onImport={() => void importCsv()}

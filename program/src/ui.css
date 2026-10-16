@@ -1218,3 +1218,6 @@ body.explaining .explainHover { outline: 1px dashed #7fd0a0; outline-offset: 1px
 .explainBody code { font: 12px ui-monospace, monospace; }
 .explainGrip { position: absolute; right: 0; bottom: 0; width: 14px; height: 14px; cursor: nwse-resize; background: linear-gradient(135deg, transparent 50%, #33405a 50%); border-bottom-right-radius: 6px; }
 .explainGrip:hover { background: linear-gradient(135deg, transparent 50%, #4a90d9 50%); }
+/* look-ups in the user's browser (2026-10-16): the energy code's Find…, the utility's Search… */
+.codeFind, .utilSearch div { display: inline-flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+.utilSearch { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }

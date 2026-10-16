@@ -12,7 +12,7 @@
 import { useEffect, useState } from "react";
 import type { BemModelOutcome } from "../pipeline.js";
 import type { SiteRuling } from "../core/bemDb.js";
-import { resolveCode, PNNL_NOTICE, PNNL_SOURCE_URL } from "../core/energyCodes.js";
+import { resolveCode, PNNL_NOTICE } from "../core/energyCodes.js";
 import { EnergyCodeDialog } from "./EnergyCodeDialog.js";
 import { EnergyCodeEditor } from "./EnergyCodeEditor.js";
 import type { CountyZoneRead } from "../../../core/climateZone.js";
@@ -157,15 +157,11 @@ export function BemSite(p: BemSiteProps): React.ReactElement {
           const moved = !!r.adoption && !!p.county?.state && r.adoption.state.toUpperCase() !== p.county.state.toUpperCase();
           return (
             <div className="lensRow" title="the code whose prescriptive tables the code default reads — the IRC's chapter 11 carries the IECC's residential tables; the climate zone is the county's, read from the location in force">
-              energy code <b className={moved ? "bad" : srcClass(cur ? "user" : "code-default")}>{r.adoption?.label ?? r.edition.label}</b>
+              energy code <b className={moved ? "bad" : srcClass(cur ? "user" : "code-default")} title={r.edition.shipped ? PNNL_NOTICE : undefined}>{r.adoption?.label ?? r.edition.label}</b>
               {cur?.referenceDate ? <span className="muted"> · permit date {cur.referenceDate}</span> : <span className="muted"> · not confirmed — the app's default</span>}
               <span className="src-dataset"> · zone {p.county?.zone || "not read"}{p.county?.state ? ` (${p.county.state})` : ""}</span>
               {" "}<button className="qaBtn" onClick={() => setCodeOpen(true)}>Choose…</button>
-              {" "}<button className="qaBtn" onClick={() => setCodeEdit(true)} title="enter or correct the code's values — U-factors, SHGC, slab, air leakage, thermostat — as you read them in the code">Edit values…</button>
-              {r.edition.shipped && <div className="muted codeNotice" title={PNNL_NOTICE}>values: DOE/PNNL Residential Prototype Building Models (<a href={PNNL_SOURCE_URL} target="_blank" rel="noreferrer">energycodes.gov</a>),
-                modelled to the {r.edition.base.replace(/^IECC-/, "")} IECC — public domain, with acknowledgement to the U.S. Department of Energy and Pacific Northwest
-                National Laboratory. Not a state's adopted code: confirm the code your project is under, or enter its values with Edit values….</div>}
-              {r.edition.id === "none" && <div className="bad">no energy code is on record — Edit values… to enter the one your project is under; the model is built, but cannot run without it</div>}
+              {r.edition.id === "none" && <div className="bad">no energy code is on record — Choose… › Edit values… to enter the one your project is under; the model is built, but cannot run without it</div>}
               {moved && <div className="bad">the location is in {p.county!.state}; this is {r.adoption!.state}'s code — confirm the code</div>}
             </div>
           );
@@ -175,7 +171,7 @@ export function BemSite(p: BemSiteProps): React.ReactElement {
             onSaved={() => { setCodeEdit(false); p.onCodesSaved?.(); }} onCancel={() => setCodeEdit(false)} />; })()}
         {codeOpen && <EnergyCodeDialog state={p.county?.state || null} county={p.county?.county || null} zone={p.county?.zone || null} imperial={p.imperial}
           current={typeof stage.energyCode === "string" ? { adoption: stage.energyCode } : stage.energyCode}
-          onUse={(v) => { set("energyCode", v); setCodeOpen(false); }} onCancel={() => setCodeOpen(false)} />}
+          onUse={(v) => { set("energyCode", v); setCodeOpen(false); }} onCancel={() => setCodeOpen(false)} onEdit={() => { setCodeOpen(false); setCodeEdit(true); }} />}
         <KV k="climate zone" src="dataset" title="by county: the IECC and ASHRAE 169 assign zones by county — the site's county from the Census boundaries, the county's zone from the DOE Building America table, both cached under data/cache"
           v={<>{setting("climate_zone_county")?.value ?? "county not read yet"} <span className="src-file">· the .ddy states {w?.climateZone ?? "nothing"}</span> <span className={srcClass(src("climate_zone_code"))}>· the code default reads {setting("climate_zone_code")?.value ?? "zone 4's row (assumed)"}</span></>} />
       </Fold>

@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { ENERGY_CODE_DATA, adoptionsFor, codeFor, resolveCode } from "../core/energyCodes.js";
 import { ZONE_TABLE_URL } from "../../../core/climateZone.js";
 import { PNNL_NOTICE } from "../core/energyCodes.js";
+import { energyCodeLinks } from "../../../core/localSearch.js";
 import type { EnergyCodeRuling } from "../core/bemDb.js";
 
 const today = (): string => new Date().toISOString().slice(0, 10);
@@ -31,7 +32,10 @@ const SHOWN: { key: string; label: string; kind: "u" | "shgc" | "r" | "ach" | "f
 export function EnergyCodeDialog(p: {
   state: string | null; county: string | null; zone: string | null; current: EnergyCodeRuling | undefined; imperial: boolean;
   onUse: (r: EnergyCodeRuling | undefined) => void; onCancel: () => void;
+  /** Edit values… (2026-10-16: moved here from SITE's row) — the code's values, typed or copied from a shipped edition */
+  onEdit: () => void;
 }): React.ReactElement {
+  const [findOpen, setFindOpen] = useState(false);
   const [date, setDate] = useState(p.current?.referenceDate ?? today());
   // THE CLIMATE ZONE, as the user reads it for the county in the code's table ("4A") — typed here, kept with the code
   const [zone, setZone] = useState((p.current?.climateZone ?? p.zone ?? "").toUpperCase());
@@ -63,9 +67,18 @@ export function EnergyCodeDialog(p: {
     <div className="menuScrim dialogScrim" onPointerDown={p.onCancel}>
       <div className="dialog codeDialog" role="dialog" aria-label="the energy code" onPointerDown={(e) => e.stopPropagation()}>
         <div className="dialogHead">the energy code for this project</div>
+        {/* FIND (user, 2026-10-16: "add Find button on Choose button dialog, so the user can search locally for reference"): the code the
+            state and county adopted, in the user's own browser; EDIT VALUES: a code of the user's own, or a shipped edition copied */}
+        <div className="allRow">
+          <button className="qaBtn" onClick={() => setFindOpen((x) => !x)} title="look up the energy code adopted where the site is — in your browser">Find…</button>
+          <button className="qaBtn" onClick={p.onEdit} title="enter or correct a code's values — U-factors, SHGC, slab, air leakage, thermostat — as you read them in the code; or copy a DOE/PNNL edition into a code of your own">Edit values…</button>
+          {findOpen && <span className="codeFind">{energyCodeLinks(p.state, p.county).map((l) => (
+            <button key={l.url} className="chip" title={`${l.tip}\n${l.url}`} onClick={() => void window.bem.openBrowser(l.url)}>{l.label} ↗</button>
+          ))}{!p.state && <span className="muted"> · the site is in no county yet — locate it on the map for the state's page</span>}</span>}
+        </div>
         {!noTables && ownEditions.length === 0 && <div className="muted" style={{ margin: "6px 0 10px" }}>
           No code table of your own is on record: the DOE/PNNL prototype values that ship with Enthalix are offered below, by IECC edition. To use
-          the code your project is under as the code states it, enter its values with SITE › energy code › Edit values….
+          the code your project is under as the code states it, enter its values with Edit values… above.
         </div>}
         {noTables && <div className="bad" style={{ margin: "6px 0 10px" }}>
           No energy code is on record. Enthalix ships no code tables: a code is its publisher's. Read the code your project is under — the

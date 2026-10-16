@@ -1,8 +1,14 @@
 # Tariffs
 
 Enthalix prices the simulated year, and your utility bills, with your utility's
-own rate schedule. No schedule ships with the program: every utility publishes
-its own, and you transcribe yours once.
+own rate schedule. Every utility publishes its own, and you transcribe yours once.
+
+Until you apply a card of your own, a **Sample** card prices the run. It ships
+with the program in `program/src/modules/bom/reference/sample-tariff.json` and
+holds example values of a residential cooperative rate with net metering. They
+are not any utility's rates. To find your own utility and its schedule, use
+**Search…** in BOM › 2 · tariff & PV. It opens the U.S. Utility Rate Database
+(OpenEI) for the site's ZIP code, and a web search for the county's utility.
 
 1. Copy `tariff.template.json` to `data/tariffs/tariff.json` (create the
    folder). The `data/` folder holds your own files and is never committed.
@@ -14,7 +20,7 @@ its own, and you transcribe yours once.
 5. Change `status` to `"in force"`.
 
 The app reads the file when it starts. BOM › UTILITY lists the card, or says
-which values it refused.
+which values it refused. Apply your card, and it replaces the Sample.
 
 ## What the arithmetic covers
 

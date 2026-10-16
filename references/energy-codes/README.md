@@ -8,7 +8,7 @@ reference thermostat.
 Building Models ([energycodes.gov](https://www.energycodes.gov/prototype-building-models)),
 for each IECC edition from 2006 to 2024 and each climate zone, in
 `program/src/modules/bem/reference/`. They are public domain, and DOE and PNNL are
-acknowledged in the app under BEM › SITE › energy code. A project with no table
+acknowledged in the app (hover on the code's name under BEM › SITE › energy code). A project with no table
 of your own reads the 2021 edition. Each value cites the prototype file it was
 read from; `program/scripts/pnnl-codes/` re-reads them.
 
@@ -32,7 +32,7 @@ built, but it cannot run; the app names the missing value. Enthalix never invent
 
 ## Setting up
 
-The simplest way is in the app: BEM › SITE › energy code › **Edit values…**
+The simplest way is in the app: BEM › SITE › energy code › **Choose…** › **Edit values…**
 writes these files for you, one climate zone's row at a time, and keeps the
 file it replaces beside it as a `.bak`. To edit the files directly instead:
 

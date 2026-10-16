@@ -22,6 +22,8 @@ export interface Cited { value: number; unit: string; cite: string; url: string 
 export interface TariffCharges { accessUsdMonth: Cited; deliveryUsdKwh: Cited; demandUsdKw: Cited; supplySummerUsdKwh: Cited; supplyWinterUsdKwh: Cited }
 export interface TariffCard {
   id: string; name: string; status: "in force" | "pending"; effective: string; fuel: string; note?: string;
+  /** THE SAMPLE CARD shipped with the program (user, 2026-10-16): example values, no utility's — no schedule to link to */
+  sample?: boolean;
   charges?: TariffCharges; summerMonths?: number[];
   demandWindow?: { fromHour: number; toHour: number; cite: string };
   minimum?: { cite: string }; pca?: { cite: string; url: string };
@@ -39,7 +41,7 @@ export function parseTariffs(text: string): { file: TariffFile | null; usable: T
   const usable: TariffCard[] = [];
   for (const c of file.cards ?? []) {
     if (c.status !== "in force") continue;
-    const bad = CHARGE_KEYS.filter((k) => { const x = c.charges?.[k]; return !x || typeof x.value !== "number" || !Number.isFinite(x.value) || !x.unit || !x.cite || !x.url; });
+    const bad = CHARGE_KEYS.filter((k) => { const x = c.charges?.[k]; return !x || typeof x.value !== "number" || !Number.isFinite(x.value) || !x.unit || !x.cite || (!x.url && !c.sample); });
     if (!c.summerMonths?.length) bad.push("summerMonths" as keyof TariffCharges);
     if (!c.demandWindow) bad.push("demandWindow" as keyof TariffCharges);
     if (bad.length) refused.push(`${c.id}: ${bad.join(", ")} without a number and its citation — refused`);
@@ -47,6 +49,17 @@ export function parseTariffs(text: string): { file: TariffFile | null; usable: T
   }
   return { file, usable, refused };
 }
+
+/** THE SAMPLE CARD beside the user's (2026-10-16: "a 'Sample' utility card … predefined and applied in absence of other card"): the
+ *  user's cards first, then the sample's — offered always, priced by when no card is applied */
+export function withSample(user: ReturnType<typeof parseTariffs> | null, sample: ReturnType<typeof parseTariffs>): ReturnType<typeof parseTariffs> {
+  const mark = (c: TariffCard): TariffCard => ({ ...c, sample: true });
+  const cards = [...(user?.file?.cards ?? []), ...(sample.file?.cards ?? []).map(mark)];
+  return { file: { readAt: user?.file?.readAt ?? sample.file?.readAt ?? "", utility: user?.file?.utility ?? "", cards }, usable: [...(user?.usable ?? []), ...sample.usable.map(mark)], refused: [...(user?.refused ?? []), ...sample.refused] };
+}
+/** the card a run is priced by: the one applied, else the sample */
+export const cardInForce = (read: ReturnType<typeof parseTariffs> | null, applied: string | undefined): TariffCard | undefined =>
+  applied ? read?.usable.find((c) => c.id === applied) : read?.usable.find((c) => c.sample);
 
 /** the PCA as typed: one value for every month, or a value per month ("1"…"12", or a bill's "YYYY-MM"), $/kWh */
 export interface PcaRuling { all?: number; byMonth?: Record<string, number> }
