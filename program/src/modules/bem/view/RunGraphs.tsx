@@ -29,7 +29,10 @@ export type PeakPart = "system" | "zone";
  *  point right-clicked (user: "Left click on chart sets one point and right click on chart sets second point so that a range is selected") —
  *  the frame sums the point, or the range between the two */
 export type GraphPoint = { day: number; hour: number | null };
-export interface RunGraphState { section: RunGraphSection; annual: AnnualSeries[]; peak: PeakKind[]; scale: TimeScale; start: number; temps: TempLine[]; peakParts: PeakPart[]; pick?: GraphPoint | null; pick2?: GraphPoint | null }
+export interface RunGraphState { section: RunGraphSection; annual: AnnualSeries[]; peak: PeakKind[]; scale: TimeScale; start: number; temps: TempLine[]; peakParts: PeakPart[]; pick?: GraphPoint | null; pick2?: GraphPoint | null;
+  /** the lines' checkboxes under the Annual graph unfolded (user, 2026-10-16: "a collapsing view of the checkbox plotting values so the graph
+   *  has more space") — folded unless opened */
+  checksOpen?: boolean }
 export const RUN_GRAPH_DEFAULT: RunGraphState = { section: "annual", annual: ["use", "heating", "cooling", "ventilation", "renewable", "purchased", "net"], peak: ["heating", "cooling"], scale: "year", start: 0, temps: [], peakParts: ["system", "zone"] };
 
 /** what each Annual line sums: the engine's own meters, the ones the run has. Heating and cooling read the electric meter (real
@@ -267,14 +270,8 @@ export function AnnualGraph({ bem, shown, size, scale = "year", start = 0, temps
       <div className="runGraphHead">
         ENERGY · {windowWords} · by the {hours ? "hour" : "day"}, {two && sR.unit !== sL.unit ? `${sL.unit} left · ${sR.unit} right` : sL.unit}{two ? " — the end uses on the left axis, the facility on the right" : ""}{tScale ? ` · outside ${tUnit} outermost right` : ""}
         {fallback && <span className="runKey dim">this run has no hourly results — drawn by the day; Run again for the hours</span>}
-        {ANNUAL_SERIES.filter((s) => shown.includes(s.id)).map((s) => {
-          const l = lines.get(s.id), v = vis.get(s.id);
-          return (
-            <span key={s.id} className="runKey" title={l ? `the engine's meter${l.meters.length > 1 ? "s" : ""} ${l.meters.join(" + ")}` : s.none}>
-              <i style={{ background: l ? s.color : "transparent", borderColor: s.color }} />{s.label}{l && two && s.right ? " (right)" : ""} {v ? `${Math.round(v.reduce((t, x) => t + x, 0)).toLocaleString()} kWh${scale === "year" ? "/yr" : " in view"}` : `— ${s.none}`}
-            </span>
-          );
-        })}
+        {/* the lines' names, sums and notes are in the frame under the view (user, 2026-10-16: "Why is the summary data listed in the
+            view? It should be in the frame below the view") — the view is the drawing */}
         {temps.length > 0 && !T0 && <span className="runKey dim">— no outside temperature in this run; Run again</span>}
       </div>
       <div className="runGraphBody" ref={ref} style={size ? { height: size.h, flex: "0 0 auto" } : undefined}>
@@ -626,7 +623,13 @@ export function RunGraphs({ bem, state, imperial, modelSha, onState, structures 
           <AnnualGraph bem={bem} shown={state.annual} scale={state.scale} start={state.start} temps={state.temps} imperial={imperial} onWindow={(scale, start) => onState(scale !== state.scale ? rescale(state, scale) : { ...state, start })}
             pick={state.pick ?? null} pick2={state.pick2 ?? null} onPick={(p, second) => onState(second ? { ...state, pick2: p } : { ...state, pick: p })} />
           {/* the lines to draw, under the graph (user, 2026-10-12: "We should have the graph selection components in the upper section below the graph") */}
-          <div className="runViewChecks"><AnnualChecks state={state} onState={onState} bem={bem} /></div>
+          <div className={`runViewChecks${state.checksOpen ? " open" : ""}`}>
+            <button className="runChecksFold" onClick={() => onState({ ...state, checksOpen: !state.checksOpen })} title={state.checksOpen ? "fold the lines' checkboxes — the graph takes the space" : "unfold: check the lines the graph draws"}>
+              {state.checksOpen ? "▾" : "▸"} lines drawn · {state.annual.length + (state.temps ?? []).length} of {ANNUAL_SERIES.length + TEMP_LINES.length}
+              {!state.checksOpen && <span className="runChecksShown">{[...ANNUAL_SERIES.filter((x) => state.annual.includes(x.id)), ...TEMP_LINES.filter((x) => (state.temps ?? []).includes(x.id))].map((x) => <span key={x.id}><i style={{ background: x.color }} />{x.label}</span>)}</span>}
+            </button>
+            {state.checksOpen && <AnnualChecks state={state} onState={onState} bem={bem} />}
+          </div>
         </>
         : state.peak.length === 0 || parts.length === 0 ? <div className="runGraphEmpty">check a part (per system, per zone) and Heating or Cooling in the frame below</div>
         : <>
@@ -688,13 +691,14 @@ export function AnnualSums({ state, bem, imperial }: { state: RunGraphState; bem
   const kwh = (v: number): string => (Number.isFinite(v) ? `${v.toLocaleString(undefined, { maximumFractionDigits: Math.abs(v) >= 100 ? 0 : 2 })} kWh` : "—");
   const toT = (c: number): string => (Number.isFinite(c) ? (imperial ? `${(c * 9 / 5 + 32).toFixed(1)} °F` : `${c.toFixed(1)} °C`) : "—");
   const shown = ANNUAL_SERIES.filter((s) => state.annual.includes(s.id) && lines.has(s.id));
+  const absent = ANNUAL_SERIES.filter((s) => state.annual.includes(s.id) && !lines.has(s.id));
   const tShown = T0 ? TEMP_LINES.filter((t) => (state.temps ?? []).includes(t.id)) : [];
   const sum = (arr: number[] | null, i0: number, i1: number): number => (!arr ? NaN : arr.slice(i0, i1 + 1).reduce((t, v) => t + v, 0));
   const atPick = (id: AnnualSeries): number => { const l = lines.get(id)!; return byHour ? sum(l.hourly, lo, hi) : sum(l.kwh, lo, hi); };
   const tOf = (id: TempLine, vals: number[]): number => { const v = vals.filter((x) => Number.isFinite(x)); return !v.length ? NaN : id === "high" ? Math.max(...v) : id === "low" ? Math.min(...v) : v.reduce((s, x) => s + x, 0) / v.length; };
   const tWin = (id: TempLine): number => tOf(id, T0![id].slice(d0, d0 + n));
   const tPick = (id: TempLine): number => tOf(id, byHour ? T0!.hourly.slice(lo, hi + 1) : T0![id].slice(lo, hi + 1));
-  if (!shown.length && !tShown.length) return <div className="idfInfo">check a line under the graph — its sum shows here</div>;
+  if (!shown.length && !tShown.length && !absent.length) return <div className="idfInfo">check a line under the graph (unfold "lines drawn") — its sum shows here</div>;
   return (
     <table className="runSums">
       <thead><tr><th>line</th><th className="num">{windowWordsOf(state.scale, state.start)}</th>{pickWords && <th className="num">{pickWords}</th>}</tr></thead>
@@ -703,6 +707,9 @@ export function AnnualSums({ state, bem, imperial }: { state: RunGraphState; bem
           <tr key={s.id}><td><i style={{ background: s.color }} />{s.label}</td>
             <td className="num">{kwh(lines.get(s.id)!.kwh.slice(d0, d0 + n).reduce((t, v) => t + v, 0))}</td>
             {pickWords && <td className="num">{kwh(atPick(s.id))}</td>}</tr>
+        ))}
+        {absent.map((s) => (
+          <tr key={s.id} className="dim"><td><i style={{ background: "transparent", border: `1px solid ${s.color}` }} />{s.label}</td><td colSpan={pickWords ? 2 : 1}>not drawn — {s.none}</td></tr>
         ))}
         {tShown.map((tl) => (
           <tr key={tl.id}><td><i style={{ background: tl.color }} />{tl.label}{tl.id === "high" ? " (the highest)" : tl.id === "low" ? " (the lowest)" : " (the mean)"}</td>

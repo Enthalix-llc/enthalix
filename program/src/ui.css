@@ -973,6 +973,15 @@ button.apply.mini { padding: 1px 8px; font-size: 11px; }
 .runKey.dim { color: var(--dim); }
 .runKey i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; border: 1px solid; }
 .runGraphBody { flex: 1 1 auto; min-height: 0; position: relative; }
+/* the lines' checkboxes under the Annual graph, folded to one line (2026-10-16) */
+.runViewChecks { flex: 0 0 auto; }
+.runChecksFold { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; width: 100%; text-align: left; background: none; border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; color: var(--muted); font: 700 10px/1.4 ui-monospace, monospace; letter-spacing: 0.04em; cursor: pointer; }
+.runViewChecks.open .runChecksFold { margin-bottom: 4px; }
+.runChecksShown { display: inline-flex; flex-wrap: wrap; gap: 2px 10px; font-weight: 400; letter-spacing: 0; color: var(--text); }
+.runChecksShown span { display: inline-flex; align-items: center; gap: 4px; }
+.runChecksShown i, .runSums i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; }
+.runSums tr.dim td { color: var(--dim); }
+.runSums td:first-child { white-space: nowrap; }
 .runGraphBody svg { position: absolute; inset: 0; display: block; }
 .runGraphEmpty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; pointer-events: none; }
 .runGraphs > .runGraphEmpty { position: static; flex: 1 1 auto; }
