@@ -293,7 +293,9 @@ A card that serves no zone is refused, and the refusal says so ("… serves no z
 ## RUN
 Build the model, check it, run EnergyPlus, and read the results.
 
-The model the run uses is the one applied on the other tabs; what is still staged there is named here and is not in the run.
+The model the run uses is the one applied on the other tabs. **Run EnergyPlus** turns red when the results are out of date: no run yet, the last run failed, the model changed since, or something is staged and not applied.
+
+When something stands in the way of the run (a change staged and not applied, the energy code's values incomplete, no envelope, no EnergyPlus), clicking **Run EnergyPlus** opens a box that names each reason, with a button to the tab where it is resolved. The box stays open while you work and closes by itself once nothing is left in the way.
 
 ## OPERATIONS
 BOM's one tab: the tariff, the bills and the PV, and the calibration year.

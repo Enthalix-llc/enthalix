@@ -1226,3 +1226,6 @@ body.explaining .explainHover { outline: 1px dashed #7fd0a0; outline-offset: 1px
 /* look-ups in the user's browser (2026-10-16): the energy code's Find…, the utility's Search… */
 .codeFind, .utilSearch div { display: inline-flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
 .utilSearch { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+/* why the run cannot go (2026-10-16): floats over the view without a scrim, so the tabs stay usable until it clears */
+.dialog.runBlocked { position: fixed; top: 72px; left: max(16px, calc(55vw - 560px)); width: min(560px, calc(100vw - 32px)); z-index: 55; border-color: var(--warn); }
+.dialog.runBlocked ul { margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 6px; }

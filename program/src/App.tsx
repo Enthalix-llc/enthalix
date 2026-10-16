@@ -42,7 +42,8 @@ import { createDbPanes, type DbPanes, type PickHit } from "./view/dbPanes.js";
 import { createIfcPane, type DragMode, type IfcPane, type ViewPreset } from "./view/ifcPane.js";
 import { ViewTools } from "./view/ViewTools.js";
 import { Rail, type DotState } from "./shell/Rail.js";
-import { tabsOf, moduleOf, firstTab, isTab, type AppModule, type TabId } from "./shell/registry.js";
+import { tabsOf, moduleOf, firstTab, isTab, TABS, type AppModule, type TabId } from "./shell/registry.js";
+import { RunBlockedDialog, type RunBlock } from "./modules/bem/view/RunBlockedDialog.js";
 import { checkChain, readMeta, moduleState, stampIdfContentSha, stampIfcContentSha, formatChain, type ChainLink } from "./core/stale.js";
 import { indexIfcDb, diffIndex, carryRulings, type FileIndex, type FileDiff, type RulingCase, type Ledgers, type Carry, type CarryRecord } from "./core/ifcChanges.js";
 import { rankParents, versionLabel, readLineageSidecar, type VersionCandidate, type RankedParent } from "./core/projectLookup.js";
@@ -206,6 +207,7 @@ export function App(): React.ReactElement {
   const [bemRunning, setBemRunning] = useState(false);
   const [bemLog, setBemLog] = useState<string[]>([]);
   const [bemEpw, setBemEpw] = useState<string | null>(null);
+  const [runBlocked, setRunBlocked] = useState(false);
   const [bemEngine, setBemEngine] = useState<{ exe: string; version: string; others: Array<{ version: string }> } | null | undefined>(undefined);
   const bemLedgerRef = useRef<BemLedger | null>(null);
   /** the systems diagram as idf.db holds it after the last rebuild or Save (2026-09-10) */
@@ -2156,25 +2158,36 @@ export function App(): React.ReactElement {
   const gainPending = (() => { const a = bemLedger?.gains ?? {}; const n = (k: "rooms" | "zones"): number => Object.keys({ ...(gainStage[k] ?? {}), ...(a[k] ?? {}) }).filter((x) => JSON.stringify(gainStage[k]?.[x] ?? null) !== JSON.stringify(a[k]?.[x] ?? null)).length; return n("rooms") + n("zones"); })();
   // RUN'S HONESTY (2026-09-15, the tab review): the model RUN describes is rebuilt from the APPLIED ledger, so what the
   // tabs hold STAGED is not in it — counted here in words for the RUN column, never left silent
-  const runStagedNote = ((): string | null => {
+  const runStaged = ((): Array<{ what: string; tab: TabId }> => {
     const same = (a: unknown, b: unknown): boolean => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
     const led = bemLedger;
-    const parts: string[] = [];
+    const parts: Array<{ what: string; tab: TabId }> = [];
     const nCons = [...new Set([...Object.keys(consStage), ...Object.keys(led?.constructions ?? {})])].filter((k) => !same(consStage[k], led?.constructions?.[k])).length;
-    if (nCons) parts.push(`${nCons} construction ruling${nCons > 1 ? "s" : ""}`);
-    if (!same(consGround, led?.ground)) parts.push("the ground method");
+    if (nCons) parts.push({ what: `${nCons} construction ruling${nCons > 1 ? "s" : ""}`, tab: "bem-constructions" });
+    if (!same(consGround, led?.ground)) parts.push({ what: "the ground method", tab: "bem-constructions" });
     const siteKeys = ["designDays", "runPeriod", "groundTemp", "northAxisDeg", "timestep", "shadowCalculation", "terrain", "solarDistribution", "location"] as const;
-    if (siteStage && siteKeys.some((k) => !same(siteStage[k], led?.site?.[k]))) parts.push("site settings");
+    if (siteStage && siteKeys.some((k) => !same(siteStage[k], led?.site?.[k]))) parts.push({ what: "site settings", tab: "bem-site" });
     const nSched = [...new Set([...Object.keys(schedStage), ...Object.keys(led?.schedules ?? {})])].filter((r) => !same(schedStage[r as ScheduleRole], led?.schedules?.[r as ScheduleRole])).length;
-    if (nSched) parts.push(`${nSched} schedule${nSched > 1 ? "s" : ""}`);
-    if (!same(holStage, appliedHolidays(led))) parts.push("the project's holidays");
+    if (nSched) parts.push({ what: `${nSched} schedule${nSched > 1 ? "s" : ""}`, tab: "bem-schedules" });
+    if (!same(holStage, appliedHolidays(led))) parts.push({ what: "the project's holidays", tab: "bem-schedules" });
     const sys = diagramDiff(sysStage, led?.systems).pending;
-    if (sys) parts.push(`the systems sheet (${sys} change${sys > 1 ? "s" : ""})`);
-    if (gainPending) parts.push(`${gainPending} gain ruling${gainPending > 1 ? "s" : ""}`);
+    if (sys) parts.push({ what: `the systems sheet (${sys} change${sys > 1 ? "s" : ""})`, tab: "bem-systems" });
+    if (gainPending) parts.push({ what: `${gainPending} gain ruling${gainPending > 1 ? "s" : ""}`, tab: "bem-zones" });
     const nZ = Object.keys(zoneStage).length;
-    if (nZ) parts.push(`${nZ} zone ruling${nZ > 1 ? "s" : ""}`);
-    return parts.length ? `staged on the tabs and NOT in this model: ${parts.join(", ")} — Apply or Save there, then run` : null;
+    if (nZ) parts.push({ what: `${nZ} zone ruling${nZ > 1 ? "s" : ""}`, tab: "bem-zones" });
+    return parts;
   })();
+  const runStagedNote = runStaged.length ? `staged on the tabs and NOT in this model: ${runStaged.map((x) => x.what).join(", ")} — Apply or Save there, then run` : null;
+  // WHY THE RUN CANNOT GO (user, 2026-10-16: "pop up a dialog box stating that the run can't occur because …, which clears when the
+  // issues are resolved"): each reason with the tab where it is resolved; a change staged and not applied is one — the run would not hold it
+  const runBlocks: RunBlock[] = [
+    ...(bemEngine === null ? [{ what: "EnergyPlus is not installed", how: "install it (see SETUP.md), then restart the program" }] : []),
+    ...(idfRowsRef.current.length === 0 ? [{ what: "no envelope is built", how: "open an IFC file in BIM", tab: "bim-edit" as TabId }] : []),
+    ...(bemModel?.report.codeGap ? [{ what: `the energy code's values are incomplete — ${bemModel.report.codeGap}`, how: "enter them in SITE › energy code › Choose… › Edit values…", tab: "bem-site" as TabId }] : []),
+    ...runStaged.map((x) => ({ what: `${x.what} staged and not applied`, how: `Apply or Save it on ${TABS.find((t) => t.id === x.tab)?.label ?? x.tab}`, tab: x.tab })),
+  ];
+  // the box clears itself once nothing stands in the way
+  useEffect(() => { if (runBlocked && runBlocks.length === 0) { setRunBlocked(false); setStatus("nothing stands in the way of the run — Run EnergyPlus when ready"); } }, [runBlocked, runBlocks.length]);
   /** the CONSTRUCTIONS tab's rulings (2026-09-08): what governs each type, keyed by the type's name */
   /** CUSTOM EDITS ARE SAVED ON APPLY (user, 2026-09-29: "When main view (MV) button is applied, any custom layer edits are saved"):
    *  every layer drafted in the DETAIL list becomes a material of yours — its pick the base, the typed name, R and reflectance over
@@ -3877,6 +3890,7 @@ export function App(): React.ReactElement {
           </div>
         </>
       )}
+      {runBlocked && runBlocks.length > 0 && <RunBlockedDialog blocks={runBlocks} tabLabel={(t) => TABS.find((x) => x.id === t)?.label ?? t} onGo={(t) => setTab(t)} onClose={() => setRunBlocked(false)} />}
       {fenDialog && <FenestrationDialog state={fenDialog} onState={setFenDialog} imperial={imperial} onSave={saveFenestration} onDelete={(k) => void deleteFenestration(k)} onCancel={() => setFenDialog(null)} />}
       {dialog && <MaterialDialog state={dialog} onState={setDialog} imperial={imperial} layerLabel={`layer ${layerPos(dialog.seq)}${detailRow ? ` of ${detailName ?? detailRow.label}` : ""}`} onSave={saveHand} onDelete={(k) => void removeMaterial(k)} canDelete={!!dialog.editFrom && (materialsRef.current?.rows.find((r) => r.key === dialog.editFrom)?.sourceId === "hand" || materialsRef.current?.rows.find((r) => r.key === dialog.editFrom)?.sourceId === "bcl")} onCancel={() => setDialog(null)} />}
       {menu && (
@@ -4350,7 +4364,7 @@ export function App(): React.ReactElement {
           {tab === "bem-site" && (
             <BemSite model={bemModel} onCodesSaved={() => { energyCodesReadRef.current = null; void energyCodesRead().then(() => refreshBemModel()); }} county={countyZone} site={runRef.current?.site ?? null} elevation={runRef.current ? projectElevation(runRef.current) : null} trueNorth={runRef.current?.trueNorth ?? null}
               epw={bemLedger?.weather?.epw ?? null} epwList={epwList} ruling={bemLedger?.site ?? EMPTY_SITE} busy={bemBusy || bemRunning} imperial={imperial}
-              onEpw={chooseEpw} onPickEpw={() => void pickEpw()} onApply={applySite} staged={bemLedger?.staged?.site} onStage={setSiteStage}
+              onEpw={chooseEpw} onPickEpw={() => void pickEpw()} onApply={applySite} staged={siteStage ?? bemLedger?.staged?.site} onStage={setSiteStage}
               sun={sun} onSun={setSun} cycle={cycle} onCycle={setCycle} deciduous={deciduous} onDeciduous={setDeciduous} intensity={intensity} onIntensity={setIntensity}
               sunInfo={sunInfo} timeZone={bemModel?.weather?.header?.timeZone ?? null} siteWord={siteWord}
               focus={siteFocus} onFocus={setSiteFocus} solar={solar} onSolar={setSolar} address={siteAddress} locPick={locPick} />
@@ -4383,7 +4397,7 @@ export function App(): React.ReactElement {
           {tab === "bem-run" && (
             <BemRun structures={runStructures} onCosts={() => setTab("bom-ops")} model={bemModel} bem={bem} engine={bemEngine} idfReady={idfRowsRef.current.length > 0} running={bemRunning}
               lastLine={bemLog[bemLog.length - 1] ?? ""} validation={validation} lens={lens} legend={legend} imperial={imperial} stagedNote={runStagedNote}
-              onValidate={() => void validateModel()} onRun={() => void runBem()} onLens={(l) => applyLens(l)}
+              onValidate={() => void validateModel()} onRun={() => (runBlocks.length ? setRunBlocked(true) : void runBem())} onLens={(l) => applyLens(l)}
               onDock={(d) => toggleSection(d)} isOpen={(d) => open.has(d)} onPrint={() => printAs(`BEM · Run report — ${projectName}`)} />
           )}
           {module === "bem" && tab === "bem-run" && bem && (

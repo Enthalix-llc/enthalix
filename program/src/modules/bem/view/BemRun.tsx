@@ -122,9 +122,9 @@ export function BemRun(p: BemRunProps): React.ReactElement {
             sha), or rulings staged on a tab and not yet applied */}
         {/* THE CODE'S VALUES INCOMPLETE (2026-10-15): the model is built for the tabs, but never run — the gap named, and where to enter it */}
         {m?.report.codeGap && <div className="idfInfo bad" title="the default constructions, the infiltration and the reference thermostat are the code's values — none is invented">cannot run: {m.report.codeGap}</div>}
-        <button className={`apply${needs.length && !p.running ? " needsRun" : ""}`} onClick={p.onRun} disabled={p.running || !p.idfReady || p.engine === null || !!m?.report.codeGap}
+        <button className={`apply${needs.length && !p.running ? " needsRun" : ""}`} onClick={p.onRun} disabled={p.running}
           title={needs.length ? `action needed: ${needs.join(" · ")}` : "the last run is of the model as it stands"}>
-          {p.running ? "running…" : "Run simulation"}
+          {p.running ? "running…" : "Run EnergyPlus"}
         </button>
         {(p.running || p.lastLine) && <div className="idfInfo runLine">{p.lastLine}</div>}
         {b && (
