@@ -62,6 +62,8 @@ function AsmNodeView(p: NodeProps<AsmFlowNode>): React.ReactElement {
   const bar = n.kind === "zone" ? zoneColor(n.id) : GROUP_COLOR[GROUP_OF[n.kind]];
   return (
     <div className={`asmNode${p.selected ? " sel" : ""}${d.refused.length ? " refused" : ""}${loop ? " loop" : ""}${n.kind === "zone" ? " zoneBox" : ""}${narrow ? " narrow" : ""}`} style={n.kind === "zone" ? { width: w, minHeight: h, borderColor: bar, borderLeftColor: bar } : { width: w, minHeight: h, borderLeftColor: bar }} title={d.refused.join("\n") || d.sub}>
+      {/* a zone card SAYS it is one (user, 2026-10-16: "doesn't state what those cards represent") */}
+      {n.kind === "zone" && <div className="asmKindTag" style={{ color: bar }} title="a thermal ZONE: its rooms run as one air volume on one thermostat; what joins its Loc (top) serves it">ZONE</div>}
       <div className="asmTitle">{d.label}</div>
       {n.ident && <div className="asmIdent" title="the component's ID">{n.ident}</div>}
       {n.kind === "zone" && (

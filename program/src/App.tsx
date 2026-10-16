@@ -75,7 +75,7 @@ import { PlumbingColumn, type PlumbRoom } from "./modules/bem/view/PlumbingSheet
 import { readPlumbCatalogue, compilePlumbing, sheetFromFile as plumbFromFile, isFileWaterHeater, PLUMB_SHELVES, PLUMB_CLASS } from "./modules/bem/core/plumbSheet.js";
 import { readPanels } from "./modules/bem/core/pvArrays.js";
 import { startPaletteDrag } from "./modules/bem/view/assemblyDrag.js";
-import { compileAssembly, stageAssembly, sanitizeStage, diagramRows, diagramDiff, removeRoom, addRoom, addNode, type Assembly, type ZoneAssign, refusedByNode } from "./modules/bem/core/assembly.js";
+import { compileAssembly, stageAssembly, sanitizeStage, diagramRows, diagramDiff, removeRoom, addRoom, addNode, addEdge, type Assembly, type ZoneAssign, refusedByNode } from "./modules/bem/core/assembly.js";
 import { readJournal, writeJournal, newestStaged, stagedEmpty, stagedContent, type Staged } from "./modules/bem/core/stageJournal.js";
 import { parseEpSchema, SCHEMA_FILE, IDD_FILE, type EpSchema } from "./modules/bem/core/epSchema.js";
 import { parseIoReferenceIndex, ioRefVersionOf, ioRefIndexUrl, ioRefCacheName, type IoReference } from "./modules/bem/core/ioReference.js";
@@ -2490,7 +2490,15 @@ export function App(): React.ReactElement {
       for (const room of rooms) a = addRoom(a, r.id, room);
       made++;
     }
-    if (made) setAssembly(a);
+    // THE IDEAL LOADS CARD SERVES THEM (user, 2026-10-16: "Ideal Loads was loaded expecting to have zones assigned to it"): every zone
+    // card that holds rooms and is fed by nothing is joined to the sheet's Ideal loads card, Loc to Loc
+    const ideal = a.nodes.find((n) => n.kind === "ideal");
+    let joined = 0;
+    if (ideal) for (const z of a.nodes.filter((n) => n.kind === "zone" && (n.rooms?.length ?? 0) > 0)) {
+      if (a.edges.some((e) => e.to === z.id && (e.toPort ?? "loc-in") === "loc-in")) continue;
+      a = addEdge(a, ideal.id, z.id, "loc-out", "loc-in"); joined++;
+    }
+    if (made || joined) setAssembly(a);
     return made;
   };
   const hideElement = useCallback((elementId: number) => {

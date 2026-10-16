@@ -423,13 +423,23 @@ The zones drawn on the SYSTEMS sheet, one card each, with the rooms it holds. Cl
 - **Creating a zone**: on SYSTEMS › MECHANICAL, drag a **Zone** card from the bench's ZONE EQUIPMENT shelf onto the sheet, or drag a room from LEVELS · SPACES onto an empty part of the sheet (that makes a zone holding it).
 - **Deleting a zone**: select its card on the sheet and press **Delete** (or Backspace); its rooms return to no zone.
 - **Renaming a zone**: select its card; its name and **ID** are in the column.
-- **Zones by level**: one zone per level, holding the level's rooms in no zone — staged until Save.
+- **Zones by level**: one zone per level, holding the level's rooms in no zone, each joined to the sheet's **Ideal loads** card when it has one — staged until Save.
 - **Assigning rooms**: right-click a room that is in no zone (in LEVELS · SPACES, on any tab) and pick the zone; or drag the room onto the zone's card on the sheet. Right-click a room in a zone to **Un-assign** it.
 - **Bed** (residential): tick each room that is a bedroom. The bedrooms set the whole-house ventilation rate (ASHRAE 62.2: bedrooms + 1), count in the occupants (Building America, 2014) and in the hot-water use of the dwelling (30 + 10 × bedrooms gal/day). Rooms named "Bed n" start ticked. Ticks are applied with **Apply · n gain rulings**.
 
 ## SYSTEMS › system QA
-Checks of the assembled systems: what is connected, what is missing, and what the writer would refuse.
+**QA** — quality assurance: the eight checks every saved model's systems are put through, read from the EnergyPlus input as written. Each card on the sheet shows ✓ when it passes, or ✗ and the number of gaps; hover for the checks.
 
+1. a fluid loop has a pump on its supply side
+2. every node named is named twice — nothing dangles
+3. both sides of a loop are populated
+4. producers on the supply side, consumers on the demand side; every water side on a loop
+5. an air loop has its supply path, its return path and a terminal per zone
+6. a zone with equipment has one equipment list and its connections; every conditioned zone has something serving it
+7. every control has its setpoint
+8. sizing once for every zone, air loop and plant loop
+
+The header counts the rows checked and the gaps.
 ## SYSTEMS › MECHANICAL
 The selected component's settings. The code default governs each subsection until it is ruled; the engine's fields are read-only until then.
 
