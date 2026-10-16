@@ -203,7 +203,7 @@ export function ZoneFrame(p: ZoneFrameProps): React.ReactElement {
         {FRAME_TABS.map((t) => <button key={t} className={`asmRailBtn${p.tab === t ? " on" : ""}`} style={{ borderLeftColor: RAIL_COLOR[t] }} onClick={() => p.onTab(t)}>{t}</button>)}
       </div>
       <div className="asmShelf">
-        {!key ? <div className="muted">pick a zone in the column, or a room — in the tree, under a zone's card, or in the model — to read it here</div>
+        {!key ? <div className="muted" title="a zone in the column, or a room — in the tree, under a zone's card, or in the model">pick a zone or a room</div>
           : <>
               <div className="asmShelfHead"><b>{p.tab}</b> <span className="muted">· {subjectWord}</span></div>
               {p.tab === "OCCUPANCY" ? occupancy() : p.tab === "ENVELOPE" ? envelope() : p.tab === "LIGHTING" ? lighting() : loads()}

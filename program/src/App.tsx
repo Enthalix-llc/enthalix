@@ -3996,27 +3996,32 @@ export function App(): React.ReactElement {
           <>
             {module === "bom" && <button className={costView ? "on" : ""} onClick={() => setBomView("cost")} title="the run's months and the bills, priced by the tariff applied in UTILITY below">ENERGY &amp; COST{pricedBom ? ` · ${pricedBom.card.name}` : ""}</button>}
             {module !== "bom" && <button className={eff.has("ifc") ? "on" : ""} onClick={() => toggleView("ifc")} title={eff.has("ifc") ? "collapse the IFC view" : "show the IFC view"}>IFC — FRAGMENTS</button>}
-            {module !== "bom" && <button className={eff.has("idf") ? "on" : ""} onClick={() => toggleView("idf")} title={eff.has("idf") ? "collapse the IDF-DB view" : "show the IDF-DB view"}>IDF-DB — SINGLE PLANE</button>}
           </>
         ) : (
           <>
-            {tab === "bem-constructions" && <button className={eff.has("idf") ? "on" : ""} onClick={() => setConsView("plan")} title="the model from above, every cell painted by the file's type or by what governs it — click a cell to select its type">PLAN · {consPaint === "source" ? "by what governs each type" : "by the file's type"}</button>}
+            {tab === "bem-constructions" && <button className={eff.has("idf") ? "on" : ""} onClick={() => setConsView("plan")} title={`the model from above, every cell painted ${consPaint === "source" ? "by what governs each type" : "by the file's type"} — click a cell to select its type`}>PLAN</button>}
             {tab === "bem-constructions" && <button className={eff.has("detail") ? "on" : ""} onClick={() => setConsView("detail")} title="the selected type's assembly, drawn to scale from the file's own layers, with the U the governing construction gives it">DETAIL · {detailRow ? detailName ?? detailRow.label : "select a type"}</button>}
             {tab === "bem-systems" && <button className={asmView ? "on" : ""} onClick={() => setSysView("assembly")} title={MAIN_OF[sysFocus] === "plumbing" ? "the plumbing assembly: water heaters and the hot-water uses they supply, from the bench, connected; each heater in its room; the selected card's settings in the column" : MAIN_OF[sysFocus] === "electrical" ? "the electrical assembly: PV arrays, inverters, load centres and the utility from the bench, connected; the selected card's settings in the column" : "the mechanical assembly: components from the bench, connected into systems, the zones assigned in ZONES; the selected component's settings in the column"}>ASSEMBLY · {MAIN_OF[sysFocus].toUpperCase()}</button>}
-            {tab === "bem-schedules" && <button className={calView ? "on" : ""} onClick={() => setSchedView("calendar")} title="the run's calendar — a card in the column paints it with that schedule's values; click a month, a week, a day; double-click backs up">CALENDAR · {schedCard ? `${ROLE_LABELS[schedCard]} · ${calProfile?.name ?? "the code default"}` : "the run calendar"} · {calAt.level}</button>}
+            {tab === "bem-schedules" && <button className={calView ? "on" : ""} onClick={() => setSchedView("calendar")} title="the run's calendar — a card in the column paints it with that schedule's values; click a month, a week, a day; double-click backs up">CALENDAR · {schedCard ? `${ROLE_LABELS[schedCard]} · ${calProfile?.name ?? "the code default"} · ` : ""}{calAt.level}</button>}
             {/* ANNUAL and PEAK, each its own tab (user, 2026-10-12: "What happened to the Annual plots?" — one tab named for the section
                 shown hid the other behind the frame's title) */}
             {tab === "bem-run" && <button className={graphView && runGraph.section === "annual" ? "on" : ""} onClick={() => { setRunView("graphs"); setRunGraph({ ...runGraph, section: "annual" }); }} title="the run's year graphed by the hour: outside temperature, heating and cooling, ventilation, occupant loads, PV, bought and sold — the frame below picks the lines and the window">GRAPHS · ANNUAL</button>}
             {tab === "bem-run" && <button className={graphView && runGraph.section === "peak" ? "on" : ""} onClick={() => { setRunView("graphs"); setRunGraph({ ...runGraph, section: "peak" }); }} title="peak conditioning per structure and per zone on the design days — the frame below picks the parts">GRAPHS · PEAK</button>}
             {tab === "bem-run" && <button className={reportView ? "on" : ""} onClick={() => setRunView("report")} title="EnergyPlus's own tabular report (eplustbl.htm) for the run, as the engine wrote it — the end uses, the zone and space component loads, sizing, envelope; a run that ended Fatal shows its error file">REPORT · ENGINE</button>}
-            {tab !== "bem-constructions" && tab !== "bem-schedules" && tab !== "bem-systems" && <button className={eff.has("idf") ? "on" : ""} onClick={() => (tab === "bem-run" ? (setRunView("model"), lens !== "surface-temp-winter" && lens !== "surface-temp-summer" && applyLens("surface-temp-winter")) : toggleView("idf"))} title={`the zone model: every cell painted by ${lens === "none" ? "the zone behind it" : LENSES.find((l) => l.id === lens)?.label ?? lens}`}>
-              {tab === "bem-site" ? (siteView === "location" ? "SITE · the project location — OpenStreetMap" : siteView === "weather" ? "SITE · the weather stations — EnergyPlus's weather repository" : siteView === "solar" ? "IDF-DB — SITE · terrain, shading elements, the sun" : "IDF-DB — SITE · the model; the files beside the house below")
-                : tab === "bem-zones" ? `IDF-DB — ZONES · the model alone, no site · ${lens === "none" ? "by the sheet's Zones, rooms in none grey" : LENSES.find((l) => l.id === lens)?.label ?? lens}` : tab === "bem-run" ? `SURFACE TEMPERATURES · the ${lens === "surface-temp-summer" ? "summer" : "winter"} design day` : `IDF-DB — ZONE MODEL · ${lens === "none" ? "by zone" : LENSES.find((l) => l.id === lens)?.label ?? lens}`}
+            {tab !== "bem-constructions" && tab !== "bem-schedules" && tab !== "bem-systems" && <button className={eff.has("idf") ? "on" : ""} onClick={() => (tab === "bem-run" ? (setRunView("model"), lens !== "surface-temp-winter" && lens !== "surface-temp-summer" && applyLens("surface-temp-winter")) : toggleView("idf"))} title={tab === "bem-site" ? (siteView === "location" ? "the project location — OpenStreetMap" : siteView === "weather" ? "the weather stations — EnergyPlus's weather repository" : siteView === "solar" ? "the model under its terrain, with the site's shading elements and the sun" : "the model; the files beside the house are listed below")
+                : tab === "bem-zones" ? `the model alone, no site — painted ${lens === "none" ? "by the sheet's Zones; rooms in none are grey" : `by ${LENSES.find((l) => l.id === lens)?.label ?? lens}`}`
+                : tab === "bem-run" ? `the exterior surface temperatures, the ${lens === "surface-temp-summer" ? "summer" : "winter"} design day`
+                : `the zone model: every cell painted by lens === "none" ? "the zone behind it" : LENSES.find((l) => l.id === lens)?.label ?? lens}`}>
+              {/* the tab names its view; what the view shows is the tab's tooltip (user, 2026-10-16) */}
+              {tab === "bem-site" ? (siteView === "location" ? "SITE · LOCATION" : siteView === "weather" ? "SITE · WEATHER STATIONS" : siteView === "solar" ? "IDF-DB — SITE · SOLAR" : "IDF-DB — SITE")
+                : tab === "bem-zones" ? "IDF-DB — ZONES" : tab === "bem-run" ? "SURFACE TEMPERATURES" : "IDF-DB — ZONE MODEL"}
             </button>}
           </>
         )}
         {/* RUN's model takes the mouse alone — left-drag orbits, right-drag pans (user, 2026-10-12: "without all the view orientation") */}
         {(eff.has("idf") || eff.has("ifc")) && !mapView && !asmView && !calView && !(module === "bem" && tab === "bem-run") && <ViewTools drag={drag} onDrag={setDrag} onView={viewTo} onZoom={(step) => ifcPaneRef.current?.zoom(step)} />}
+        {/* BIM's IDF-DB tab at the far right, after the view tools (user, 2026-10-16): it names the RIGHT pane of the split, so it sits over it */}
+        {module === "bim" && <button className={`farRight${eff.has("idf") ? " on" : ""}`} onClick={() => toggleView("idf")} title={eff.has("idf") ? "collapse the IDF-DB view" : "show the IDF-DB view"}>IDF-DB — SINGLE PLANE</button>}
       </div>
       <div className="panes" style={{ gridTemplateColumns: `repeat(${eff.size || 1}, 1fr)` }}>
         {/* a collapsed IFC pane is GHOSTED, never display:none: every drag in any pane is
@@ -4166,9 +4171,8 @@ export function App(): React.ReactElement {
                   : fenFrame ? `${detailName ?? detailRow!.label} (${detailRow!.section}) — the fenestration datasets; Apply at the right`
                   : detailRow && layerSel !== null ? `layer ${layerPos(layerSel)} of ${detailName ?? detailRow.label} — the category and its materials; a click replaces the layer`
                   : detailRow ? `options for ${detailName ?? detailRow.label} (${detailRow.section})`
-                  : `the unique types the file names · ${typeRows.filter((r) => r.section !== "Window" && r.section !== "Door").length} surface types · ${typeRows.filter((r) => r.section === "Window").length} window · ${typeRows.filter((r) => r.section === "Door").length} door`;
-                const tail = (consView === "plan" && detailRow) || fenFrame || layerSel !== null ? "" : " · a row click stages the ruling; Apply is in the column";
-                return <h4>CONSTRUCTIONS · {head}{tail}</h4>;
+                  : `${typeRows.filter((r) => r.section !== "Window" && r.section !== "Door").length} surface types · ${typeRows.filter((r) => r.section === "Window").length} window · ${typeRows.filter((r) => r.section === "Door").length} door`;
+                return <h4 title={(consView === "plan" && detailRow) || fenFrame || layerSel !== null ? undefined : "the unique types the file names — a row click stages the ruling; Apply is in the column"}>CONSTRUCTIONS · {head}</h4>;
               })()}
               {consView === "plan" && detailRow ? (
                 <ConstructionReading row={detailRow} imperial={imperial} codeLabel={energyCodeLabel} code={detailCode} codeShgc={detailRow.kind === "window" || detailRow.kind === "door" ? ieccFor(bemModel?.built.model.climateZone, bemModel?.built.model.energyCode).fenestrationSHGC ?? 0.40 : null} applied={bemLedger?.constructions?.[detailRow.key]} stage={detailStage} resolved={detailResolved} stagedSummary={detailSummary} onStage={stageCons} onDetail={() => setConsView("detail")} />
@@ -4191,7 +4195,7 @@ export function App(): React.ReactElement {
           )}
           {module === "bem" && tab === "bem-site" && siteView === "model" && (
             <section>
-              <h4>SITE · the files beside {nameRef.current || "the house"} · {siteFiles.filter((f) => f.projected).length} of {siteFiles.length} projected · a checkbox shows or hides a file or a kind in the view · right-click a file or an item: project it, hide, delete from the model, or turn the file by degrees</h4>
+              <h4 title="a checkbox shows or hides a file or a kind in the view · right-click a file or an item: project it, hide, delete from the model, or turn the file by degrees">SITE · the files beside {nameRef.current || "the house"} · {siteFiles.filter((f) => f.projected).length} of {siteFiles.length} projected</h4>
               <SiteFilesFrame files={siteFiles} siteName={siteFileName} rows={siteRows} hiddenFiles={hiddenFiles} selected={selSite} busy={busy} onShowFile={showSiteFile} onShowKind={showSiteElements}
                 onSelect={(ids) => { const n = new Set(ids ?? []); selSiteRef.current = n; setSelSite(n); if (showTerrainRef.current) applyTerrain(true); }} onRestore={restoreSiteElement} onRestoreAll={restoreSiteElements}
                 onMenu={(m) => setMenu({ x: m.x, y: m.y, elementId: 0, key: null, label: m.kind ? `${m.kind.ids.length} × ${m.kind.name} · ${m.file}` : m.file, siteIds: m.kind?.ids, siteFile: m.file, siteFileProjected: m.projected })} />
@@ -4228,7 +4232,7 @@ export function App(): React.ReactElement {
           )}
           {module === "bom" && costView && (
             <section className="asmSection">
-              <h4>BOM · {bomRail} · {bomRail === "UTILITY" ? "the tariff cards — select one for its details in the column" : bomRail === "WEATHER" ? "the weather the run used, and an actual year" : "the bills imported"}</h4>
+              <h4 title={bomRail === "UTILITY" ? "the tariff cards — select one for its details in the column" : bomRail === "WEATHER" ? "the weather the run used, and an actual year" : "the bills imported"}>BOM · {bomRail}</h4>
               <BomFrame rail={bomRail} onRail={setBomRail} sel={bomSel} onSel={setBomSel}
                 cards={(tariffRead?.file?.cards ?? []).map((card) => ({ card, applied: bomTariff?.card === card.id || (!bomTariff && !!card.sample) }))}
                 weather={epwLine ? { name: (bem?.run.epw ?? bemEpw ?? "").split("/").pop() || "the weather file", line: epwLine } : null}
@@ -4237,21 +4241,21 @@ export function App(): React.ReactElement {
           )}
           {module === "bem" && tab === "bem-run" && graphView && (
             <section>
-              <h4>RUN · {runGraph.section === "annual" ? "ANNUAL — the lines shown, summed" : "PEAK — the parts and loads the view draws"}{bem ? ` · run ${bem.stamp}` : " · no run yet"}</h4>
+              <h4 title={runGraph.section === "annual" ? "the lines the graph draws, summed over the window in view and at the points clicked" : "the parts and loads the view draws"}>RUN · {runGraph.section === "annual" ? "ANNUAL — the lines summed" : "PEAK"}{bem ? ` · run ${bem.stamp}` : " · no run yet"}</h4>
               <RunGraphFrame state={runGraph} onState={setRunGraph} bem={bem} imperial={imperial} />
             </section>
           )}
           {module === "bem" && tab === "bem-schedules" && (
             <section>
-              <h4>SCHEDULES · {schedCard ? `${ROLE_LABELS[schedCard]}${calProfile ? ` · ${calProfile.name}` : " · the code default"}` : "the run calendar"} · {calAt.level}{calAt.level !== "year" ? ` · ${dayLabel(runCal, calAt.n)}` : ""} — the values the view shows</h4>
+              <h4 title="the values the view shows">SCHEDULES · {schedCard ? `${ROLE_LABELS[schedCard]}${calProfile ? ` · ${calProfile.name}` : " · the code default"}` : "the run calendar"} · {calAt.level}{calAt.level !== "year" ? ` · ${dayLabel(runCal, calAt.n)}` : ""}</h4>
               {schedCard && <ScheduleEditor profile={calProfile} role={schedCard} cal={runCal} at={calAt} imperial={imperial} library={libRef.current} onDraft={setSchedDraft} onSave={saveUserSchedule}
                 holidays={holStage} onHolidays={setHolStage} calendars={userCal} onKeep={keepCalendar} onCalMode={setCalMode} />}
-              {!schedCard && <div className="muted">no schedule selected — pick a card in the column to edit its day profiles</div>}
+              {!schedCard && <div className="muted" title="pick a card in the column to edit its day profiles">no schedule selected</div>}
             </section>
           )}
           {module === "bem" && tab === "bem-zones" && (
             <section className="asmSection">
-              <h4>ZONES · {frameZone ? frameZone.name : "—"}{selSpaceName ? ` › ${selSpaceName}` : frameZone ? ` · ${frameZone.rooms.length} room${frameZone.rooms.length === 1 ? "" : "s"} — the zone's settings, every room takes them` : " · pick a zone in the column, or a room"}{gainPending ? ` · ${gainPending} gain ruling${gainPending === 1 ? "" : "s"} staged — Apply in the column` : ""}</h4>
+              <h4 title={frameZone ? "the zone's settings — every room takes them" : "pick a zone in the column, or a room — in the tree, under a zone's card, or in the model"}>ZONES · {frameZone ? frameZone.name : "—"}{selSpaceName ? ` › ${selSpaceName}` : frameZone ? ` · ${frameZone.rooms.length} room${frameZone.rooms.length === 1 ? "" : "s"}` : " · no zone selected"}{gainPending ? ` · ${gainPending} staged` : ""}</h4>
               <ZoneFrame zone={frameZone} space={selSpaceName} rooms={bemModel?.rooms ?? []} stage={gainStage} onStage={setGainStage}
                 surfacesOf={surfacesOfRoom} fixturesOf={(r) => mepElementsRef.current.filter((e) => FOCUS.lighting(e) && e.room === r)}
                 table={{ hi, onHi: setHi, selRow, selElementId: sel?.elementId ?? null, bem, onRuleGlazing: ruleGlazing }}
@@ -4417,8 +4421,9 @@ export function App(): React.ReactElement {
                 )}
               </>
             )}
-            <button className={`qaBtn sec${open.has("placement") ? " on" : ""}`} onClick={() => toggleSection("placement")} title="the plane each category collapses to — I inner, M mid, E exterior — and whether adjoining vertices are matched">
-              {open.has("placement") ? "▾" : "▸"} single surface placement · {(Object.keys(CATEGORY_LABEL) as Category[]).map((c) => choices[c]).join(" ")}{shellOn ? " · matched" : ""}
+            <button className={`qaBtn sec${open.has("placement") ? " on" : ""}`} onClick={() => toggleSection("placement")}
+              title={`Each wall, roof, floor and window is a layered assembly in the IFC; the energy model needs it as ONE plane. For each category, choose where that plane lies:\nI — the inside face\nM — the middle of the assembly\nE — the exterior face\nNow: ${(Object.keys(CATEGORY_LABEL) as Category[]).map((c) => `${CATEGORY_LABEL[c]} ${choices[c]}`).join(" · ")}.\nmatch vertices${shellOn ? " (on)" : " (off)"} moves each boundary corner onto the line where its plane meets the adjoining wall, roof or floor, so the planes close without gaps.`}>
+              {open.has("placement") ? "▾" : "▸"} single surface placement
             </button>
             {open.has("placement") && (
               <div className="secBody">
@@ -4454,14 +4459,6 @@ export function App(): React.ReactElement {
             </button>
             {open.has("steps") && steps.length > 0 && (
               <div className="qaPanel steps">
-                <p>
-                  <b>{steps.length} stacked wall{steps.length === 1 ? "" : "s"} out of alignment.</b> A wall stands
-                  over another on the storey below, parallel but offset — no intersection can join them and
-                  nothing may be invented. <b>Keep</b> closes the step with the strip
-                  between them (the walls' own vertices). <b>Align</b> slides one
-                  plane onto the other, which moves a surface off the coordinates
-                  the file authored.
-                </p>
                 <div className="allRow">
                   <button className="apply" disabled={pending === 0} onClick={applyRulings}>
                     {pending === 0 ? "✓ applied" : `Apply ${pending} ruling${pending > 1 ? "s" : ""}`}
@@ -4551,20 +4548,6 @@ export function App(): React.ReactElement {
             </button>
           {open.has("spaces") && (
             <div className="qaPanel steps corr">
-              <p>
-                <b>{zoneRows.length} zones.</b> Every IfcSpace the file names, and an
-                <b> Attic</b> over each room whose ceiling has a roof or floor above it —
-                the column from the ceiling's top to that plane, carved like a room.
-                <b> Assign to</b> merges a zone into another: a stair or the Studio
-                Corridor into Great, an attic into its neighbour's; the surfaces
-                between them become that zone's internal partitions. <b>Closed</b> is
-                the share of the zone's boundary shared by exactly two of its own
-                surfaces — EnergyPlus's own test. Gap and missing are the open metres
-                with and without a counterpart edge.
-                {attics && attics.cathedral.length > 0 && (
-                  <> Cathedral ceilings lying under their roof ({attics.cathedral.map((c) => c.room).join(", ")}) take the roof as their ceiling and get no attic.</>
-                )}
-              </p>
               <div className="allRow">
                 <button className="apply" disabled={zonePending === 0} onClick={applyZones}>
                   {zonePending === 0 ? "✓ applied" : `Apply ${zonePending} assignment${zonePending > 1 ? "s" : ""}`}
@@ -4621,14 +4604,7 @@ export function App(): React.ReactElement {
             </button>
           {open.has("edits") && (
             <div className="qaPanel steps corr">
-              <p>
-                <b>The corrections ledger.</b> Every storey-step ruling and hand extension
-                made on this file, in order. They are saved beside the databases as
-                <code> data/corrections/&lt;sha256&gt;.json</code>, keyed to the source IFC,
-                and reapplied on every load — so a wall extended by hand stays extended.
-                <b> Restore</b> puts one back to the file as authored; the geometry rebuilds
-                from that point.{ledgerNote ? ` ${ledgerNote}.` : ""}
-              </p>
+              {ledgerNote && <div className="idfInfo">{ledgerNote}</div>}
               <div className="allRow">
                 <button
                   className="apply"

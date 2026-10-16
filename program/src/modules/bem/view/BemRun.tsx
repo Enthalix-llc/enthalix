@@ -96,8 +96,7 @@ export function BemRun(p: BemRunProps): React.ReactElement {
         const rules = [...new Set(ck.map((c) => c.rule))];
         return (
           <Fold id="checks" store={STORE} head="checks — the model as built" summary={ck.length ? (open.length ? `${open.length} to look at · ${notes.length} noted · ${rules.length} rules` : `all ${rules.length} rules pass${notes.length ? ` · ${notes.length} noted` : ""}`) : "not checked — rebuild the model"}>
-            <div className="idfInfo" title={rules.map((r) => `${r}: ${CHECK_RULES[r] ?? ""}`).join("\n")}>each build asks the same questions of the model and keeps every answer in bem.db's checks table — hover for the rules</div>
-            <div className="qaPanel"><table><tbody>
+            <div className="qaPanel" title={`each build asks the same questions of the model and keeps every answer in bem.db's checks table:\n${rules.map((r) => `${r}: ${CHECK_RULES[r] ?? ""}`).join("\n")}`}><table><tbody>
               {[...open, ...notes, ...ck.filter((c) => c.verdict === "ok")].map((c, i) => (
                 <tr key={i} title={`${c.rule}: ${CHECK_RULES[c.rule] ?? ""}${c.fix ? `\nchanged in ${c.fix}` : ""}`}>
                   <td className={c.verdict === "fail" || c.verdict === "warn" ? "src-warn" : c.verdict === "note" ? "src-code" : "muted"}>{c.verdict === "ok" ? "✓" : c.verdict === "note" ? "note" : c.verdict === "fail" ? "✗" : "!"}</td>
@@ -164,7 +163,6 @@ export function BemRun(p: BemRunProps): React.ReactElement {
             <KV k="conditioned" v={p.imperial ? `${(area * 10.7639).toFixed(0)} ft²` : `${area.toFixed(1)} m²`} />
             <button className={`qaBtn${p.isOpen("bem-results") ? " on" : ""}`} onClick={() => p.onDock("bem-results")} title="the frame under the view: the annual end uses, the months, the loads, the units' sizing and the zones — each as a table or a chart">results — tables and charts</button>
             <button className="qaBtn" onClick={p.onPrint} title="the full report — the run, the annual and monthly results, the Annual graph with every series, the Peak heating and cooling graphs, the zones and the sizing — through the system print dialog (Save as PDF is in it)">Print / Save PDF…</button>
-            <div className="idfInfo">the zone model's colours and their legend — each zone's heating and cooling peaks — are picked under the view</div>
           </>
         )}
       </Fold>

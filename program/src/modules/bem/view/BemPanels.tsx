@@ -156,12 +156,12 @@ export function BemResultsPanel(p: { bem: BemOutcome; selectedZone: string | nul
             <button className={`qaBtn${mode === "table" ? " on" : ""}`} onClick={() => setMode("table")}>table</button>
             <button className={`qaBtn${mode === "chart" ? " on" : ""}`} onClick={() => setMode("chart")}>chart</button>
           </>}
-          <span className="idfInfo">
-            {tab === "ENERGY" && "the End Uses table of the run's Annual Building Utility Performance Summary — every row by every fuel it drew; kWh in both unit systems (a fuel would also read therms or gallons)"}
-            {tab === "MONTHLY" && "the meters the writer asked for, month by month over the weather year — kWh"}
-            {tab === "LOADS" && `design at ${loadRows[0]?.zl?.heatingDay ?? "the design days"} (the HVAC Sizing Summary: the zone's sensible load, no ventilation or system effects) · peak over the weather year · ${im ? "MBH = 1000 Btu/h" : "kW"}`}
-            {tab === "SYSTEMS" && "the engine's own sizing reports: CoilSizingDetails per coil and ComponentSizingSummary per object — what a unit is picked from"}
-            {tab === "ZONES" && "each zone's annual heating and cooling (the ideal-loads pair, or the zone air system's sensible pair on real equipment) and its unmet hours"}
+          <span className="idfInfo" title={tab === "ENERGY" ? "the End Uses table of the run's Annual Building Utility Performance Summary — every row by every fuel it drew; kWh in both unit systems (a fuel would also read therms or gallons)"
+            : tab === "MONTHLY" ? "the meters the writer asked for, month by month over the weather year"
+            : tab === "LOADS" ? `design at ${loadRows[0]?.zl?.heatingDay ?? "the design days"} (the HVAC Sizing Summary: the zone's sensible load, no ventilation or system effects) · peak over the weather year`
+            : tab === "SYSTEMS" ? "the engine's own sizing reports: CoilSizingDetails per coil and ComponentSizingSummary per object — what a unit is picked from"
+            : "each zone's annual heating and cooling (the ideal-loads pair, or the zone air system's sensible pair on real equipment) and its unmet hours"}>
+            {tab === "ENERGY" || tab === "MONTHLY" ? "kWh" : tab === "LOADS" ? (im ? "MBH = 1000 Btu/h" : "kW") : ""}
           </span>
         </div>
 

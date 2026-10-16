@@ -329,7 +329,7 @@ export function BomFrame({ rail, onRail, sel, onSel, cards, weather, imports }: 
           <button key={i.sha256} className={`bomCard${on("BILLS", i.sha256) ? " sel" : ""}`} onClick={() => onSel(on("BILLS", i.sha256) ? null : { rail: "BILLS", id: i.sha256 })}>
             <b>{i.name}</b><span>{i.rows} rows</span>
           </button>
-        )) : <div className="muted bomEmpty">no bills imported — Import bills CSV… in the column</div>)}
+        )) : <div className="muted bomEmpty" title="Import bills CSV… in the column">no bills imported</div>)}
       </div>
     </div>
   );

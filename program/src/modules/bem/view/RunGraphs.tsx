@@ -268,7 +268,7 @@ export function AnnualGraph({ bem, shown, size, scale = "year", start = 0, temps
   return (
     <div className="runGraph">
       <div className="runGraphHead">
-        ENERGY · {windowWords} · by the {hours ? "hour" : "day"}, {two && sR.unit !== sL.unit ? `${sL.unit} left · ${sR.unit} right` : sL.unit}{two ? " — the end uses on the left axis, the facility on the right" : ""}{tScale ? ` · outside ${tUnit} outermost right` : ""}
+        ENERGY · {windowWords} · by the {hours ? "hour" : "day"}, {two && sR.unit !== sL.unit ? `${sL.unit} left · ${sR.unit} right` : sL.unit}{two ? " · end uses left, facility right" : ""}{tScale ? ` · outside ${tUnit} outermost right` : ""}
         {fallback && <span className="runKey dim">this run has no hourly results — drawn by the day; Run again for the hours</span>}
         {/* the lines' names, sums and notes are in the frame under the view (user, 2026-10-16: "Why is the summary data listed in the
             view? It should be in the frame below the view") — the view is the drawing */}
@@ -729,8 +729,7 @@ export function RunGraphFrame({ state, onState, bem, imperial = false }: { state
     <div className="runFrame">
       {state.section === "annual" && (
         <div className="runSection on">
-          <div className="runGroup">the lines drawn, summed — left-click the graph for a point, right-click for a second: the range between them{state.pick || state.pick2 ? " (click a point again to clear it)" : ""}</div>
-          <AnnualSums state={state} bem={bem} imperial={imperial} />
+          <div title={`left-click the graph for a point, right-click for a second: the range between them${state.pick || state.pick2 ? " — click a point again to clear it" : ""}`}><AnnualSums state={state} bem={bem} imperial={imperial} /></div>
         </div>
       )}
       <div className={`runSection${state.section === "peak" ? " on" : ""}`} hidden={state.section !== "peak"}>

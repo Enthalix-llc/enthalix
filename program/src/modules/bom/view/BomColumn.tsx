@@ -82,12 +82,10 @@ export function BomColumn(p: BomColumnProps): React.ReactElement {
       <button className="qaBtn" onClick={p.onPrint} title="the tariff, the bills against the model over each bill's own days, the run's months and the bills priced, the months' cost — through the system print dialog (Save as PDF is in it)">Print / Save PDF…</button>
 
       <div className="step">
-        <div className="stepHead">1 · schedules</div>
-        <div className="idfInfo">occupancy, thermostat setbacks, lighting — milestone M4; the run uses the code's thermostat (72 / 75 °F, IECC R405) all year</div>
+        <div className="stepHead" title="occupancy, lighting and equipment run on the schedules picked in BEM › SCHEDULES; the thermostat is the energy code's, all year, unless typed on a zone's card in ZONES">1 · schedules</div>
       </div>
       <div className="step">
-        <div className="stepHead">2 · tariff &amp; PV</div>
-        <div className="idfInfo">the tariff: UTILITY below — select a card for its charges, the PCA and Apply; until you apply one, the Sample card prices the run. The PV is on BEM › SYSTEMS › ELECTRICAL</div>
+        <div className="stepHead" title="the tariff: UTILITY below — select a card for its charges, the PCA and Apply; until you apply one, the Sample card prices the run. The PV is on BEM › SYSTEMS › ELECTRICAL">2 · tariff &amp; PV</div>
         <UtilitySearch place={p.place} />
       </div>
 

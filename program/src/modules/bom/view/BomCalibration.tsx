@@ -43,8 +43,7 @@ export function BomCalibration(p: {
   const end = p.span ? (p.span.b > p.archiveEnd ? p.archiveEnd : p.span.b) : "";
   const pvSpan = p.pv?.read.days.length ? `${p.pv.read.days[0]!.date} – ${p.pv.read.days[p.pv.read.days.length - 1]!.date}` : "";
   return (
-    <div className="calRun">
-      <div className="idfInfo">BOM's own run: the model as BEM holds it, on the actual year the bills were metered under — the station's measured temperature, humidity and wind, the sun and sky estimated by the Open-Meteo archive and checked against your panels' measured production. BEM's run on the typical year is not touched.</div>
+    <div className="calRun" title="BOM's own run: the model as BEM holds it, on the actual year the bills were metered under — the station's measured temperature, humidity and wind, the sun and sky estimated by the Open-Meteo archive and checked against your panels' measured production. BEM's run on the typical year is not touched.">
       <div className="kv"><span>bills</span><b>{p.span ? `${p.bills.length} · ${p.span.a} – ${p.span.b}` : "none with dates — type the bills above"}</b></div>
       {p.span && p.span.b > p.archiveEnd && <div className="src-warn">the weather archive reaches {p.archiveEnd}: the run ends there and a later bill is left uncovered</div>}
       <label className="lensRow" title="the day the PV was connected (the first meter reading with generation): before it a day is the house without PV — its own use bought, nothing sold or made">

@@ -116,7 +116,7 @@ export function ConstructionOptions(p: {
   const [fQ, setFQ] = useState("");
   useEffect(() => { setPalSel(null); setShowAll(false); setQ(""); }, [p.layerSel, p.row?.key]);
   const r = p.row;
-  if (!r) return <div className="idfInfo">select a type in the column or click a cell in the view — its options list here</div>;
+  if (!r) return <div className="idfInfo" title="select a type in the column, or click a cell in the view">select a type for its options</div>;
   const fU = (u: number | null): string => (u === null ? "—" : p.imperial ? (u / U_IP).toFixed(3) : u.toFixed(3));
   const lib = p.library;
   const glazed = r.kind === "window" || (r.kind === "door" && r.glazed === true);

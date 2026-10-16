@@ -97,6 +97,8 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
 }
 .viewTabs button:hover { color: #9aa5b8; }
 .viewTabs button.on { color: var(--sel); border-bottom-color: var(--sel); }
+.viewTabs button.farRight { margin-left: auto; }
+.viewTabs .viewTools + button.farRight { margin-left: 8px; }
 .panes > [hidden], .inspector section[hidden] { display: none; }
 /* THE PAGE TABS: a module's pages across the top of the editing column, one
    active; the rail lights the module a tab belongs to (2026-09-04) */

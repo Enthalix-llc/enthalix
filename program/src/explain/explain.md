@@ -73,16 +73,16 @@ On BIM this is the right half of a split view, beside the IFC. Click the tab to 
 ## ENERGY & COST
 BOM's view: the run's months against the bills, priced by the tariff applied in UTILITY (the frame below).
 
-## SITE · the project location
+## SITE · location
 The site on the map, at the position the IfcSite states or the one you located. Confirm the position here; the frame says which is in force.
 
-## SITE · the weather stations
+## SITE · weather stations
 Every weather station near the site with a typical-year weather file, for picking the one the run uses. Click a station to download its files into `Weather/`; the frame below lists what is installed and which file is in force.
 
-## IDF-DB — SITE · terrain
+## IDF-DB — SITE · solar
 The model with the site around it: the terrain, the shading elements and the sun's position for the day and hour set in the right column's solar studies.
 
-## IDF-DB — SITE · the model
+## IDF-DB — SITE
 The model with the files beside the building (the site and shading IFCs) as the energy model sees them. The frame below lists the files; a checkbox shows or hides one.
 
 ## PLAN
@@ -278,7 +278,15 @@ The project this IFC belongs to (its IfcProject) and its versions. Your rulings 
 The IFC changed since your rulings were made: the changes found, and the rulings that need you to decide whether they still apply.
 
 ## BIM › single surface placement
-Where each kind of assembly's single plane is placed — at the inside face, the centre or the outside face — by category. "matched" means the planes are matched across rooms.
+In the IFC, each wall, roof, floor and window is a layered assembly with a thickness. The energy model needs it as **one plane**. For each category, choose where that plane lies:
+
+- **I** — the inside face (the room side)
+- **M** — the middle of the assembly
+- **E** — the exterior face
+
+The choice moves every plane of that category, and the rooms' areas and volumes follow it. Hover on the header for the choices in force.
+
+**match vertices** moves each boundary corner onto the line where its plane meets the adjoining wall, roof or floor. Each plane keeps its direction, and the planes close against each other without gaps.
 
 ## BIM › storey alignment QA
 The storey alignment QA lists every place where a wall stands over a wall on the storey below, **parallel but offset** — a foundation wall under a framed wall, for example. Two parallel planes have no line of intersection, so the program cannot join them by itself and invents nothing: each pair is your ruling. Click a row to light the walls in the views.
@@ -311,8 +319,12 @@ EnergyPlus runs a zone that is not enclosed, with a warning; the QA shows where 
 - Gaps that come from walls are corrected in the **wall QA** (Extend to Surface).
 - A **?** beside a space's name in LEVELS · SPACES asks where an attic's insulation is; right-click it to answer.
 
+The **Attic** zones: over each room whose ceiling has a roof or floor above it, the program builds the column from the top of the ceiling to that plane, carved like a room. A cathedral ceiling that lies under its roof takes the roof as its ceiling, and gets no attic.
+
 ## BIM › corrections
-Your corrections to the file: placement choices, edits to elements and spaces, glazing and void rulings. A ⚠ marks a correction that failed.
+The corrections ledger: every ruling and hand edit made on this file, in order — storey alignment rulings, wall and space extensions, glazing and void rulings. They are kept with the file in the project store, keyed to the IFC's content, and applied again every time it is opened, so a wall extended by hand stays extended. A ⚠ marks a correction that failed.
+
+**Restore** puts one correction back to the file as authored; the geometry rebuilds from that point.
 
 ## SITE › location
 The site's latitude, longitude and elevation from the IfcSite, or the position you located on the map.

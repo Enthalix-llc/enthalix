@@ -365,7 +365,7 @@ function NameBox(q: { name: string; base: string; disabled: boolean; placeholder
 
 export function ConstructionDetail(p: DetailInput): React.ReactElement {
   const r = p.row;
-  if (!r) return <div className="detailBox"><div className="idfInfo">select a type — a row in the column or in the table below — to see its assembly</div></div>;
+  if (!r) return <div className="detailBox"><div className="idfInfo" title="a row in the column or in the table below">select a type to see its assembly</div></div>;
   const imperial = p.imperial;
   const film = r.kind === "roof" || r.kind === "ceiling" ? FILMS.ceiling : r.kind === "floor" ? FILMS.floor : FILMS.wall;
   const govern = p.resolved ? { label: p.resolved.label, u: p.resolved.uWm2k, source: p.resolved.source } : p.code ? { label: p.code.name, u: p.code.uWm2k, source: "code-default" as const } : null;

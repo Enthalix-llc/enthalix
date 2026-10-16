@@ -277,13 +277,10 @@ export function BemSite(p: BemSiteProps): React.ReactElement {
             if (vals.length === 12 && vals.every((x) => Number.isFinite(x))) set("groundTemp", { values: vals });
           }} />
         )}
-        <div className={`monthStrip ${srcClass(groundStaged.src)}`} title={groundDiffers ? `staged: ${groundStaged.word} — Apply to move the model` : setting("ground_temp_from")?.value}>
+        <div className={`monthStrip ${srcClass(groundStaged.src)}`} title={`${groundDiffers ? `staged: ${groundStaged.word} — Apply to move the model` : setting("ground_temp_from")?.value ?? ""}\na ground heat exchanger card writes its own ground model (Kusuda-Achenbach) from the same three parameters — the annual mean, the amplitude and the phase`}>
           {groundStaged.vals.map((v, i) => <span key={i}><i>{MONTHS[i]}</i>{p.imperial ? (v * 9 / 5 + 32).toFixed(0) : v.toFixed(1)}</span>)}
         </div>
         {groundDiffers && <div className="idfInfo" title={setting("ground_temp_from")?.value}>applied in the model: <span className={srcClass(src("ground_temp_c"))}>{tempStrip(groundNow)}</span> — Apply to move it</div>}
-        <div className="idfInfo" title="Site:GroundTemperature:Undisturbed:KusudaAchenbach — the ground model a ground heat exchanger card writes; its fields are the same three parameters this estimate runs on">
-          the borefield's ground model takes the same three parameters — the annual mean, the amplitude and the phase; the exchanger card states the engine example's 13.4 °C · 3.2 K · day 8 today{groundInputs ? `, where this file reads ${fmtTemp(groundInputs.tavgC, p.imperial)} · ${p.imperial ? `${(groundInputs.tampC * 1.8).toFixed(1)} °F` : `${groundInputs.tampC.toFixed(1)} K`} · day ${GEOKISS.dayToMin}` : ""} — a separate derivation, flagged for the settings slice
-        </div>
       </Fold>
 
       <Fold id="solar" store={STORE} head="solar studies — the view" summary={p.solar ? "on — the terrain, the shading elements and the sun" : "off — the model alone"}>

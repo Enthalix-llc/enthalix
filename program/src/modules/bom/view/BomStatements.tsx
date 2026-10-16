@@ -76,7 +76,7 @@ export function BomStatements({ led, format, busy, onChange, onFormat }: { led: 
         <button className="qaBtn" onClick={onFormat} title="what a bill holds: its usage rows, its charge groups and lines, how each is figured and what carries to the next month">bill format…</button>
         <span className="muted">{format.utility}</span>
       </div>
-      {bills.length === 0 && <div className="idfInfo">no bills yet — "+ a bill" and type the first from paper, the meter number and the period first</div>}
+      {bills.length === 0 && <div className="idfInfo" title={`"+ a bill" and type the first from paper — the meter number and the period first`}>no bills yet</div>}
       {bills.map((s) => {
         const t = statementTotal(s), c = checkStated(s), d = statementDays(s), on = open === s.id;
         const flag = t.open ? `${t.open} line${t.open === 1 ? "" : "s"} open` : c.ok === null ? "" : c.ok ? "✓" : `✗ ${c.diff > 0 ? "+" : ""}${c.diff.toFixed(2)}`;
