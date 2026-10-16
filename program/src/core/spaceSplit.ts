@@ -69,6 +69,8 @@ export interface SpaceVolume {
   name: string;
   colorIndex: number;
   faces: Array<{ n: V3; outer: V3[] }>;
+  /** built by the program (an attic or floor void): its faces point out by construction, so their normals are read as they are */
+  built?: boolean;
 }
 
 export interface SplitReport {
@@ -264,6 +266,46 @@ function reclean(out: IdfFaceOut[], touched: Set<IdfFaceOut>): { out: IdfFaceOut
   return { out: res, split };
 }
 
+/** whether a point in a face's plane lies inside its outer ring (the plane projected on its two widest axes) */
+function inPolygon(p: V3, f: { n: V3; outer: V3[] }): boolean {
+  const ax = [0, 1, 2].reduce((b, k) => (Math.abs(f.n[k]!) > Math.abs(f.n[b]!) ? k : b), 0);
+  const [i, j] = ax === 0 ? [1, 2] : ax === 1 ? [0, 2] : [0, 1];
+  let inside = false;
+  const o = f.outer;
+  for (let a = 0, b = o.length - 1; a < o.length; b = a++) {
+    const yi = o[a]![j]!, yj = o[b]![j]!, xi = o[a]![i]!, xj = o[b]![i]!;
+    if ((yi > p[j]!) !== (yj > p[j]!) && p[i]! < ((xj - xi) * (p[j]! - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+/** whether a point is inside a closed solid given as polygon faces: a ray, skewed off every axis, counted across the faces */
+function insideSolid(p: V3, faces: Array<{ n: V3; outer: V3[] }>): boolean {
+  const dir: V3 = [1, 0.00137, 0.00071];
+  let hits = 0;
+  for (const f of faces) {
+    const den = dot(f.n, dir);
+    if (Math.abs(den) < 1e-9) continue;
+    const t = (dot(f.n, f.outer[0]!) - dot(f.n, p)) / den;
+    if (t <= 1e-9) continue;
+    if (inPolygon([p[0] + dir[0] * t, p[1] + dir[1] * t, p[2] + dir[2] * t], f)) hits++;
+  }
+  return hits % 2 === 1;
+}
+/** a room's horizontal face: its top (the room below it) or its bottom (the room above it), asked of the room's own solid 1 cm off
+ *  each side at every fan triangle's centre that lies in the face — a vote, so one probe near a thin edge (an attic where its roof
+ *  meets the ceiling) cannot decide it; null when the solid does not answer (an open or self-touching solid) */
+function topOrBottom(sf: { n: V3; outer: V3[] }, faces: Array<{ n: V3; outer: V3[] }>): boolean | null {
+  const o = sf.outer;
+  let top = 0, bottom = 0;
+  for (let i = 1; i + 1 < o.length && top + bottom < 12; i++) {
+    const c: V3 = [(o[0]![0] + o[i]![0] + o[i + 1]![0]) / 3, (o[0]![1] + o[i]![1] + o[i + 1]![1]) / 3, (o[0]![2] + o[i]![2] + o[i + 1]![2]) / 3];
+    if (!inPolygon(c, sf)) continue;
+    const below = insideSolid([c[0], c[1] - 0.01, c[2]], faces), above = insideSolid([c[0], c[1] + 0.01, c[2]], faces);
+    if (below && !above) top++; else if (above && !below) bottom++;
+  }
+  return top > bottom ? true : bottom > top ? false : null;
+}
+
 export function splitBySpace(
   faces: IdfFaceOut[],
   spaces: SpaceVolume[],
@@ -319,13 +361,13 @@ export function splitBySpace(
   /** a room's horizontal face → whether it is the room's top (by where it is, not its normal) */
   const topOf = new Map<object, boolean>();
   for (const sp of spaces) {
-  // the room's mid-height: a horizontal face above it is the room's top, below it its bottom — read from where the face IS, never
-  // from its normal, which a file may wind either way (the sample's hallways)
-  const ys = sp.faces.flatMap((f) => f.outer.map((q) => q[1]));
-  const yMid = ys.length ? (Math.min(...ys) + Math.max(...ys)) / 2 : 0;
   for (const sf of sp.faces) {
     if (Math.abs(sf.n[1]) < 0.5) continue;
-    const isTop = sf.outer.reduce((t, q) => t + q[1], 0) / sf.outer.length > yMid;
+    // TOP OR BOTTOM, read from the room itself (2026-10-16): a point just above the face and one just below, each asked whether it
+    // is inside the room's solid — never the face's normal, which a file may wind either way (the sample's hallways), nor a height
+    // against the room's middle, which a sloped attic roof or a room with a tall part defeats (measured on the house: Great, attics)
+    const side = sp.built ? null : topOrBottom(sf, sp.faces);
+    const isTop = side ?? sf.n[1] > 0;
     topOf.set(sf, isTop);
     // A SLOPED ceiling finish is cathedral: the room's ceiling is its roof
     // (the user's rule), so the finish is not a plane a room may claim —

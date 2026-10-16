@@ -1227,7 +1227,7 @@ export function App(): React.ReactElement {
     })), rooms.map((r) => r.name));
     setAttics(atticRep);
     atticsRef.current = atticRep;
-    const split2 = splitBySpace(hand.out, [...rooms, ...atticRep.attics.map((a) => ({ name: a.name, colorIndex: a.colorIndex, faces: a.faces }))]);
+    const split2 = splitBySpace(hand.out, [...rooms, ...atticRep.attics.map((a) => ({ name: a.name, colorIndex: a.colorIndex, faces: a.faces, built: true }))]);
     // the user's zone rulings: merges, relabeled after the carve
     const ruled = applyZoneRulings(split2.out, zonesRef.current);
     const split = { out: ruled.out, report: split2.report };
