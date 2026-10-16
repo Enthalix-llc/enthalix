@@ -49,7 +49,12 @@ export function AssemblyBench(p: { catalogue: Catalogue | null; shelves?: string
   fromCat.sort((a, b) => (order[a.tier ?? "component"] - order[b.tier ?? "component"]) || a.label.localeCompare(b.label));
   // the attachments (coils and the availability schedule dropped ONTO a card) have no class of their own; they stay as they were
   const attachments = PALETTE.filter((it) => it.group === group && it.attach);
-  const items = [...fromCat, ...(custom && !p.shelves ? attachments : [])];
+  // THE ZONE CARD (user, 2026-10-16: "they are not offered in the frame below the mechanical systems view, so how can they be
+  // assembled?"): not an engine component, so the catalogue has none — the sheet's own Zone, on ZONE EQUIPMENT whatever tiers are shown,
+  // right after Ideal loads (the shelf's first item, the user's ruling)
+  const zoneTile = !p.shelves && group === "ZONE EQUIPMENT" ? PALETTE.filter((it) => it.node === "zone") : [];
+  const nIdeal = fromCat.filter((it) => it.tier === "ideal").length;
+  const items = [...fromCat.slice(0, nIdeal), ...zoneTile, ...fromCat.slice(nIdeal), ...(custom && !p.shelves ? attachments : [])];
 
   return (
     <div className="asmBench">
@@ -71,7 +76,7 @@ export function AssemblyBench(p: { catalogue: Catalogue | null; shelves?: string
         </div>
         <div className="asmTiles">
           {items.map((it) => (
-            <div key={it.id} className={`asmTile tier-${it.attach ? "attach" : it.tier ?? "component"}`} style={{ borderColor: GROUP_COLOR[it.group] ?? "#d4a017" }}
+            <div key={it.id} className={`asmTile tier-${it.attach ? "attach" : it.node === "zone" ? "zone" : it.tier ?? "component"}`} style={{ borderColor: GROUP_COLOR[it.group] ?? "#d4a017" }}
               onPointerDown={(e) => startPaletteDrag({ item: it }, it.label, e)} title={it.sub}>
               <div className="asmTileLabel">{it.label}</div>
             </div>

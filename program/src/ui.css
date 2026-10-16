@@ -98,6 +98,7 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
 .viewTabs button:hover { color: #9aa5b8; }
 .viewTabs button.on { color: var(--sel); border-bottom-color: var(--sel); }
 .viewTabs button.farRight { margin-left: auto; }
+.asmTile.tier-zone { border-style: dashed; border-width: 1px 1px 1px 3px; }
 .asmKindTag { font: 700 9px/1 ui-monospace, monospace; letter-spacing: 0.08em; opacity: 0.85; margin-bottom: 2px; }
 .viewTabs .viewTools + button.farRight { margin-left: 8px; }
 .panes > [hidden], .inspector section[hidden] { display: none; }
