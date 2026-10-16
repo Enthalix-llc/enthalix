@@ -179,7 +179,7 @@ export interface AssemblyProps {
   asm: Assembly; assign: ZoneAssign;
   onChange: (a: Assembly, assign?: ZoneAssign) => void;
   sel: string | null; onSel: (id: string | null) => void;
-  compiled: Pick<CompiledAssembly, "refusals" | "cautions">;
+  compiled: Pick<CompiledAssembly, "refusals" | "cautions"> & Partial<Pick<CompiledAssembly, "zones">>;
   /** THE ELECTRICAL SHEET (2026-10-02) is this canvas with its own cards: no rooms dropped onto it, no MECHANICAL kinds in a card's
    *  "change to" list, its own words on an empty sheet */
   rooms?: boolean; paletteKinds?: boolean; emptyText?: React.ReactNode;
@@ -207,6 +207,9 @@ function Canvas(p: AssemblyProps): React.ReactElement {
     return e?.tag && !base.includes(e.tag) ? `${base} · ${e.tag}` : base;
   };
   const sub = (n: AsmNode): string => classOf(n);
+  // WHAT A CARD SERVES (2026-10-16): the ZONES tab's assignment AND every Zone card joined to it by Loc — the line drawn is a serving
+  // too ("Ideal loads" serving two Zone cards read "serves —")
+  const servedBy = (id: string): string[] => [...new Set([...zonesOf(p.assign, id), ...(p.compiled.zones ?? []).filter((z) => z.fedBy === id).map((z) => z.name)])];
   const refusedOf = useMemo(() => { const m = new Map<string, string[]>(); for (const r of p.compiled.refusals) (m.get(r.node) ?? m.set(r.node, []).get(r.node)!).push(r.text); return m; }, [p.compiled]);
   const cautionsOf = useMemo(() => { const m = new Map<string, string[]>(); for (const r of p.compiled.cautions) (m.get(r.node) ?? m.set(r.node, []).get(r.node)!).push(r.text); return m; }, [p.compiled]);
   const [tip, setTip] = useState<{ x: number; y: number; above: number | null; head: string; lines: TipLine[] } | null>(null);
@@ -236,7 +239,7 @@ function Canvas(p: AssemblyProps): React.ReactElement {
   const onThermostat = useCallback((id: string) => { const q = pRef.current; q.onChange(toggleThermostat(q.asm, id)); q.onSel(id); }, []);
   const toFlow = useCallback((a: Assembly, selected: string | null): AsmFlowNode[] => a.nodes.map((n) => ({
     id: n.id, type: "asm" as const, position: { x: n.x, y: n.y }, selected: n.id === selected,
-    data: { node: n, label: label(n), sub: sub(n), refused: refusedOf.get(n.id) ?? [], cautions: cautionsOf.get(n.id) ?? [], notWritten: p.notWritten?.get(n.id) ?? [], qa: p.qa?.get(n.id) ?? [], zones: zonesOf(p.assign, n.id), rooms: n.rooms ?? [], onRoomOut, onToggle, onThermostat },
+    data: { node: n, label: label(n), sub: sub(n), refused: refusedOf.get(n.id) ?? [], cautions: cautionsOf.get(n.id) ?? [], notWritten: p.notWritten?.get(n.id) ?? [], qa: p.qa?.get(n.id) ?? [], zones: servedBy(n.id), rooms: n.rooms ?? [], onRoomOut, onToggle, onThermostat },
   })), [refusedOf, cautionsOf, p.qa, p.notWritten, p.assign, onRoomOut, onToggle, onThermostat]);   // eslint-disable-line react-hooks/exhaustive-deps
   const [nodes, setNodes] = useState<AsmFlowNode[]>(() => toFlow(p.asm, p.sel));
   const dragging = useRef(false);

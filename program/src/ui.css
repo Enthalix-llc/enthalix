@@ -699,8 +699,9 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .asmBench { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 8px; }
 /* six headers need more height than the shelf has, and a scrollbar in a 19 px column ate the labels (measured
    2026-09-11: the buttons went to 10 px and the vertical text vanished) — it scrolls without a gutter instead */
-.asmRail { overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
-.asmRail::-webkit-scrollbar { width: 0; height: 0; }
+/* the shelves' rail and the shelf SCROLL, the bar shown (user, 2026-10-16: "need a scroll bar to access all card groups") */
+.asmRail { overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-gutter: stable; width: 32px; box-sizing: border-box; }
+.asmRail .asmRailBtn { width: 18px; }
 .sysSettings { display: flex; flex-direction: column; gap: 4px; padding: 4px 0 2px; }
 .sysSettings .asmPills .asmPill { background: #1b2130; color: var(--text); border-color: #33405a; }
 .sysSettings .asmPill .chip { padding: 0 4px; line-height: 1.2; }

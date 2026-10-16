@@ -428,7 +428,8 @@ function NodeSettings({ node: n, p }: { node: AsmNode; p: SettingsProps }): Reac
   for (const a of n.attached ?? []) { const t = a.startsWith("coil-heat") ? ["heating_coil_type", "supplemental_heating_coil_type", "baseboard_heating_type"] : a.startsWith("coil-cool") ? ["cooling_coil_type"] : ["heat_recovery_type"]; for (const k of t) attachedKeys.add(k); }
   const nbrs = p.asm.edges.filter((e) => e.from === n.id || e.to === n.id).map((e) => p.asm.nodes.find((x) => x.id === (e.from === n.id ? e.to : e.from))).filter((x): x is AsmNode => !!x);
   // an air loop serves through its terminals; a terminal names its air loop
-  const zones = isAirLoop(n.kind) ? [...new Set(nbrs.filter((x) => x.kind === "terminal").flatMap((x) => zonesOf(p.assign, x.id)))] : zonesOf(p.assign, n.id);
+  const zones = isAirLoop(n.kind) ? [...new Set(nbrs.filter((x) => x.kind === "terminal").flatMap((x) => zonesOf(p.assign, x.id)))]
+    : [...new Set([...zonesOf(p.assign, n.id), ...p.compiled.zones.filter((z) => z.fedBy === n.id).map((z) => z.name)])];   // a Zone card joined by Loc is served too
   const airLoop = n.kind === "terminal" ? nbrs.find((x) => isAirLoop(x.kind)) ?? null : null;
   const loopsOn = nbrs.filter((x) => isLoop(x.kind));
   const cfaByCells = p.input ? p.input.faces.filter((f) => f.category === "floor" && ((f.space && p.conditioned.includes(f.space)) || (f.spaceFacing && p.conditioned.includes(f.spaceFacing)))).reduce((t, f) => t + f.areaM2, 0) : 0;
