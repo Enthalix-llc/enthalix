@@ -116,6 +116,8 @@ export interface CollapseCensus {
   wallSideByEnvelope: number;
   pairs: number;
   unpaired: number;
+  /** pairs where the file wound one face backwards, turned to face apart */
+  flipped: number;
   droppedEdgeAreaM2: number;   // edge bands, dropped by design
 }
 
@@ -169,6 +171,7 @@ export function collapse(
     wallSideByEnvelope: 0,
     pairs: 0,
     unpaired: 0,
+    flipped: 0,
     droppedEdgeAreaM2: 0,
   };
   const out: IdfFaceOut[] = [];
@@ -337,13 +340,26 @@ export function collapse(
       let bestGap = Infinity;
       for (const cand of glist) {
         if (cand === A || cand.used) continue;
-        if (dot(A.n, cand.n) > -0.99) continue;
+        // the partner faces the other way — or, where the file wound one face backwards (a mirrored solid: both faces of a ceiling
+        // pointing down, 2026-10-16), the same way at a real distance; the pair is then turned to face apart below
+        const c = dot(A.n, cand.n);
+        if (c > -0.99 && c < 0.99) continue;
         const gap = Math.abs(dot(A.n, cand.center) - A.d);
+        if (c >= 0.99 && gap < 0.003) continue;
         if (gap < bestGap && gap <= 1.0 && cand.area >= 0.25 * A.area) { bestGap = gap; B = cand; }
       }
       if (B) {
         A.used = true; B.used = true;
         census.pairs++;
+        // A FACE WOUND BACKWARDS, turned: each of the pair faces away from the other (its normal and its ring reversed)
+        const apart = (g: Grp, other: Grp): Grp => {
+          const away: V3 = [g.center[0] - other.center[0], g.center[1] - other.center[1], g.center[2] - other.center[2]];
+          if (dot(g.n, away) >= 0) return g;
+          census.flipped++;
+          const neg = (v: V3): V3 => [-v[0], -v[1], -v[2]];
+          return { ...g, n: neg(g.n), d: -g.d, faces: g.faces.map((f) => ({ ...f, n: neg(f.n), outer: [...f.outer].reverse(), holes: f.holes.map((h) => [...h].reverse()) })) };
+        };
+        if (dot(A.n, B.n) > 0) { const a2 = apart(A, B), b2 = apart(B, A); Object.assign(A, { n: a2.n, d: a2.d, faces: a2.faces }); Object.assign(B, { n: b2.n, d: b2.d, faces: b2.faces }); }
         // outer side — the most local fact that settles it. For a wall that is
         // a READ: the face a bounded room lies against is the INTERIOR face
         // (IfcRelSpaceBoundary's own model, and the same side the per-space
