@@ -48,6 +48,8 @@ type Ring2 = Array<[number, number]>;
 /** how far off a surface's plane a room's face may sit and still be its
  *  boundary: the thickest pair gap in the file, not a tuned distance */
 const SLAB_M = 0.65;
+/** how far behind a room's top or bottom face a plane may lie and still be claimed — a room drawn into a slab */
+const BEHIND_M = 0.1;
 const PARALLEL = 0.99;
 const MIN_AREA = 1e-3;      // 10 cm² — below this a sliver is clipper noise
 /** a poly whose effective width (2·area/perimeter) is under a centimetre is
@@ -314,8 +316,17 @@ export function splitBySpace(
   }));
   /** space face → (group key → the plan region it claims there) */
   const regionOf = new Map<object, Map<string, Ring2[][]>>();
-  for (const sp of spaces) for (const sf of sp.faces) {
+  /** a room's horizontal face → whether it is the room's top (by where it is, not its normal) */
+  const topOf = new Map<object, boolean>();
+  for (const sp of spaces) {
+  // the room's mid-height: a horizontal face above it is the room's top, below it its bottom — read from where the face IS, never
+  // from its normal, which a file may wind either way (the sample's hallways)
+  const ys = sp.faces.flatMap((f) => f.outer.map((q) => q[1]));
+  const yMid = ys.length ? (Math.min(...ys) + Math.max(...ys)) / 2 : 0;
+  for (const sf of sp.faces) {
     if (Math.abs(sf.n[1]) < 0.5) continue;
+    const isTop = sf.outer.reduce((t, q) => t + q[1], 0) / sf.outer.length > yMid;
+    topOf.set(sf, isTop);
     // A SLOPED ceiling finish is cathedral: the room's ceiling is its roof
     // (the user's rule), so the finish is not a plane a room may claim —
     // the claim passes through it to the roof. Conveying ceilings had let
@@ -326,9 +337,14 @@ export function splitBySpace(
       .filter((g) => (g.category === "floor" || g.category === "roof" || (g.category === "ceiling" && Math.abs(g.n[1]) >= 0.999)) &&
         Math.abs(dot(sf.n, g.n)) >= PARALLEL)
       .map((g) => ({ g, dist: Math.abs(dot(g.n, sf.outer[0]!) - g.dP) }))
+      // OUTWARD ONLY (2026-10-16): a room's top claims what is above it, its bottom what is below — a hallway drawn through its own
+      // ceiling up to the roof's underside took the ceiling 24 cm BELOW its top as the nearest plane, and the roof over it faced no
+      // room. A room drawn a little into a slab still claims it: 10 cm of reach behind the face
+      .filter((c) => { const p0 = sf.outer[0]!, yFace = p0[1], yPlane = (c.g.dP - c.g.n[0] * p0[0] - c.g.n[2] * p0[2]) / c.g.n[1];   /* the plane's height over the face's own point (a sloped roof too) */ return isTop ? yPlane >= yFace - BEHIND_M : yPlane <= yFace + BEHIND_M; })
       .filter((c) => c.dist <= SLAB_M)
       .sort((a, b) => a.dist - b.dist);
-    if (cands.length === 0) continue;
+    // nothing outward in reach: the face claims nothing — never the old either-way reach below
+    if (cands.length === 0) { regionOf.set(sf, new Map()); continue; }
     let remaining: Ring2[][] = [[sf.outer.map(planXZ)]];
     const per = new Map<string, Ring2[][]>();
     for (const c of cands) {
@@ -340,6 +356,7 @@ export function splitBySpace(
       try { remaining = polygonClipping.difference(remaining as never, hit as never) as Ring2[][]; } catch { break; }
     }
     regionOf.set(sf, per);
+  }
   }
 
   for (const [gkey, fs] of groups.entries()) {
@@ -376,7 +393,9 @@ export function splitBySpace(
           const lift = (q: [number, number]): [number, number] => to2([q[0], (dP - n[0] * q[0] - n[2] * q[1]) / n[1], q[1]]);
           for (const poly of mine) {
             const rings = poly.map((r) => r.map(lift));
-            (dot(sf.n, n) > 0 ? bRings : fRings).push(rings as Ring2[]);
+            // the room is BELOW its top face and ABOVE its bottom face — behind P when P's normal points away from it
+            const behind = topOf.has(sf) ? (topOf.get(sf) ? n[1] > 0 : n[1] < 0) : dot(sf.n, n) > 0;
+            (behind ? bRings : fRings).push(rings as Ring2[]);
           }
           continue;
         }
