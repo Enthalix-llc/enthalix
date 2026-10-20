@@ -295,6 +295,8 @@ Build the model, check it, run EnergyPlus, and read the results.
 
 The model the run uses is the one applied on the other tabs. **Run EnergyPlus** turns red when the results are out of date: no run yet, the last run failed, the model changed since, or something is staged and not applied.
 
+On a computer without a graphics card (a virtual machine, a remote desktop, a build server), EnergyPlus cannot cast shadows by PixelCounting and uses polygon clipping instead. The RUN column then says so: non-convex surfaces cast no shadow and are reported as Severe errors, and the year's results differ slightly from a run on a computer with a graphics card.
+
 When something stands in the way of the run (a change staged and not applied, the energy code's values incomplete, no envelope, no EnergyPlus), clicking **Run EnergyPlus** opens a box that names each reason, with a button to the tab where it is resolved. The box stays open while you work and closes by itself once nothing is left in the way.
 
 ## OPERATIONS

@@ -56,6 +56,8 @@ export function BemRun(p: BemRunProps): React.ReactElement {
   const area = b?.facility.conditionedAreaM2 ?? 0;
   const perM2 = (kwh: number): string => (area > 0 ? ` (${fmtEnergyArea(kwh, area, p.imperial)})` : "");
   const stale = !!(b && m && b.run.modelSha256 && b.run.modelSha256 !== m.modelSha);
+  // the Severe "is a casting surface and is non-convex" lines: what polygon clipping could not use (2026-10-20)
+  const noShadow = (b?.err.groups ?? []).filter((g) => g.kind === "Severe" && /casting surface and is non-convex/.test(g.key)).reduce((n, g) => n + g.count, 0);
   const needs = [!b ? "no run yet" : null, b && (!b.run.completed || b.run.fatal > 0) ? "the last run did not complete" : null, stale ? "the model has changed since the last run" : null, p.stagedNote ? "rulings staged on a tab are not applied — Apply them, then Run" : null].filter((x): x is string => !!x);
   const bc = (k: string): number => m ? m.surfaces.filter((s) => s.bc === k).length : 0;
   const eu = b ? endUseTable(b.endUses) : null;
@@ -132,6 +134,11 @@ export function BemRun(p: BemRunProps): React.ReactElement {
             {b.run.completed ? "completed" : "did not complete"} · Fatal {b.run.fatal} · Severe {b.run.severe} · Warning {b.run.warning} · {b.run.seconds.toFixed(0)} s
           </span>} />
         )}
+        {/* NO GRAPHICS CARD (2026-10-20, the CI runners, a virtual machine, a remote desktop): EnergyPlus said "No GPU found (required for
+            PixelCounting)" and cast the shadows by polygon clipping instead — said here, never left to the run log */}
+        {b?.err.noGpuShadows && <div className="idfInfo bad" title="SITE › simulation › shadows asks for PixelCounting, which needs a graphics card (OpenGL). Without one EnergyPlus uses polygon clipping, which cannot use a non-convex surface to cast shadows and reports each as a Severe error; the year's heating and cooling come out a little different from a run on a computer with a graphics card">
+          no graphics card: EnergyPlus cast the shadows by polygon clipping, not PixelCounting{noShadow ? ` — ${noShadow} non-convex surface${noShadow === 1 ? "" : "s"} cast no shadow (Severe)` : ""}; results differ slightly from a computer with one
+        </div>}
         {b && <button className={`qaBtn${p.isOpen("bem-run") ? " on" : ""}`} onClick={() => p.onDock("bem-run")}>run log</button>}
       </Fold>
       <Fold id="energy" store={STORE} head="results — annual, by fuel" summary={b ? `heating ${k0(b.facility.heatingKwh)} · cooling ${k0(b.facility.coolingKwh)} kWh${perRun(b.hourly)}${eu && eu.fuels.includes("Electricity") ? ` · electricity ${k0(eu.fuelTotal("Electricity"))} kWh` : ""}${stale ? " · from an earlier model" : ""}` : "no run yet"}>

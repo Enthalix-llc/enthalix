@@ -25,6 +25,8 @@ export interface ErrSummary {
   nonPlanar: number;
   vertexOrdering: number;
   nonConvex: number;
+  /** "No GPU found (required for PixelCounting)": the engine had no graphics card and cast the shadows by polygon clipping (2026-10-20) */
+  noGpuShadows: boolean;
   tail: string;
 }
 
@@ -52,6 +54,7 @@ export function parseErr(text: string): ErrSummary {
     severe: msgs.filter((m) => m.kind === "Severe").length,
     warning: msgs.filter((m) => m.kind === "Warning").length,
     completed: /Completed Successfully/.test(text),
+    noGpuShadows: /No GPU found/i.test(text),
     groups: [...groups.values()].sort((a, b) => (a.kind === b.kind ? b.count - a.count : a.kind < b.kind ? -1 : 1)),
     notEnclosed: count(/not fully enclosed/),
     areaMismatch: count(/InterZone Surface Areas do not match/),
