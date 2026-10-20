@@ -39,7 +39,8 @@ else note("Electron", "its binary is not downloaded yet — Electron fetches it 
 try {
   const { listEngines } = require(path.join(program, "electron", "engineLocate.cjs"));
   const engines = listEngines();
-  if (!engines.length) need("EnergyPlus", "no installation found (looked in /Applications, /usr/local/bin, /opt/homebrew/bin and $ENERGYPLUS)",
+  const looked = { darwin: "/Applications, /usr/local/bin, /opt/homebrew/bin", win32: "C:\\EnergyPlusV* and Program Files", linux: "/usr/local/EnergyPlus-*, /opt/EnergyPlus-*, /usr/local/bin, /usr/bin" }[process.platform] ?? "the usual folders";
+  if (!engines.length) need("EnergyPlus", `no installation found (looked in ${looked} and $ENERGYPLUS)`,
     `install EnergyPlus ${TESTED_ENERGYPLUS} from https://github.com/NatLabRockies/EnergyPlus/releases (or set ENERGYPLUS to its program)`);
   else {
     const e = engines[0];
@@ -56,12 +57,14 @@ if (epws.length) ok("weather", `${epws.length} file${epws.length === 1 ? "" : "s
 else note("weather", "no file in Weather/ yet — the app opens on a placeholder (Golden, CO, from EnergyPlus's own WeatherData)",
   "pick your site's file on the map in BEM › SITE (EnergyPlus's weather repository, https://energyplus.net/weather), or put a .epw with its .ddy in Weather/");
 
-// 4. The energy code — the user's own tables
+// 4. The energy code — the DOE/PNNL prototype values ship with the program (2026-10-15); the user's own tables, where present, come first
 const codes = path.join(repo, "data", "energy-codes");
 const eds = csvRows(path.join(codes, "editions.csv")), vals = csvRows(path.join(codes, "values.csv"));
-if (eds && vals) ok("energy code", `${eds} edition${eds === 1 ? "" : "s"}, ${vals} value${vals === 1 ? "" : "s"} in data/energy-codes/`);
+const shipped = csvRows(path.join(program, "src", "modules", "bem", "reference", "pnnl-values.csv"));
+if (eds && vals) ok("energy code", `${eds} edition${eds === 1 ? "" : "s"}, ${vals} value${vals === 1 ? "" : "s"} of your own in data/energy-codes/, before the shipped DOE/PNNL values`);
+else if (shipped) ok("energy code", `the DOE/PNNL prototype values for IECC 2006–2024 ship with the program (${shipped} values); enter your own code's in BEM › SITE › energy code › Choose… › Edit values…`);
 else need("energy code", "no code values on record — the model is not written without them",
-  "copy references/energy-codes/*.csv to data/energy-codes/ and enter your code's values (references/energy-codes/README.md); the IECC is free to read at https://codes.iccsafe.org/");
+  "enter your code's values in BEM › SITE › energy code › Choose… › Edit values… (references/energy-codes/README.md)");
 
 // 5. The tariff — optional, for costs
 const tariff = path.join(repo, "data", "tariffs", "tariff.json");
@@ -70,12 +73,13 @@ if (fs.existsSync(tariff)) {
   try { inForce = (JSON.parse(fs.readFileSync(tariff, "utf8")).cards ?? []).filter((c) => c.status === "in force").length; } catch { /* reported below */ }
   if (inForce) ok("tariff", `${inForce} card${inForce === 1 ? "" : "s"} in force in data/tariffs/tariff.json`);
   else note("tariff", "data/tariffs/tariff.json has no card marked \"in force\"", "references/tariffs/README.md");
-} else note("tariff", "none — runs report energy only, without costs (optional)", "references/tariffs/README.md");
+} else note("tariff", "none of your own — the shipped Sample residential card prices the run until you apply your utility's (BOM › tariff › Search…)", "references/tariffs/README.md");
 
 // 6. A building
 const ifcDir = path.join(repo, "references", "ifc");
 const ifcs = fs.existsSync(ifcDir) ? fs.readdirSync(ifcDir).filter((f) => /\.ifc$/i.test(f)) : [];
 if (ifcs.length) ok("building", `${ifcs.length} IFC file${ifcs.length === 1 ? "" : "s"} in references/ifc/`);
+else if (fs.existsSync(path.join(repo, "samples", "Duplex_A_20110907.ifc"))) ok("building", "the sample samples/Duplex_A_20110907.ifc — open it, or any IFC, from BIM › Open IFC…");
 else note("building", "no IFC file in references/ifc/ — open any IFC from the app (BIM › Open IFC…)", "a sample building: see SETUP.md");
 
 // 7. Terms to know before paid work

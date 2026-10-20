@@ -1,0 +1,107 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Enthalix LLC
+#
+# Every push and pull request, on macOS, Windows and Linux: typecheck, build, install EnergyPlus 26.1, build the app,
+# run the Duplex sample through it (scripts/smoke.mjs), then build the installer. The installers and the smoke results
+# are kept as the run's artifacts; nothing is published.
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  EP_VERSION: 26.1.0
+  EP_BUILD: 6f2e40d102
+  CSC_IDENTITY_AUTO_DISCOVERY: "false"   # unsigned builds: never sign with a certificate the runner happens to hold
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            ep: Darwin-macOS13-arm64.tar.gz
+          - os: windows-latest
+            ep: Windows-x86_64.zip
+          - os: ubuntu-24.04
+            ep: Linux-Ubuntu24.04-x86_64.tar.gz
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: program
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: The sample is the published file, byte for byte
+        working-directory: .
+        run: |
+          want=$(sed -n 's/.*SHA-256:\*\*[[:space:]]*`\([0-9a-f]\{64\}\)`.*/\1/p' samples/README.md)
+          if command -v sha256sum > /dev/null; then got=$(sha256sum samples/Duplex_A_20110907.ifc | cut -d' ' -f1)
+          else got=$(shasum -a 256 samples/Duplex_A_20110907.ifc | cut -d' ' -f1); fi
+          echo "published $want"; echo "checkout  $got"
+          test "$want" = "$got"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: program/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm build
+
+      - name: Install EnergyPlus ${{ env.EP_VERSION }}
+        run: |
+          name="EnergyPlus-${EP_VERSION}-${EP_BUILD}-${{ matrix.ep }}"
+          url="https://github.com/NatLabRockies/EnergyPlus/releases/download/v${EP_VERSION}/${name}"
+          cd "$RUNNER_TEMP"
+          curl -fsSL -o "$name" "$url"
+          case "$name" in
+            *.zip) 7z x -y -o"$RUNNER_TEMP/ep" "$name" > /dev/null ;;
+            *) mkdir -p "$RUNNER_TEMP/ep" && tar -xzf "$name" -C "$RUNNER_TEMP/ep" ;;
+          esac
+          exe=$(find "$RUNNER_TEMP/ep" -maxdepth 3 -type f \( -name energyplus -o -name energyplus.exe \) | head -1)
+          test -n "$exe"
+          "$exe" --version
+          if [ "$RUNNER_OS" = "Windows" ]; then exe=$(cygpath -w "$exe"); fi   # Node needs the Windows form
+          echo "ENERGYPLUS=$exe" >> "$GITHUB_ENV"
+
+      - run: pnpm setup:check
+
+      - name: Build the app (unpacked)
+        run: ./node_modules/.bin/electron-builder --dir --publish never
+
+      - name: Linux display for the smoke run
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Smoke run — the Duplex through the built app
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then xvfb-run -a node scripts/smoke.mjs --out smoke-result.json
+          else node scripts/smoke.mjs --out smoke-result.json; fi
+
+      - name: Build the installer
+        run: ./node_modules/.bin/electron-builder --publish never
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: enthalix-${{ runner.os }}
+          path: |
+            program/smoke-result.json
+            release/*.dmg
+            release/*.exe
+            release/*.AppImage
+            release/*.deb
+          if-no-files-found: warn

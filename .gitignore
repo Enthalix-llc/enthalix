@@ -12,3 +12,4 @@ references/ifc/*.ifc
 *.log
 .DS_Store
 EnergyPlus/
+program/smoke-result.json

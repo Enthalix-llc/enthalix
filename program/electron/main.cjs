@@ -405,8 +405,10 @@ const runDir = (stamp) => within(path.join("bem", "runs", stamp));
 ipcMain.handle("bem:run", async (ev, opts) => {
   const exe = opts.exe || findEnergyPlus();
   if (!exe) return { exitCode: null, seconds: 0, dir: null, error: "no energyplus found" };
-  const dir = runDir(opts.stamp);
-  fs.mkdirSync(dir, { recursive: true });
+  fs.mkdirSync(runDir(opts.stamp), { recursive: true });
+  // the folder by its REAL path (2026-10-20): reached through a link (macOS /var → /private/var, a Windows junction) EnergyPlus takes its
+  // input folder and its output folder for two places, links in.idf into the second and stops on "create_symlink: File exists"
+  const dir = fs.realpathSync(runDir(opts.stamp));
   const idfPath = path.join(dir, "in.idf");
   fs.writeFileSync(idfPath, opts.idf);
   const args = [...(opts.expand ? ["-x"] : []), ...(opts.epw ? ["-w", opts.epw] : ["-D"]), "-d", dir, idfPath];
@@ -459,8 +461,8 @@ ipcMain.handle("bem:report-out", async (_ev, stamp, mode, title) => {
 ipcMain.handle("bem:validate", async (_ev, idf) => {
   const exe = findEnergyPlus();
   if (!exe) return { ok: false, err: "no energyplus found" };
-  const dir = within(path.join("bem", "validate"));
-  fs.mkdirSync(dir, { recursive: true });
+  fs.mkdirSync(within(path.join("bem", "validate")), { recursive: true });
+  const dir = fs.realpathSync(within(path.join("bem", "validate")));   // its real path, as for a run
   const idfPath = path.join(dir, "in.idf");
   fs.writeFileSync(idfPath, idf);
   const sa = engines.spawnArgs(exe, ["--convert-only", "-d", dir, idfPath]);
