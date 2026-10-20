@@ -71,7 +71,7 @@ jobs:
             *.zip) 7z x -y -o"$RUNNER_TEMP/ep" "$name" > /dev/null ;;
             *) mkdir -p "$RUNNER_TEMP/ep" && tar -xzf "$name" -C "$RUNNER_TEMP/ep" ;;
           esac
-          exe=$(find "$RUNNER_TEMP/ep" -maxdepth 3 -type f \( -name energyplus -o -name energyplus.exe \) | head -1)
+          exe=$(find "$RUNNER_TEMP/ep" -maxdepth 3 \( -type f -o -type l \) \( -name energyplus -o -name energyplus.exe \) | head -1)   # a link on macOS and Linux
           test -n "$exe"
           "$exe" --version
           if [ "$RUNNER_OS" = "Windows" ]; then exe=$(cygpath -w "$exe"); fi   # Node needs the Windows form
@@ -100,6 +100,7 @@ jobs:
           name: enthalix-${{ runner.os }}
           path: |
             program/smoke-result.json
+            program/smoke-eplusout.err
             release/*.dmg
             release/*.exe
             release/*.AppImage

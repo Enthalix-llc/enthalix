@@ -125,6 +125,15 @@ async function main() {
     Object.assign(result, r);
     const m = /EnergyPlus completed · Fatal (\d+) · Severe (\d+) · Warning (\d+) · heating (\d+) · cooling (\d+) kWh/.exec(r?.status ?? "");
     if (m) Object.assign(result, { fatal: +m[1], severe: +m[2], warning: +m[3], heatingKwh: +m[4], coolingKwh: +m[5] });
+    // the engine's own report, kept beside the result: its Severe lines, and whether its shadows fell back from the graphics card
+    const runs = path.join(home, "data", "bem", "runs");
+    let errText = "";
+    try { const last = fs.readdirSync(runs).sort().pop(); errText = fs.readFileSync(path.join(runs, last, "eplusout.err"), "utf8"); } catch { /* no run folder */ }
+    if (errText) {
+      fs.writeFileSync(path.join(path.dirname(out), "smoke-eplusout.err"), errText);
+      result.severeLines = errText.split(/\r?\n/).filter((l) => /\*\* Severe/.test(l)).map((l) => l.trim());
+      result.shadingNotes = errText.split(/\r?\n/).filter((l) => /PixelCounting|OpenGL|graphics/i.test(l)).map((l) => l.trim()).slice(0, 6);
+    }
     const s = result.sample;
     result.ok = !!m && result.fatal === 0 && result.severe === 0 && s.published === s.repo && s.repo === s.bundled;
     if (m && !result.ok && s.published !== s.repo) result.error = "the sample's SHA-256 differs from samples/README.md (line endings rewritten?)";

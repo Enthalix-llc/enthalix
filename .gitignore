@@ -13,3 +13,4 @@ references/ifc/*.ifc
 .DS_Store
 EnergyPlus/
 program/smoke-result.json
+program/smoke-eplusout.err
