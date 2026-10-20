@@ -12,8 +12,11 @@ const explainWindow = require("./explainWindow.cjs");   // the Explain help in a
 
 // <repo>/data — the module contract's output location. INSTALLED (2026-10-20, the installers for macOS, Windows and Linux): the app's
 // own folder is read-only (inside the .app, under Program Files, in an AppImage), so the user's files — data/ and Weather/ — live in
-// Documents/Enthalix, and the shipped references and samples are read from the install's resources folder
-const REPO_DIR = app.isPackaged ? path.join(app.getPath("documents"), "Enthalix") : path.resolve(__dirname, "..", "..");
+// the app-data folder beside projects.sqlite, and the shipped references and samples are read from the install's resources folder.
+// ENTHALIX_HOME names another folder for all of them (a test run, a portable copy)
+const HOME_DIR = process.env.ENTHALIX_HOME ? path.resolve(process.env.ENTHALIX_HOME) : null;
+if (HOME_DIR) app.setPath("userData", path.join(HOME_DIR, "chromium"));   // the window's own storage goes there too
+const REPO_DIR = HOME_DIR ?? (app.isPackaged ? path.join(app.getPath("appData"), "Enthalix") : path.resolve(__dirname, "..", ".."));
 const SHIPPED_DIR = app.isPackaged ? process.resourcesPath : path.resolve(__dirname, "..", "..");
 const DATA_DIR = path.join(REPO_DIR, "data");
 // <repo>/Weather — the project's weather files (the user's ruling, 2026-09-22): searched first, and where a download lands
@@ -27,7 +30,7 @@ const broadcast = (status) => { for (const w of BrowserWindow.getAllWindows()) {
 // without admin rights and untouched by an update or a reinstall; never the install folder. Its own folder, Enthalix,
 // the same in development and installed — beside Chromium's userData, which is NOT moved: the renderer's local storage
 // (the view settings, the stage journal) lives there, and moving it would reset them on the first launch.
-const STORE_FILE = path.join(app.getPath("appData"), "Enthalix", "projects.sqlite");
+const STORE_FILE = path.join(HOME_DIR ?? path.join(app.getPath("appData"), "Enthalix"), "projects.sqlite");
 let projects = null;   // opened before the first window (openProjects), so every ledger handler finds it
 async function openProjects() {
   const initSqlJs = require("sql.js");

@@ -30,7 +30,15 @@ export function Splash(): ReactNode {
   return (
     <div className="splashScrim">
       <div className="splash" role="dialog" aria-labelledby="splashTitle">
-        <h1 id="splashTitle">Enthalix</h1>
+        <h1 id="splashTitle" className="splashName">
+          {/* the mark (2026-10-20): a building in three strokes, one per module — the tower BOM's amber, the wing BIM's blue, the ground BEM's teal */}
+          <svg viewBox="80 20 380 476" width="34" height="42" aria-hidden="true">
+            <polygon fill="var(--accent-bom)" points="160,440 86,104 312,22 312,440 286,440 282,58 122,128 192,440" />
+            <polygon fill="var(--accent-bim)" points="324,128 440,222 378,440 350,440 404,244 324,176" />
+            <path fill="var(--accent-bem)" d="M88,462 Q270,436 450,462 L450,476 Q270,456 92,492 Z" />
+          </svg>
+          Enthalix
+        </h1>
         <div className="splashSub">BIM-BEM-BOM — Building Information Model · Building Energy Model · Building Operations Model · where the model meets the meter · public preview</div>
 
         <section>

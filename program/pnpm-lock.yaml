@@ -8,43 +8,19 @@ importers:
 
   .:
     dependencies:
+      fflate:
+        specifier: 0.8.2
+        version: 0.8.2
+      sql.js:
+        specifier: ^1.14.2
+        version: 1.14.2
+    devDependencies:
       '@thatopen/components':
         specifier: 3.4.8
         version: 3.4.8(@thatopen/fragments@3.4.7(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
       '@thatopen/fragments':
         specifier: 3.4.7
         version: 3.4.7(three@0.185.1)(web-ifc@0.0.77)
-      '@xyflow/react':
-        specifier: ^12.11.6
-        version: 12.11.6(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      camera-controls:
-        specifier: ^3.1.2
-        version: 3.1.2(three@0.185.1)
-      earcut:
-        specifier: ^3.0.0
-        version: 3.2.3
-      fflate:
-        specifier: 0.8.2
-        version: 0.8.2
-      polygon-clipping:
-        specifier: ^0.15.7
-        version: 0.15.7
-      react:
-        specifier: ^19.1.0
-        version: 19.2.8
-      react-dom:
-        specifier: ^19.1.0
-        version: 19.2.8(react@19.2.8)
-      sql.js:
-        specifier: ^1.14.2
-        version: 1.14.2
-      three:
-        specifier: 0.185.1
-        version: 0.185.1
-      web-ifc:
-        specifier: 0.0.77
-        version: 0.0.77
-    devDependencies:
       '@types/earcut':
         specifier: ^3.0.0
         version: 3.0.0
@@ -63,15 +39,36 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^5.0.0
         version: 5.2.0(vite@7.3.6(@types/node@26.4.0)(jiti@2.7.0)(tsx@4.23.13))
+      '@xyflow/react':
+        specifier: ^12.11.6
+        version: 12.11.6(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      camera-controls:
+        specifier: ^3.1.2
+        version: 3.1.2(three@0.185.1)
       concurrently:
         specifier: ^9.1.0
         version: 9.2.4
+      earcut:
+        specifier: ^3.0.0
+        version: 3.2.3
       electron:
         specifier: ^44.1.0
         version: 44.1.0
       electron-builder:
         specifier: ^26.0.0
         version: 26.15.3(electron-builder-squirrel-windows@26.15.3)
+      polygon-clipping:
+        specifier: ^0.15.7
+        version: 0.15.7
+      react:
+        specifier: ^19.1.0
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.1.0
+        version: 19.2.8(react@19.2.8)
+      three:
+        specifier: 0.185.1
+        version: 0.185.1
       tsx:
         specifier: ^4.19.0
         version: 4.23.13
@@ -81,6 +78,9 @@ importers:
       vite:
         specifier: ^7.1.0
         version: 7.3.6(@types/node@26.4.0)(jiti@2.7.0)(tsx@4.23.13)
+      web-ifc:
+        specifier: 0.0.77
+        version: 0.0.77
 
 packages:
 
