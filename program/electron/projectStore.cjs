@@ -16,6 +16,7 @@
 // (the rule ledgerStore.cjs kept on disk since 2026-09-10). A CommonJS module: main.cjs requires it, the gate tests it.
 const fs = require("node:fs");
 const path = require("node:path");
+const { renameRetry } = require("./fsRetry.cjs");   // Windows holds a file open for a moment (2026-10-20)
 
 const SCHEMA_VERSION = 1;
 const KINDS = ["corrections", "bem", "bom"];
@@ -62,7 +63,7 @@ function openStore(file, SQL) {
     fs.mkdirSync(path.dirname(file), { recursive: true });
     const tmp = `${file}.tmp`;
     fs.writeFileSync(tmp, Buffer.from(db.export()));
-    fs.renameSync(tmp, file);
+    renameRetry(tmp, file);
   }
   if (!existed) flush();
 
@@ -207,7 +208,7 @@ function openStore(file, SQL) {
     }
     const tmp = `${outFile}.tmp`;
     fs.writeFileSync(tmp, Buffer.from(out.export()));
-    fs.renameSync(tmp, outFile);
+    renameRetry(tmp, outFile);
     out.close();
     return { project: projectId, versions: shas.length };
   }

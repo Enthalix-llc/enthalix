@@ -8,6 +8,7 @@ import * as OBC from "@thatopen/components";
 import { RenderedFaces } from "@thatopen/fragments";
 import * as THREE from "three";
 import CameraControls from "camera-controls";
+import { WASM_DIR, wasmUrl } from "../core/wasmUrl.js";
 
 export interface IfcPane {
   camera: THREE.PerspectiveCamera;
@@ -81,7 +82,7 @@ export async function createIfcPane(container: HTMLElement): Promise<IfcPane> {
   world.renderer.showLogo = false;
 
   const fragments = components.get(OBC.FragmentsManager);
-  fragments.init(new URL("/wasm/fragments-worker.mjs", window.location.origin).href);
+  fragments.init(wasmUrl("fragments-worker.mjs"));
 
   components.init();
   world.scene.setup();
@@ -249,7 +250,7 @@ export async function createIfcPane(container: HTMLElement): Promise<IfcPane> {
       const loader = components.get(OBC.IfcLoader);
       await loader.setup({
         autoSetWasm: false,
-        wasm: { path: "/wasm/", absolute: true },
+        wasm: { path: WASM_DIR, absolute: true },
         webIfc: { COORDINATE_TO_ORIGIN: false },
       });
       await loader.load(bytes, true, name, {

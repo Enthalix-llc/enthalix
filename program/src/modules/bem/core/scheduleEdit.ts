@@ -189,7 +189,7 @@ export function nameProblem(name: string, lib: Library, resaving: string | null)
 export function readUserFile(text: string | null): { objects: IdfObject[]; notes: Map<string, string> } {
   if (!text) return { objects: [], notes: new Map() };
   const notes = new Map<string, string>();
-  for (const m of text.matchAll(/^! ◆ (.+?) — (.+)$/gm)) notes.set(m[1]!.toLowerCase(), m[2]!);
+  for (const m of text.matchAll(/^! ◆ (.+?) — (.+)$/gm)) notes.set(m[1]!.toLowerCase(), m[2]!.replace(/\r$/, ""));   // a file saved with Windows line ends
   return { objects: parseScheduleObjects(text, USER_SCHEDULE_FILE), notes };
 }
 /** the file with one schedule saved into it (a schedule of the same name replaced); type limits once each, by name */

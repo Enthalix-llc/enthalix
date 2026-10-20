@@ -14,7 +14,7 @@
 }
 * { box-sizing: border-box; margin: 0; }
 html, body, #root { height: 100%; }
-body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, sans-serif; }
+body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; }
 /* THE RAIL: BIM · BEM · BOM down the far left, a freshness dot on each */
 .rail {
   flex: 0 0 44px; display: flex; flex-direction: column; align-items: stretch; gap: 2px;
@@ -23,7 +23,7 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
 .railItem {
   display: flex; flex-direction: column; align-items: center; gap: 3px;
   background: none; border: 0; border-radius: 5px; padding: 7px 0 5px; cursor: pointer;
-  color: var(--dim); font: 700 10px/1 ui-monospace, monospace; letter-spacing: 0.06em;
+  color: var(--dim); font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: 0.06em;
 }
 .railItem:hover { background: var(--panel); color: var(--text); }
 .railItem.on { background: var(--accent); color: #fff; }
@@ -43,7 +43,7 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
 .topbar button:disabled { background: #3a4150; cursor: default; }
 .topbar label { display: flex; align-items: center; gap: 5px; color: #9aa5b8; }
 .status { color: #9aa5b8; }
-.gate { margin-left: auto; font-family: ui-monospace, monospace; font-size: 12px;
+.gate { margin-left: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; font-size: 12px;
   padding: 3px 10px; border-radius: 4px; background: #1b2130; }
 .gate.ok { color: #4ade80; } .gate.bad { color: #f87171; }
 .body { flex: 1; display: flex; min-height: 0; }
@@ -93,21 +93,21 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
 }
 .viewTabs button {
   background: none; border: 0; border-bottom: 2px solid transparent; color: #5b6478;
-  font: 700 11px/1 ui-monospace, monospace; letter-spacing: 0.06em; padding: 7px 10px 5px; cursor: pointer;
+  font: 700 11px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: 0.06em; padding: 7px 10px 5px; cursor: pointer;
 }
 .viewTabs button:hover { color: #9aa5b8; }
 .viewTabs button.on { color: var(--sel); border-bottom-color: var(--sel); }
 .viewTabs button.farRight { margin-left: auto; }
 .asmTile.tier-zone { border-style: dashed; border-width: 1px 1px 1px 3px; }
-.asmKindTag { font: 700 9px/1 ui-monospace, monospace; letter-spacing: 0.08em; opacity: 0.85; margin-bottom: 2px; }
+.asmKindTag { font: 700 9px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: 0.08em; opacity: 0.85; margin-bottom: 2px; }
 .viewTabs .viewTools + button.farRight { margin-left: 8px; }
 .panes > [hidden], .inspector section[hidden] { display: none; }
 /* THE PAGE TABS: a module's pages across the top of the editing column, one
    active; the rail lights the module a tab belongs to (2026-09-04) */
 .editTabs { flex-wrap: wrap; row-gap: 0; }
 /* THE SYSTEMS SCHEMATIC in a pane slot beside the 3-D zone model, on the SYSTEMS tab only */
-.paneHtml { position: relative; overflow: auto; background: var(--bg); border-left: 1px solid #262c38; padding: 10px; font: 11px ui-monospace, monospace; }
-.chip { background: #1b2130; color: var(--text); border: 1px solid #33405a; border-radius: 10px; padding: 1px 8px; font: 11px ui-monospace, monospace; cursor: pointer; }
+.paneHtml { position: relative; overflow: auto; background: var(--bg); border-left: 1px solid #262c38; padding: 10px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
+.chip { background: #1b2130; color: var(--text); border: 1px solid #33405a; border-radius: 10px; padding: 1px 8px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; cursor: pointer; }
 .chip.on { color: var(--sel); border-color: var(--sel); }
 .schedRow { display: flex; flex-direction: column; gap: 2px; padding: 4px 0 6px; border-bottom: 1px solid var(--line); }
 .schedRow.staged { background: color-mix(in srgb, var(--src-user) 8%, transparent); }
@@ -119,7 +119,7 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
 .schedStrips > div { flex: 1 1 0; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .schedStrips > div span { font-size: 9px; color: var(--muted); }
 .schedStrips .schedPartPick { align-self: flex-start; font-size: 10px; padding: 0 2px; color: #000; background: #fff; }   /* the card's part dropdown (the user, 2026-10-05) */
-.schedRange { flex: 0 0 auto; font-size: 10px; font-family: ui-monospace, monospace; color: var(--muted); padding-bottom: 12px; }
+.schedRange { flex: 0 0 auto; font-size: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: var(--muted); padding-bottom: 12px; }
 .schedRow .strip { width: 100%; height: 22px; display: block; }
 .schedNone { color: #4a5265; height: 22px; font-size: 11px; }
 .schedNote { font-size: 10px; color: var(--muted); }
@@ -134,10 +134,10 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
 .schedLib tr.sel { outline: 1px solid var(--sel); }
 .schedObj { font-size: 10px; line-height: 1.3; max-height: 280px; overflow: auto; background: var(--panel); border: 1px solid var(--line); padding: 6px; white-space: pre; margin: 4px 0 0; }
 .lensBox { display: flex; flex-direction: column; gap: 4px; padding: 4px 0 8px; border-bottom: 1px solid var(--line); }
-.monthStrip { display: flex; gap: 2px; font: 10px ui-monospace, monospace; }
+.monthStrip { display: flex; gap: 2px; font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .monthStrip span { flex: 1; display: flex; flex-direction: column; align-items: center; background: #1b2130; border-radius: 3px; padding: 2px 0; }
 .monthStrip i { color: var(--muted); font-style: normal; }
-.bemCol input[type="number"], .bemCol input[type="text"], .bemCol input:not([type]) { width: 64px; background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 2px 4px; font: 11px ui-monospace, monospace; }
+.bemCol input[type="number"], .bemCol input[type="text"], .bemCol input:not([type]) { width: 64px; background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 2px 4px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .bemCol input:not([type]) { width: 100%; }
 .bemCol .allRow { display: flex; gap: 6px; align-items: center; padding: 6px 0; }
 .idfBar {
@@ -146,7 +146,7 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
 }
 .idfBar .barHead { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: #7c8698; }
 /* a column's exposition behind one ⓘ (user, 2026-09-29) */
-.infoTip { cursor: help; color: #7c8698; font: 400 12px/1 system-ui, sans-serif; margin-left: 6px; letter-spacing: 0; text-transform: none; }
+.infoTip { cursor: help; color: #7c8698; font: 400 12px/1 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; margin-left: 6px; letter-spacing: 0; text-transform: none; }
 .infoTip:hover { color: var(--text); }
 .idfBar .qaBtn { margin-left: 0; text-align: left; }
 .idfBar label { justify-content: space-between; }
@@ -199,9 +199,9 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
 .voidGrille { display: flex; gap: 6px; align-items: center; cursor: pointer; }
 /* THE SPACE TABLE: the IDF-DB reading by room */
 .spaceTabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 2px 0 4px; }
-.spaceTabs button { background: var(--panel3); color: var(--muted); border: 1px solid #33405a; border-radius: 3px; padding: 1px 6px; font: 11px ui-monospace, monospace; cursor: pointer; }
+.spaceTabs button { background: var(--panel3); color: var(--muted); border: 1px solid #33405a; border-radius: 3px; padding: 1px 6px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; cursor: pointer; }
 .spaceTabs button.on { background: var(--accent-bim); color: #fff; border-color: var(--accent-bim); }
-.spaceTable { border-collapse: collapse; width: 100%; font: 11px ui-monospace, monospace; }
+.spaceTable { border-collapse: collapse; width: 100%; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .spaceTable th { text-align: left; color: #8b93a7; font-weight: 500; padding: 1px 6px 1px 0; position: sticky; top: 0; background: var(--panel2); }
 .spaceTable td { padding: 1px 6px 1px 0; border-top: 1px solid #1b202a; white-space: nowrap; cursor: pointer; }
 .spaceTable td.num { text-align: right; }
@@ -214,7 +214,7 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
 .spaceTable tr.sub td:first-child { padding-left: 14px; }
 .spaceTable input[type="checkbox"] { width: 11px; height: 11px; margin: 0 5px 0 0; vertical-align: -1px; accent-color: var(--src-user); cursor: pointer; }
 .spaceTable input[type="checkbox"]:disabled { opacity: 0.35; cursor: default; }
-.tree .elev { flex: 0 0 auto; color: #7c8698; font: 11px ui-monospace, monospace; }
+.tree .elev { flex: 0 0 auto; color: #7c8698; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .tree .swatch { flex: 0 0 auto; width: 9px; height: 9px; border-radius: 2px; }
 .tree .allRow { display: flex; gap: 6px; padding: 4px 10px 8px; }
 .tree .allRow button { font-size: 11px; }
@@ -223,13 +223,13 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
   background: #1b2130; color: #e2e8f0; border: 1px solid #33405a;
   border-radius: 4px; padding: 1px 4px; font-weight: 700;
 }
-.idfInfo { color: #7c8698; font-family: ui-monospace, monospace; font-size: 11px; }
+.idfInfo { color: #7c8698; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; }
 
 /* wall QA — the per-wall census, read from idf.db's wall_qa table */
 .qaBtn { margin-left: 8px; }
 .qaPanel {
   flex: 1; min-height: 0; overflow: auto;
-  font: 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace;
 }
 .qaPanel table { border-collapse: collapse; width: 100%; }
 .qaPanel th, .qaPanel td { padding: 2px 6px; text-align: left; white-space: nowrap; }
@@ -238,7 +238,7 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
 .qaPanel td { color: #c8cedd; border-top: 1px solid #1b202a; }
 .qaPanel tr.bad td { color: #ffb4a2; }
 
-.spaceInfo { color: #8fd0a8; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.spaceInfo { color: #8fd0a8; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 
 
 .qaPanel.steps p { margin: 8px 10px; color: #a8b0c2; line-height: 1.5; white-space: normal; }
@@ -279,11 +279,11 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
   position: fixed; z-index: 41; min-width: 220px;
   background: #12161f; border: 1px solid #33405a; border-radius: 5px;
   box-shadow: 0 8px 24px #000a; padding: 4px;
-  font: 12px -apple-system, sans-serif;
+  font: 12px -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
 }
 .ctxHead {
   padding: 5px 8px; color: #7fd0a0; border-bottom: 1px solid #262c38; margin-bottom: 4px;
-  font: 11px ui-monospace, monospace;
+  font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace;
 }
 .ctxMenu button {
   display: block; width: 100%; text-align: left; padding: 6px 8px;
@@ -294,8 +294,8 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
 .ctxFoot { border-top: 1px solid #262c38; margin-top: 4px; padding-top: 4px; }
 /* CHANGE A CARD (2026-09-12): the substitute list, grouped by shelf, scrolls when long */
 .ctxMenu.long { max-height: 70vh; overflow-y: auto; min-width: 280px; }
-.ctxSub { padding: 2px 8px 6px; color: #8b93a7; font: 11px -apple-system, sans-serif; white-space: normal; max-width: 320px; }
-.ctxGroup { padding: 6px 8px 2px; color: #7fd0a0; font: 10px ui-monospace, monospace; letter-spacing: 0.06em; }
+.ctxSub { padding: 2px 8px 6px; color: #8b93a7; font: 11px -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; white-space: normal; max-width: 320px; }
+.ctxGroup { padding: 6px 8px 2px; color: #7fd0a0; font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: 0.06em; }
 .ctxDim { color: #8b93a7; font-size: 11px; }
 .ctxMenu button:hover:enabled .ctxDim { color: #cfe4ff; }
 .ctxMore { color: #8b93a7 !important; font-style: italic; }
@@ -306,18 +306,18 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
   background: #2b6cb0; color: #fff; border-radius: 5px; padding: 6px 12px;
   box-shadow: 0 6px 18px #0008;
 }
-.armBar i { font-style: normal; color: #cfe4ff; font-family: ui-monospace, monospace; }
+.armBar i { font-style: normal; color: #cfe4ff; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .armBar button {
   background: #1b3f68; color: #fff; border: 1px solid #4a86c8;
   border-radius: 4px; padding: 2px 8px; cursor: pointer;
 }
-.editInfo { color: #ffd166; font: 11px ui-monospace, monospace; }
+.editInfo { color: #ffd166; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 /* THE BEM COLUMN: the workflow in steps; provenance as a colour */
 .bemCol .step { display: flex; flex-direction: column; gap: 4px; padding: 6px 0; border-top: 1px solid var(--line); }
-.bemCol .stepHead { font: 700 10px/1 ui-monospace, monospace; letter-spacing: 0.06em; color: var(--dim); text-transform: uppercase; }
+.bemCol .stepHead { font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: 0.06em; color: var(--dim); text-transform: uppercase; }
 .bemCol .kv { display: flex; gap: 6px; font-size: 11px; line-height: 1.35; }
 .bemCol .kv span { flex: 0 0 74px; color: var(--muted); }
-.bemCol .kv b { font-weight: 500; font-family: ui-monospace, monospace; word-break: break-word; }
+.bemCol .kv b { font-weight: 500; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; word-break: break-word; }
 .bemCol .allRow { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .bemCol .apply { background: var(--accent-bem); color: #fff; border: 0; border-radius: 4px; padding: 5px 10px; font-weight: 700; cursor: pointer; }
 .bemCol .apply:disabled { background: #3a4150; cursor: default; }
@@ -326,14 +326,14 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
 .bemCol .lensRow select { flex: 1; min-width: 0; }
 .legend { display: flex; flex-direction: column; gap: 3px; }
 /* THE VIEW LEGEND (2026-09-05): the solar-intensity ramp, bottom centre of the view (user's placement) */
-.viewLegend { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 3; background: rgba(15, 17, 23, 0.85); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: 10px ui-monospace, monospace; color: var(--text); display: flex; flex-direction: column; gap: 3px; min-width: 190px; pointer-events: none; }
+.viewLegend { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 3; background: rgba(15, 17, 23, 0.85); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: var(--text); display: flex; flex-direction: column; gap: 3px; min-width: 190px; pointer-events: none; }
 .viewLegend b { font-size: 11px; }
 .viewLegend .legendBar.sun { background: linear-gradient(90deg, #1e2230, #ff8e14, #fff5c0); }
 .viewLegend .muted { color: var(--muted); }
 .legendBar { height: 8px; border-radius: 2px; }
 .legendBar.div { background: linear-gradient(90deg, #4678f5, #ebf0f5, #f55a2d); }
 .legendBar.seq { background: linear-gradient(90deg, #ece8dc, #ff8e14); }
-.legendEnds { display: flex; justify-content: space-between; font: 10px ui-monospace, monospace; color: var(--dim); }
+.legendEnds { display: flex; justify-content: space-between; font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: var(--dim); }
 .src-file { color: var(--text); }
 .src-code { color: var(--src-inherited); }
 .src-user { color: var(--src-user); }
@@ -344,7 +344,7 @@ input.src-code, select.src-code { color: var(--src-inherited); }
 input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .bemLine { color: var(--muted); }
 .bemCol .ok { color: var(--ok); } .bemCol .bad { color: var(--warn); }
-.qaPanel .log { white-space: pre-wrap; font: 11px ui-monospace, monospace; }
+.qaPanel .log { white-space: pre-wrap; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .qaPanel .logLine { display: block; }
 .qaPanel td.src-user { color: var(--src-user); } .qaPanel td.src-code { color: var(--src-inherited); }
 /* THE BOM COLUMN */
@@ -352,7 +352,7 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .bomCol .colMap { display: flex; flex-direction: column; gap: 4px; padding: 6px; border: 1px solid var(--line); border-radius: 4px; }
 .bomCol .caveat { color: var(--src-user); }
 .calChart { width: 100%; height: auto; display: block; margin: 6px 0; }
-.qaPanel .formula { font: 11px/1.6 ui-monospace, monospace; }
+.qaPanel .formula { font: 11px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .qaPanel tr.off { opacity: 0.45; }
 .qaPanel .eye { border: 0; background: none; color: var(--text); cursor: pointer; font-size: 13px; padding: 0 4px; }
 .qaPanel .eye.off { color: #4a5265; }
@@ -369,12 +369,12 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 }
 .inspector section {
   overflow: auto; padding: 6px 10px; border-right: 1px solid #1b202a;
-  font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; color: #c8cedd;
+  font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: #c8cedd;
 }
 .inspector section:last-child { border-right: 0; }
 .inspector h4 {
   position: sticky; top: -6px; margin: -6px -10px 6px; padding: 5px 10px;
-  background: #161a22; color: #8b93a7; font: 700 10px/1.4 ui-monospace, monospace;
+  background: #161a22; color: #8b93a7; font: 700 10px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace;
   letter-spacing: 0.05em;
 }
 .inspector b { color: #8b93a7; font-weight: 400; display: inline-block; min-width: 74px; }
@@ -404,7 +404,7 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
    hidden meanwhile, the IFC pane stays ghosted as on every BEM page */
 .paneMapSlot { position: relative; padding: 0; overflow: hidden; }
 .paneMap, .gmap { position: absolute; inset: 0; }
-.mapTag { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 3; background: rgba(15, 17, 23, 0.85); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; font: 10px ui-monospace, monospace; color: var(--text); pointer-events: none; max-width: 70%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mapTag { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 3; background: rgba(15, 17, 23, 0.85); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: var(--text); pointer-events: none; max-width: 70%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tileMap { position: absolute; inset: 0; overflow: hidden; background: #0c0e14; cursor: grab; user-select: none; touch-action: none; }
 .tileMap:active { cursor: grabbing; }
 .tileMap .tile { position: absolute; width: 256px; height: 256px; pointer-events: none; filter: saturate(0.7) brightness(0.85); }
@@ -412,24 +412,24 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .tileMap .marker.installed { box-shadow: 0 0 0 2px #7fd0a0; }
 .tileMap .marker.on { background: var(--sel); width: 15px; height: 15px; z-index: 4; }
 .tileMap .marker.site { background: #f55a2d; width: 15px; height: 15px; border-radius: 2px; transform: translate(-50%, -50%) rotate(45deg); z-index: 5; }
-.tileMap .marker span { display: none; position: absolute; left: 12px; top: -4px; white-space: nowrap; font: 10px ui-monospace, monospace; color: var(--text); background: rgba(15, 17, 23, 0.85); border: 1px solid var(--line); border-radius: 3px; padding: 1px 5px; pointer-events: none; }
+.tileMap .marker span { display: none; position: absolute; left: 12px; top: -4px; white-space: nowrap; font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: var(--text); background: rgba(15, 17, 23, 0.85); border: 1px solid var(--line); border-radius: 3px; padding: 1px 5px; pointer-events: none; }
 .tileMap .marker.site span { transform: rotate(-45deg); transform-origin: -6px 6px; }
 .tileMap .marker:hover span, .tileMap .marker.on span, .tileMap .marker.site span { display: block; }
-.mapAttrib { position: absolute; right: 6px; bottom: 4px; z-index: 3; font: 9px ui-monospace, monospace; color: var(--muted); background: rgba(15, 17, 23, 0.7); padding: 1px 5px; border-radius: 3px; pointer-events: none; }
+.mapAttrib { position: absolute; right: 6px; bottom: 4px; z-index: 3; font: 9px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: var(--muted); background: rgba(15, 17, 23, 0.7); padding: 1px 5px; border-radius: 3px; pointer-events: none; }
 .locator { display: flex; flex-direction: column; gap: 6px; padding: 4px 0; }
 .locator .allRow, .stationList .allRow { display: flex; gap: 8px; align-items: center; }
-.locator input.addr { flex: 1; min-width: 0; background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 3px 6px; font: 11px ui-monospace, monospace; }
+.locator input.addr { flex: 1; min-width: 0; background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 3px 6px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .locator label, .stationList label { display: flex; align-items: center; gap: 4px; color: #9aa5b8; font-size: 11px; }
 .stationList { display: flex; flex-direction: column; gap: 6px; padding: 4px 0; }
-.stationList input[type="number"] { width: 60px; background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 1px 4px; font: 11px ui-monospace, monospace; }
+.stationList input[type="number"] { width: 60px; background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 1px 4px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .stationTable .qaBtn.per { padding: 0 6px; margin: 1px 3px 1px 0; font-size: 10px; }
 .stationTable .qaBtn.per.on { background: var(--sel); color: #0c0e14; border-color: var(--sel); }
 .inspector section .idfInfo.solarLine { white-space: normal; }
-.locator input.num { width: 110px; background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 3px 6px; font: 11px ui-monospace, monospace; }
+.locator input.num { width: 110px; background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 3px 6px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .tileMap .marker.same { background: #7fd0a0; }
 .stationTable td.same { color: #7fd0a0; }
 /* THE STATION LEGEND (user, 2026-09-07): what the colours say, bottom left of the map */
-.mapLegend { position: absolute; left: 8px; bottom: 22px; z-index: 3; background: rgba(15, 17, 23, 0.88); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: 10px ui-monospace, monospace; color: var(--text); display: flex; flex-direction: column; gap: 3px; pointer-events: none; max-width: 300px; }
+.mapLegend { position: absolute; left: 8px; bottom: 22px; z-index: 3; background: rgba(15, 17, 23, 0.88); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: var(--text); display: flex; flex-direction: column; gap: 3px; pointer-events: none; max-width: 300px; }
 .mapLegend b { font-size: 10px; letter-spacing: 0.06em; color: var(--dim); text-transform: uppercase; }
 .mapLegend span { display: flex; align-items: center; gap: 6px; white-space: normal; }
 .mapLegend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #0c0e14; flex: 0 0 auto; }
@@ -442,12 +442,12 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .stationTable td.bad { color: var(--warn); }
 
 /* ── CONSTRUCTIONS: the DETAIL pane and the options table (2026-09-08) ── */
-.detailBox { padding: 6px 8px; font: 11px ui-monospace, monospace; color: var(--text); }
+.detailBox { padding: 6px 8px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: var(--text); }
 .detailHead { margin-bottom: 8px; }
 /* the model NAMED UNDER THE MODEL (user, 2026-09-18): the product or construction this window takes, over the code line */
 .detailHead.modelName { margin-top: 8px; margin-bottom: 2px; }
 .detailSvg { display: block; max-width: 720px; }
-.detailSvg .lbl { font: 10px ui-monospace, monospace; fill: var(--text); }
+.detailSvg .lbl { font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; fill: var(--text); }
 .detailTable { border-collapse: collapse; width: 100%; max-width: 720px; margin-top: 6px; table-layout: fixed; }   /* fixed: a long source URL must not squeeze the layer column (2026-09-08) */
 .detailTable th:first-child { width: 29%; } .detailTable th.num { width: 15%; } .detailTable th.num.thick { width: 22%; } .detailTable th.refl { width: 10%; }   /* the thickness column holds its input, the unit and the × (2026-09-16) */
 .detailTable td.wrap { overflow-wrap: anywhere; }
@@ -462,7 +462,7 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .viewTabs button.mini { margin-left: auto; font-size: 10px; letter-spacing: 0; }
 /* THE VIEW TOOLS (2026-09-08) at the right end of the tab strip — beside the view, never over it */
 .viewTabs .viewTools { margin-left: auto; display: flex; align-items: center; gap: 1px; padding: 2px 0; }
-.viewTabs .viewTools button { font: 600 10px/1 ui-monospace, monospace; letter-spacing: 0; padding: 4px 6px; border: 1px solid transparent; border-radius: 3px; color: #7c8698; }
+.viewTabs .viewTools button { font: 600 10px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: 0; padding: 4px 6px; border: 1px solid transparent; border-radius: 3px; color: #7c8698; }
 .viewTabs .viewTools button:hover { color: #c9d1e0; background: #1b2130; }
 .viewTabs .viewTools button.on { color: var(--sel); border-color: #33405a; background: #1b2130; }
 .viewTabs .viewTools .sep { width: 1px; height: 12px; background: var(--line); margin: 0 4px; }
@@ -471,7 +471,7 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .detailSvg rect.band { cursor: pointer; }
 .detailSvg rect.band:hover { stroke: #9aa5b8; stroke-width: 1.5; }
 .detailSvg rect.part, .detailSvg text.partLbl { pointer-events: none; }
-.detailSvg text.partLbl { font: 9px ui-monospace, monospace; fill: #0f1117; }
+.detailSvg text.partLbl { font: 9px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; fill: #0f1117; }
 .detailSvg rect.selOutline { fill: none; stroke: var(--sel); stroke-width: 2; pointer-events: none; }
 .detailTable tbody tr.layer { cursor: pointer; }
 .detailTable tbody tr.layer:hover td { background: #161c28; }
@@ -496,7 +496,7 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .typeTable .qaBtn.mini, .spaceTable .qaBtn.mini { margin-left: 6px; font-size: 10px; padding: 0 5px; }
 .typeTable select { max-width: 320px; }
 /* THE PALETTE (2026-09-16): a toolbar, the pick block, then the list — one line per material, the details in the row's tooltip */
-.palBar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; align-items: center; padding: 3px 0 5px; font: 11px ui-monospace, monospace; }
+.palBar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; align-items: center; padding: 3px 0 5px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .palBar .l, .palBar .r { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 /* THE THREE FILTERS, a row under the head (2026-09-17): Source · DataSet · Name, each label over its select's own line */
 .palFilters { padding-top: 0; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
@@ -504,8 +504,8 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .dialog .qaBtn.bad { color: var(--warn); border-color: var(--warn); }
 .palFilters label { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); min-width: 0; }
 .palFilters .l { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; }
-.palFilters select { max-width: 200px; text-overflow: ellipsis; background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 1px 4px; font: 11px ui-monospace, monospace; }
-.palBar input.q { width: 140px; background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 2px 6px; font: 11px ui-monospace, monospace; }
+.palFilters select { max-width: 200px; text-overflow: ellipsis; background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 1px 4px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
+.palBar input.q { width: 140px; background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 2px 6px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .palBar .qaBtn.on { background: var(--accent-bem, #2b6cb0); color: #fff; border-color: transparent; }
 .palBar .qaBtn.mini.on { background: var(--accent-bem, #2b6cb0); color: #fff; }
 .palTable { table-layout: fixed; width: 100%; }
@@ -528,11 +528,11 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .palTable tr.more td { color: var(--muted); cursor: default; }
 /* THE MATERIAL DIALOG (2026-09-16): the app's one modal — the scrim darkens the window, the panel is centred */
 .menuScrim.dialogScrim { background: #0009; z-index: 60; display: flex; align-items: center; justify-content: center; }
-.dialog { width: min(980px, 94vw); background: #12161f; border: 1px solid #33405a; border-radius: 6px; box-shadow: 0 12px 40px #000c; padding: 10px 14px; font: 11px ui-monospace, monospace; color: var(--text); display: flex; flex-direction: column; gap: 6px; }
+.dialog { width: min(980px, 94vw); background: #12161f; border: 1px solid #33405a; border-radius: 6px; box-shadow: 0 12px 40px #000c; padding: 10px 14px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: var(--text); display: flex; flex-direction: column; gap: 6px; }
 .dialog .dialogHead { color: #7fd0a0; font-weight: 600; }
 .dialog .allRow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.dialog input.q { flex: 1; min-width: 160px; background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 3px 6px; font: 11px ui-monospace, monospace; }
-.dialog input, .dialog select { font: 11px ui-monospace, monospace; background: var(--panel2); color: var(--text); border: 1px solid var(--line); padding: 1px 4px; }
+.dialog input.q { flex: 1; min-width: 160px; background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 3px 6px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
+.dialog input, .dialog select { font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; background: var(--panel2); color: var(--text); border: 1px solid var(--line); padding: 1px 4px; }
 .dialog .bad { color: var(--warn); }
 /* THE ENERGY-CODE DIALOG (2026-09-29): the state's adoptions, the model codes, the preview */
 .codeTable { border-collapse: collapse; width: 100%; }
@@ -566,7 +566,7 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .sysTable tbody tr { cursor: pointer; }
 .sysNote { font-size: 10px; color: var(--text); }
 .sysItems { display: flex; flex-direction: column; gap: 1px; padding: 2px 0 2px 14px; }   /* the sheet's equipment under its subsection (the user, 2026-10-05) */
-.sysItem { text-align: left; background: none; border: 0; padding: 2px 4px; font: 11px ui-monospace, monospace; color: var(--text); cursor: pointer; border-radius: 3px; }
+.sysItem { text-align: left; background: none; border: 0; padding: 2px 4px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: var(--text); cursor: pointer; border-radius: 3px; }
 .sysItem:hover { background: #1b2433; }
 .sysOptions { display: flex; flex-direction: column; gap: 4px; }
 .sysOptHead { font-size: 11px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
@@ -586,18 +586,18 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .sysZones label { display: inline-flex; gap: 3px; align-items: center; white-space: nowrap; cursor: pointer; }
 .sysZones label.other { color: var(--muted); cursor: default; }
 .sysFieldsEdit td:nth-child(2) { width: 12em; }
-.sysFieldsEdit input[type="text"] { width: 9em; font: 11px ui-monospace, monospace; background: #0f1319; border: 1px solid var(--line); color: var(--text); border-radius: 3px; padding: 1px 4px; }
-.sysFieldsEdit select { max-width: 14em; font: 11px ui-monospace, monospace; background: #0f1319; border: 1px solid var(--line); color: var(--text); border-radius: 3px; }
+.sysFieldsEdit input[type="text"] { width: 9em; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; background: #0f1319; border: 1px solid var(--line); color: var(--text); border-radius: 3px; padding: 1px 4px; }
+.sysFieldsEdit select { max-width: 14em; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; background: #0f1319; border: 1px solid var(--line); color: var(--text); border-radius: 3px; }
 .sysFieldsEdit tr.key td:first-child { color: var(--text); }
 .sysApplied { font-size: 10.5px; display: flex; flex-direction: column; gap: 2px; }
 .sysApplied .row { display: flex; gap: 6px; flex-wrap: wrap; }
 .sysStaged { color: var(--src-user); font-size: 10px; }
 .sysLocal td { padding: 1px 4px; }
-.sysLocal input[type="text"] { width: 5em; font: 11px ui-monospace, monospace; background: #0f1319; border: 1px solid var(--line); color: var(--text); border-radius: 3px; padding: 1px 4px; }
+.sysLocal input[type="text"] { width: 5em; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; background: #0f1319; border: 1px solid var(--line); color: var(--text); border-radius: 3px; padding: 1px 4px; }
 /* THE MECHANICAL ASSEMBLY (2026-09-10): a white sheet in the pane, rectangles for equipment, ports and orthogonal
    connectors (React Flow, MIT, does the mechanics; every node is ours); the bench under it with vertical headers */
 .asmSlot { background: #fff; }
-.asmWrap { position: absolute; inset: 0; background: #fff; color: #1d2430; font: 11px ui-monospace, monospace; }
+.asmWrap { position: absolute; inset: 0; background: #fff; color: #1d2430; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .asmWrap .react-flow__attribution { font-size: 9px; color: #9aa3b2; background: transparent; }
 .asmWrap .react-flow__controls { box-shadow: none; border: 1px solid #d3d9e2; border-radius: 6px; overflow: hidden; }
 .asmWrap .react-flow__controls-button { background: #fff; border-bottom: 1px solid #e3e7ee; color: #4a5468; width: 22px; height: 22px; }
@@ -613,7 +613,7 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .asmNode.sel { outline: 2px solid var(--src-user); outline-offset: 1px; }
 .asmNode.refused { border-color: #d6553b; }
 /* the name wraps between the connectors' labels so it reads whole (user, 2026-09-10); the box grows with it */
-.asmTitle { font: 600 11px/1.2 ui-monospace, monospace; color: #1d2430; white-space: normal; overflow-wrap: anywhere; text-align: center; padding-top: 1px; }
+.asmTitle { font: 600 11px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: #1d2430; white-space: normal; overflow-wrap: anywhere; text-align: center; padding-top: 1px; }
 .asmSub { font-size: 9.5px; color: #6c7688; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .asmZones { font-size: 9px; color: #3b6fd6; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
 .asmPills { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; justify-content: center; }
@@ -621,11 +621,11 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .asmNode.loop { border-style: dashed; }
 /* A ZONE (2026-09-10): a container — its rooms listed under the title, a toggle to count them instead; rooms are dropped on it from LEVELS · SPACES */
 .asmRooms { margin-top: 3px; border-top: 1px dashed #d9dfe8; padding-top: 2px; }
-.asmToggle { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 1px 0; font: 600 9px ui-monospace, monospace; color: #3b6fd6; cursor: pointer; }
-.asmRoom { display: flex; justify-content: space-between; align-items: center; font: 9.5px ui-monospace, monospace; color: #1d2430; padding: 1px 0 1px 8px; border-left: 2px solid #dfe5ee; margin: 1px 0; }
+.asmToggle { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 1px 0; font: 600 9px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: #3b6fd6; cursor: pointer; }
+.asmRoom { display: flex; justify-content: space-between; align-items: center; font: 9.5px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: #1d2430; padding: 1px 0 1px 8px; border-left: 2px solid #dfe5ee; margin: 1px 0; }
 .asmRoomX { background: none; border: 0; color: #8a94a6; cursor: pointer; font-size: 11px; padding: 0 3px; line-height: 1; }
 .asmRoomX:hover { color: #d6553b; }
-.asmRoomHint { font: italic 9px ui-monospace, monospace; color: #8a94a6; padding: 2px 0 2px 8px; }
+.asmRoomHint { font: italic 9px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: #8a94a6; padding: 2px 0 2px 8px; }
 .tree .name.draggable { cursor: grab; user-select: none; }
 .tree .name.held { font-weight: 600; }   /* a room held by a Zone reads in the zone's colour */
 .asmNode.zoneBox { border-width: 2px; border-left-width: 4px; }
@@ -639,12 +639,12 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .zoneStat { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 11px; }
 .zoneStat input { width: 5em; }
 .subTabs { display: flex; gap: 2px; padding: 0 6px; border-bottom: 1px solid #262c38; }
-.subTabs button { background: transparent; border: 0; border-bottom: 2px solid transparent; color: #7c8698; font: 600 10px/1 ui-monospace, monospace; letter-spacing: 0.06em; padding: 5px 8px; cursor: pointer; }
+.subTabs button { background: transparent; border: 0; border-bottom: 2px solid transparent; color: #7c8698; font: 600 10px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: 0.06em; padding: 5px 8px; cursor: pointer; }
 .subTabs button:hover { color: #9aa5b8; }
 .subTabs button.on { color: var(--text); border-bottom-color: var(--accent-bem); }
-.asmMark { position: absolute; top: -7px; right: -7px; width: 14px; height: 14px; border-radius: 50%; background: #d6553b; color: #fff; font: 700 10px/14px ui-monospace, monospace; text-align: center; }
+.asmMark { position: absolute; top: -7px; right: -7px; width: 14px; height: 14px; border-radius: 50%; background: #d6553b; color: #fff; font: 700 10px/14px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; text-align: center; }
 /* THE THERMOSTAT (2026-09-12): a T in a circle at the Zone card's top right — on in the card's ink, off greyed */
-.asmTstat { position: absolute; top: 3px; right: 3px; width: 16px; height: 16px; padding: 0; border-radius: 50%; border: 1.5px solid #1d2430; background: #fff; color: #1d2430; font: 700 10px/13px -apple-system, Helvetica, Arial, sans-serif; text-align: center; cursor: pointer; }
+.asmTstat { position: absolute; top: 3px; right: 3px; width: 16px; height: 16px; padding: 0; border-radius: 50%; border: 1.5px solid #1d2430; background: #fff; color: #1d2430; font: 700 10px/13px -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; text-align: center; cursor: pointer; }
 .asmTstat.off { border-color: #b8bfca; color: #b8bfca; background: #f4f6f9; }
 .asmNode.refused .asmTstat { right: 9px; }
 .asmWrap .asmPort { width: 8px; height: 8px; background: #fff; border: 1.5px solid #8a94a6; }
@@ -657,7 +657,7 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .asmWrap .asmPort.ac { border-color: #c0392b; }   /* alternating current, inverter to load centre to utility */
 .asmWrap .asmPort.hw { border-color: #e0663a; }   /* the PLUMBING sheet (2026-10-02): hot water, heater to use */
 .asmWrap .asmPort.out { background: #eef2f8; }
-.asmPortLabel { position: absolute; transform: translateY(-50%); font: 600 8.5px/1 ui-monospace, monospace; color: #6c7688; white-space: nowrap; }   /* takes the pointer: a right-click on the label is a right-click on its connector */
+.asmPortLabel { position: absolute; transform: translateY(-50%); font: 600 8.5px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: #6c7688; white-space: nowrap; }   /* takes the pointer: a right-click on the label is a right-click on its connector */
 .asmPortLabel.left { left: 8px; }
 .asmPortLabel.right { right: 8px; }
 .asmPortLabel.top { top: -11px; transform: translate(-50%, 0); color: #8e6bb8; }   /* on the top edge, above the card, centred on its connector */
@@ -669,7 +669,7 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .asmJoint.v { cursor: ew-resize; }
 .asmJoint.h { cursor: ns-resize; }
 .asmJoint.end { border-radius: 50%; }
-.asmIdent { text-align: center; font: 600 9px/1.2 ui-monospace, monospace; color: #3a4354; letter-spacing: 0.04em; margin-top: 1px; }   /* the component's ID under its name (2026-09-10) */
+.asmIdent { text-align: center; font: 600 9px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: #3a4354; letter-spacing: 0.04em; margin-top: 1px; }   /* the component's ID under its name (2026-09-10) */
 .asmIdLabel { margin-left: 6px; }
 .asmIdentInput { width: 6.5em; }
 .asmDraft { font-size: 11px; padding: 2px 0; }
@@ -684,14 +684,14 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .asmWrap.arming .asmPort.cannot, .asmWrap.arming .asmPortLabel.cannot { opacity: 0.3; }
 .asmWrap.arming .asmPort.from { background: #2b6cb0; border-color: #2b6cb0; }
 .asmWrap.arming .asmPortLabel.from { color: #2b6cb0; }
-.asmArm { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 8px; background: #2b6cb0; color: #fff; border-radius: 5px; padding: 6px 12px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25); font: 11px ui-monospace, monospace; white-space: nowrap; }
+.asmArm { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 8px; background: #2b6cb0; color: #fff; border-radius: 5px; padding: 6px 12px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25); font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; white-space: nowrap; }
 .asmArm i { font-style: normal; color: #cfe4ff; }
 .asmArm button { background: #1b3f68; color: #fff; border: 1px solid #4a86c8; border-radius: 4px; padding: 2px 8px; cursor: pointer; font: inherit; }
-.asmEmpty { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); max-width: 46ch; text-align: center; color: #3a4354; font: 11px/1.5 ui-monospace, monospace; display: flex; flex-direction: column; gap: 6px; align-items: center; pointer-events: none; }
+.asmEmpty { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); max-width: 46ch; text-align: center; color: #3a4354; font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; display: flex; flex-direction: column; gap: 6px; align-items: center; pointer-events: none; }
 .asmEmpty .chip, .asmEmpty button { pointer-events: auto; }
 .asmEmpty .chip { background: #fff; color: #1d2430; border-color: #c9d0db; }
 .asmEmpty .muted { color: #8a94a6; }
-.asmGhost { position: fixed; z-index: 1000; pointer-events: none; background: #fff; color: #1d2430; border: 1px solid #c9d0db; border-left: 4px solid var(--src-user); border-radius: 6px; padding: 5px 10px; font: 600 11px ui-monospace, monospace; box-shadow: 0 2px 8px rgba(20, 28, 44, 0.18); max-width: 22em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.asmGhost { position: fixed; z-index: 1000; pointer-events: none; background: #fff; color: #1d2430; border: 1px solid #c9d0db; border-left: 4px solid var(--src-user); border-radius: 6px; padding: 5px 10px; font: 600 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; box-shadow: 0 2px 8px rgba(20, 28, 44, 0.18); max-width: 22em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .asmSection { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 .asmSection > h4 { flex: 0 0 auto; }
 /* the rail is max-content, never `auto`: a grid's auto column is compressible, and the shelf's head squeezed the vertical
@@ -714,7 +714,7 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .sysSettings .sysFieldsEdit input[type="text"] { width: 7em; }
 .sysSettings .sysFieldsEdit select { max-width: 100%; }
 .asmRail { display: flex; flex-direction: column; gap: 3px; }
-.asmRailBtn { min-width: 16px; writing-mode: vertical-rl; transform: rotate(180deg); border: 1px solid var(--line); border-left: 3px solid #3b6fd6; border-radius: 3px; background: #10141c; color: var(--muted); font: 700 9px/1 ui-monospace, monospace; letter-spacing: 0.06em; padding: 7px 3px; cursor: pointer; flex: 0 0 auto; white-space: nowrap; }
+.asmRailBtn { min-width: 16px; writing-mode: vertical-rl; transform: rotate(180deg); border: 1px solid var(--line); border-left: 3px solid #3b6fd6; border-radius: 3px; background: #10141c; color: var(--muted); font: 700 9px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: 0.06em; padding: 7px 3px; cursor: pointer; flex: 0 0 auto; white-space: nowrap; }
 .asmRailBtn.on { background: #1b2130; color: var(--text); border-color: #33405a; }
 .asmRailBtn:hover { color: var(--text); }
 .asmShelf { display: flex; flex-direction: column; gap: 4px; min-width: 0; min-height: 0; overflow: auto; }
@@ -727,38 +727,38 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .asmTile.tier-template { border-top-color: #e3e7ee; border-right-color: #e3e7ee; border-bottom-width: 3px; }
 .asmTile.tier-component, .asmTile.tier-attach { border-top-color: #e3e7ee; border-right-color: #e3e7ee; border-bottom-color: #e3e7ee; }
 .asmTierBtns { display: inline-flex; gap: 3px; }
-.asmTierBtn { border: 1px solid var(--line); border-radius: 3px; background: #10141c; color: var(--muted); font: 600 9.5px/1 ui-monospace, monospace; padding: 3px 7px; cursor: pointer; }
+.asmTierBtn { border: 1px solid var(--line); border-radius: 3px; background: #10141c; color: var(--muted); font: 600 9.5px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; padding: 3px 7px; cursor: pointer; }
 .asmTierBtn.on { background: #1b2130; color: var(--text); border-color: #33405a; }
 .asmTierBtn:hover { color: var(--text); }
 .asmTile:hover { box-shadow: 0 1px 4px rgba(20, 28, 44, 0.25); }
 .asmTile:active { cursor: grabbing; }
-.asmTileLabel { font: 600 11px/1.25 ui-monospace, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.asmTileLabel { font: 600 11px/1.25 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .asmTileSub { font-size: 9px; color: #6c7688; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .asmRow { font-size: 10.5px; display: flex; gap: 6px; flex-wrap: wrap; }
 .asmApplied { font-size: 10px; }
 .asmDot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
-.asmName { width: 14em; font: 600 11px ui-monospace, monospace; background: #0f1319; border: 1px solid var(--line); color: var(--text); border-radius: 3px; padding: 1px 4px; }
+.asmName { width: 14em; font: 600 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; background: #0f1319; border: 1px solid var(--line); color: var(--text); border-radius: 3px; padding: 1px 4px; }
 
 /* ── 2026-09-13: the sheet's hover tips (native titles never showed inside the flow), the caution and QA marks, the narrow card, the fold entry */
-.asmTip { position: absolute; z-index: 30; max-width: 380px; padding: 6px 8px; background: #1f2530; color: #f2f4f7; font: 11px/1.4 system-ui, sans-serif; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,.35); pointer-events: none; white-space: pre-wrap; }
+.asmTip { position: absolute; z-index: 30; max-width: 380px; padding: 6px 8px; background: #1f2530; color: #f2f4f7; font: 11px/1.4 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,.35); pointer-events: none; white-space: pre-wrap; }
 .asmTip .tipHead { font-weight: 700; margin-bottom: 2px; }
 .asmTip .tipOk { color: #7fd39a; } .asmTip .tipGap { color: #f0a58a; } .asmTip .tipNa { color: #98a2b3; }
 .asmMark.caution { background: #d9a400; right: 9px; }
-.asmMark.notWritten { top: auto; bottom: -7px; right: -7px; width: auto; padding: 0 5px; border-radius: 7px; background: #6c7688; font: 700 8.5px/14px ui-monospace, monospace; letter-spacing: 0.02em; }   /* the SAVED model refused the card (2026-09-15): drawn, not in the IDF */
+.asmMark.notWritten { top: auto; bottom: -7px; right: -7px; width: auto; padding: 0 5px; border-radius: 7px; background: #6c7688; font: 700 8.5px/14px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: 0.02em; }   /* the SAVED model refused the card (2026-09-15): drawn, not in the IDF */
 .asmNode.refused .asmMark.caution { right: 25px; }
-.asmQa { position: absolute; top: -7px; left: -7px; height: 14px; min-width: 14px; padding: 0 3px; border-radius: 7px; color: #fff; font: 700 9px/14px system-ui, sans-serif; text-align: center; cursor: default; }
+.asmQa { position: absolute; top: -7px; left: -7px; height: 14px; min-width: 14px; padding: 0 3px; border-radius: 7px; color: #fff; font: 700 9px/14px -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; text-align: center; cursor: default; }
 .asmQa.ok { background: #2e9e5e; } .asmQa.gap { background: #d6553b; }
 .asmNode.narrow { padding: 5px 28px 6px 28px; }
 .asmNode.narrow .asmTitle { font-size: 11px; }
 .ctxMenu .ctxFold { font-weight: 600; color: #b8860b; }
-.asmMigration { position: absolute; left: 8px; bottom: 8px; z-index: 20; max-width: 60%; padding: 6px 8px; background: #fff8e1; border: 1px solid #d9a400; border-radius: 4px; font: 11px/1.4 system-ui, sans-serif; }
+.asmMigration { position: absolute; left: 8px; bottom: 8px; z-index: 20; max-width: 60%; padding: 6px 8px; background: #fff8e1; border: 1px solid #d9a400; border-radius: 4px; font: 11px/1.4 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; }
 .asmNode.zoneBox .asmMark.caution { right: 24px; }
 .sysQa tr.clickable { cursor: pointer; }
 
 /* THE ZONES FRAME (2026-09-13): the bench's rail with four panels; a room's pill under a zone's card is a selection */
 .asmPill.clickable { cursor: pointer; }
 .asmPill.sel { outline: 1px solid var(--src-user); }
-.zoneFrame .zfPanel { display: flex; flex-direction: column; gap: 4px; font: 11px ui-monospace, monospace; }
+.zoneFrame .zfPanel { display: flex; flex-direction: column; gap: 4px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .zoneFrame .zfRow { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
 .zoneFrame .zfTable { border-collapse: collapse; font-size: 10.5px; }
 .zoneFrame .zfTable th, .zoneFrame .zfTable td { padding: 1px 6px; text-align: left; border-bottom: 1px solid var(--line); }
@@ -775,7 +775,7 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .schedCard { cursor: pointer; }
 .schedCard.sel { outline: 2px solid var(--src-user); border-radius: 3px; }
 .calPane { background: #12151c; color: var(--text); }
-.calSlot { position: absolute; inset: 0; overflow: auto; padding: 10px 12px 12px; font: 11px ui-monospace, monospace; display: flex; flex-direction: column; gap: 8px; }
+.calSlot { position: absolute; inset: 0; overflow: auto; padding: 10px 12px 12px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; display: flex; flex-direction: column; gap: 8px; }
 .calCrumb { display: flex; gap: 6px; align-items: center; }
 .calCrumb .chip.on { background: #2b3550; color: var(--text); }
 .calYear { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 14px; }
@@ -814,14 +814,14 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .schedEd { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
 .schedEdHead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 12px; }
 .schedEdHead label { display: flex; align-items: center; gap: 6px; }
-.schedEdHead input { width: 260px; font: 12px ui-monospace, monospace; }
+.schedEdHead input { width: 260px; font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .schedEdHead input, .schedEdInput input { color: #000; background: #fff; }   /* black on white, readable (the user, 2026-10-05) */
 .schedEdHead input:disabled { color: #555; background: #d8dbe2; }
 .schedEdChips { display: flex; flex-wrap: wrap; gap: 4px; }
 .schedEdChips .chip.edited { border-color: var(--src-user); }
 .schedEdChips .chip.edited::after { content: " ✎"; color: var(--src-user); }
 .schedEdParts { display: flex; flex-wrap: wrap; gap: 4px; }   /* All Days · Weekdays · … · Winter DD (the user, 2026-10-05) */
-.schedEdParts button { background: #1b2130; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 2px 9px; font: 11.5px ui-monospace, monospace; cursor: pointer; }
+.schedEdParts button { background: #1b2130; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 2px 9px; font: 11.5px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; cursor: pointer; }
 .schedEdParts button.on { background: #2b3550; color: var(--sel); border-color: var(--sel); font-weight: 600; }
 .schedEdParts button.dim { opacity: 0.4; }
 .schedEdParts button.dim:hover { opacity: 0.75; }
@@ -830,7 +830,7 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .schedEdParts button.unset { border-style: dashed; }
 .schedEdSet { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 12px; }
 .schedEdSet label { display: flex; align-items: center; gap: 6px; }
-.schedEdSet select, .schedEdSet input { color: #000; background: #fff; font: 12px ui-monospace, monospace; }
+.schedEdSet select, .schedEdSet input { color: #000; background: #fff; font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .schedEdSet .schedEdId { width: 220px; }
 .schedEdSetDays { font-size: 11.5px; flex-basis: 100%; }
 .schedEdBars { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 3px; height: 150px; align-items: end; }
@@ -839,7 +839,7 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .schedEdBar.sel { outline: 1px solid var(--sel); background: #1b2130; }
 .schedEdBar.edited .calBarV { color: var(--src-user); font-weight: 600; }
 .schedEdInput { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 12px; min-height: 24px; }
-.schedEdInput input { width: 80px; font: 12px ui-monospace, monospace; }
+.schedEdInput input { width: 80px; font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .schedEdNote { font-size: 12px; margin-bottom: 8px; }
 
 /* ── 2026-09-14: the component's INPUTS grouped by function (the user: "too verbose, confusing"); a group with a switch greys its inputs */
@@ -850,17 +850,17 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .inGroup { border-top: 1px solid var(--line); padding: 4px 0 3px; display: flex; flex-direction: column; gap: 3px; }
 .inGroup.off fieldset { opacity: 0.4; }
 .inGroup fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.inTitle { font: 700 10px/1 ui-monospace, monospace; letter-spacing: 0.06em; color: var(--dim); text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
+.inTitle { font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: 0.06em; color: var(--dim); text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
 .inTitle label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; text-transform: uppercase; }
 .inTitle .muted { text-transform: none; font-weight: 500; letter-spacing: 0; }
 .inRow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11px; }
 .inRow .k { flex: 0 0 132px; color: var(--muted); }
-.inRow select { max-width: 24em; font: 11px ui-monospace, monospace; background: #0f1319; border: 1px solid var(--line); color: var(--text); border-radius: 3px; }
+.inRow select { max-width: 24em; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; background: #0f1319; border: 1px solid var(--line); color: var(--text); border-radius: 3px; }
 .inRow .inSub { flex-basis: 100%; padding-left: 138px; font-size: 10px; line-height: 1.35; }
 .inSlider { display: inline-flex; align-items: center; gap: 6px; }
 .inSlider input[type="range"] { width: 140px; accent-color: var(--src-user); }
-.inSlider b { font-family: ui-monospace, monospace; min-width: 3.5em; }
-.qaHow { font: 10.5px/1.4 ui-monospace, monospace; color: var(--text); padding: 4px 6px; white-space: normal; }
+.inSlider b { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; min-width: 3.5em; }
+.qaHow { font: 10.5px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: var(--text); padding: 4px 6px; white-space: normal; }
 /* the two sides of a zone's thermostat (2026-09-14): a checkbox per side, a side that is off greyed */
 .zoneSide { display: inline-flex; align-items: center; gap: 4px; }
 .zoneSide.off { opacity: 0.6; }
@@ -868,28 +868,28 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .inGroup.rollup.folded { padding-bottom: 2px; }
 .inTitle .fold, .inTitle .foldTitle { background: none; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 0; text-transform: uppercase; letter-spacing: 0.06em; }
 .inTitle .fold { width: 12px; text-align: left; }
-.inRow textarea { font: 11px ui-monospace, monospace; background: #0f1319; border: 1px solid var(--line); color: var(--text); border-radius: 3px; min-width: 14em; resize: vertical; }
+.inRow textarea { font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; background: #0f1319; border: 1px solid var(--line); color: var(--text); border-radius: 3px; min-width: 14em; resize: vertical; }
 .inGroup .inGroup { border-top: 1px dashed var(--line); margin-left: 8px; }
 
 /* THE ROLL-UPS (user, 2026-09-15): a column's sections fold behind their heads; the open set is remembered */
-.bemCol .foldHead { all: unset; cursor: pointer; display: flex; gap: 6px; align-items: baseline; font: 700 10px/1 ui-monospace, monospace; letter-spacing: 0.06em; color: var(--dim); text-transform: uppercase; }
+.bemCol .foldHead { all: unset; cursor: pointer; display: flex; gap: 6px; align-items: baseline; font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: 0.06em; color: var(--dim); text-transform: uppercase; }
 .bemCol .foldHead:hover { color: var(--text); }
 .bemCol .foldHead:focus-visible { outline: 1px solid var(--sel); outline-offset: 2px; }
 .bemCol .foldArrow { display: inline-block; width: 10px; color: var(--muted); }
-.bemCol .foldSummary { color: #a8b0c2; font: 11px/1.35 ui-monospace, monospace; padding-left: 16px; word-break: break-word; }
+.bemCol .foldSummary { color: #a8b0c2; font: 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; padding-left: 16px; word-break: break-word; }
 
 /* THE RESULTS FRAME (user, 2026-09-15): five rails, a table or a chart each; the charts are inline SVG */
 .runFrame .qaPanel.steps { min-width: 0; }
 .runFrame .chartBox { display: flex; flex-direction: column; gap: 4px; padding: 6px 10px; }
 .runFrame .chart { display: block; }
 .runFrame .chart .grid { stroke: #262c38; stroke-width: 1; }
-.runFrame .chart .tick { fill: #8b93a7; font: 9px ui-monospace, monospace; }
+.runFrame .chart .tick { fill: #8b93a7; font: 9px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .runFrame .chart rect:hover { opacity: .8; }
-.runFrame .chartLegend { display: flex; flex-wrap: wrap; gap: 4px 12px; font: 10px ui-monospace, monospace; color: #a8b0c2; }
+.runFrame .chartLegend { display: flex; flex-wrap: wrap; gap: 4px 12px; font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: #a8b0c2; }
 .runFrame .chartLegend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
 
 /* THE PLAN READING (2026-09-16): the selected type as three columns — CODE · IFC · IDF — what governs lit by its source colour */
-.readGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 6px 8px; font: 11px ui-monospace, monospace; }
+.readGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 6px 8px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .readCol { border: 1px solid var(--line); padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .readCol.sel { border-color: currentColor; box-shadow: inset 0 0 0 1px currentColor; }
 .readHead { font-weight: 600; }
@@ -898,7 +898,7 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .readCol .muted { color: var(--muted); }
 .readCol .staged { color: var(--src-user); }
 .readCol button { align-self: flex-start; margin-top: 2px; }
-.readTitle { padding: 4px 8px 0; font: 11px ui-monospace, monospace; color: var(--muted); }
+.readTitle { padding: 4px 8px 0; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: var(--muted); }
 /* the layer list's source column (2026-09-16): the short name, the citation on hover */
 .detailTable td.src { max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 button.apply.mini { padding: 1px 8px; font-size: 11px; }
@@ -973,14 +973,14 @@ button.apply.mini { padding: 1px 8px; font-size: 11px; }
 .bomEquiv { flex: 0 0 auto; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding: 8px 10px 2px; }
 .bomEquiv b { font-size: 16px; font-weight: 800; }
 .bomEquiv .dim { color: var(--muted); font-size: 11px; }
-.runGraphHead { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; padding: 6px 10px; font: 700 10px/1.4 ui-monospace, monospace; color: var(--muted); letter-spacing: 0.04em; }
+.runGraphHead { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; padding: 6px 10px; font: 700 10px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: var(--muted); letter-spacing: 0.04em; }
 .runKey { font-weight: 400; letter-spacing: 0; color: var(--text); display: inline-flex; align-items: center; gap: 5px; }
 .runKey.dim { color: var(--dim); }
 .runKey i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; border: 1px solid; }
 .runGraphBody { flex: 1 1 auto; min-height: 0; position: relative; }
 /* the lines' checkboxes under the Annual graph, folded to one line (2026-10-16) */
 .runViewChecks { flex: 0 0 auto; }
-.runChecksFold { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; width: 100%; text-align: left; background: none; border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; color: var(--muted); font: 700 10px/1.4 ui-monospace, monospace; letter-spacing: 0.04em; cursor: pointer; }
+.runChecksFold { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; width: 100%; text-align: left; background: none; border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; color: var(--muted); font: 700 10px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: 0.04em; cursor: pointer; }
 .runViewChecks.open .runChecksFold { margin-bottom: 4px; }
 .runChecksShown { display: inline-flex; flex-wrap: wrap; gap: 2px 10px; font-weight: 400; letter-spacing: 0; color: var(--text); }
 .runChecksShown span { display: inline-flex; align-items: center; gap: 4px; }
@@ -995,25 +995,25 @@ button.apply.mini { padding: 1px 8px; font-size: 11px; }
 .runGraph .gridLine { stroke: #262c38; stroke-width: 1; }
 .runGraph .gridLine.faint { stroke: #1c212b; }
 .runGraph .axisLine { stroke: #5b6478; stroke-width: 1; }
-.runGraph .axisText { fill: #8b93a7; font: 10px ui-monospace, monospace; }
+.runGraph .axisText { fill: #8b93a7; font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .runGraph .axisText.strong { fill: var(--text); }
 .runGraph .axisText.dim { fill: #5b6478; font-size: 9px; }
 .runGraph .hoverLine { stroke: #9aa5b8; stroke-dasharray: 3 3; }
 .runGraph .hoverBox { fill: #161a22; stroke: var(--line); }
-.runGraph .hoverText { fill: var(--text); font: 10px ui-monospace, monospace; }
+.runGraph .hoverText { fill: var(--text); font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .runGraph .totalTick { stroke: #fff; stroke-width: 2; }
-.runGraph .segText { fill: #fff; font: 600 9.5px ui-monospace, monospace; pointer-events: none; paint-order: stroke; stroke: rgba(0,0,0,0.45); stroke-width: 2px; }
+.runGraph .segText { fill: #fff; font: 600 9.5px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; pointer-events: none; paint-order: stroke; stroke: rgba(0,0,0,0.45); stroke-width: 2px; }
 .runLegend { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 3px 12px; padding: 4px 10px 6px; font-size: 10px; color: var(--muted); }
 .runLegend span { display: inline-flex; align-items: center; gap: 4px; }
 .runLegend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; }
 .runLegend i.tick { height: 2px; background: #fff; }
 .runFrame { display: flex; flex-direction: column; gap: 6px; padding: 4px 2px; }
-.runSection .runTitle { background: none; border: 0; border-bottom: 2px solid transparent; color: #5b6478; font: 700 11px/1 ui-monospace, monospace; letter-spacing: 0.06em; padding: 4px 2px; cursor: pointer; }
+.runSection .runTitle { background: none; border: 0; border-bottom: 2px solid transparent; color: #5b6478; font: 700 11px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: 0.06em; padding: 4px 2px; cursor: pointer; }
 .runSection .runTitle:hover { color: #9aa5b8; }
 .runSection.on .runTitle { color: var(--sel); border-bottom-color: var(--sel); }
 .runViewChecks { flex: 0 0 auto; border: 1px solid var(--line); border-radius: 4px; background: #0f1218; padding: 2px 4px 6px; }
-.runSums { border-collapse: collapse; font: 12px ui-monospace, monospace; margin: 4px 10px; }
-.runSums th { text-align: left; font: 700 10px/1.4 ui-monospace, monospace; color: var(--muted); padding: 2px 14px 2px 0; border-bottom: 1px solid var(--line); }
+.runSums { border-collapse: collapse; font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; margin: 4px 10px; }
+.runSums th { text-align: left; font: 700 10px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: var(--muted); padding: 2px 14px 2px 0; border-bottom: 1px solid var(--line); }
 .runSums td { padding: 2px 14px 2px 0; }
 .runSums .num { text-align: right; }
 .runSums td i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
@@ -1021,7 +1021,7 @@ button.apply.mini { padding: 1px 8px; font-size: 11px; }
 .runChecks label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
 .runChecks label i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }
 .runChecks label em { color: var(--dim); font-style: normal; font-size: 11px; }
-.runGroup { flex: 0 0 100%; font: 700 9px/1.2 ui-monospace, monospace; letter-spacing: 0.06em; text-transform: uppercase; color: #5b6478; }
+.runGroup { flex: 0 0 100%; font: 700 9px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; letter-spacing: 0.06em; text-transform: uppercase; color: #5b6478; }
 /* RUN's time scale (2026-10-03): the window's scroll bar over the year and the scale slider, below the view */
 .runTime { flex: 0 0 auto; display: flex; align-items: center; gap: 16px; padding: 4px 10px 8px; }
 .runScroll { flex: 1 1 auto; display: flex; align-items: center; gap: 6px; min-width: 0; }
@@ -1033,7 +1033,7 @@ button.apply.mini { padding: 1px 8px; font-size: 11px; }
 .runThumb { position: absolute; top: 1px; bottom: 1px; min-width: 6px; background: #3b4558; border: 1px solid #5b6478; border-radius: 6px; cursor: grab; touch-action: none; }
 .runTrack.full .runThumb { cursor: default; background: #262c38; }
 .runThumb:active { cursor: grabbing; background: #4a5670; }
-.runScale { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; font: 10px ui-monospace, monospace; color: var(--muted); }
+.runScale { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: var(--muted); }
 .runScale input[type=range] { width: 120px; }
 .runScaleWords { display: inline-flex; gap: 8px; }
 .runScaleWords b { font-weight: 400; cursor: pointer; }
@@ -1045,7 +1045,7 @@ button.apply.mini { padding: 1px 8px; font-size: 11px; }
   @page { size: letter; margin: 0.5in; }
   html, body, #root { height: auto !important; overflow: visible !important; background: #fff !important; }
   body > *:not(.printReport) { display: none !important; }
-  .printReport { display: block; color: #111; background: #fff; font: 10.5px/1.35 -apple-system, sans-serif; width: 7.3in; }
+  .printReport { display: block; color: #111; background: #fff; font: 10.5px/1.35 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; width: 7.3in; }
   .printReport h1 { font-size: 18px; margin: 0 0 4px; }
   .printReport h2 { font-size: 13px; margin: 14px 0 6px; border-bottom: 1px solid #999; padding-bottom: 2px; }
   .printReport .prMeta { display: flex; flex-wrap: wrap; gap: 2px 16px; color: #333; }
@@ -1067,7 +1067,7 @@ button.apply.mini { padding: 1px 8px; font-size: 11px; }
   /* BOM's tables on paper (2026-10-07): the screen's dark panel off, every column on the page */
   .printReport .bomTableWrap { background: #fff !important; border: 0; overflow: visible; }
   .printReport .bomTableWrap .runGraphHead { color: #333; font-size: 9.5px; white-space: normal; padding: 2px 0; }
-  .printReport .bomCostTable { font: 8px/1.3 -apple-system, sans-serif; color: #111; }
+  .printReport .bomCostTable { font: 8px/1.3 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; color: #111; }
   .printReport .bomCostTable th, .printReport .bomCostTable td { color: #111 !important; background: #fff !important; border-bottom: 1px solid #ddd; padding: 1px 3px; }
   .printReport .bomCostTable tr.sum td { border-top: 1px solid #888; font-weight: 700; }
   .printReport .bomCostTable tr.surplus td { color: #0f766e !important; }
@@ -1099,7 +1099,7 @@ button.apply.mini { padding: 1px 8px; font-size: 11px; }
 .pvPanels { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
 .pvFace { border-top: 1px solid var(--line); padding-top: 3px; }
 .pvFaceHead { font-size: 11px; color: var(--muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-.pvTicks { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 1px 6px; font: 10px ui-monospace, monospace; }
+.pvTicks { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 1px 6px; font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .pvTicks label { display: flex; gap: 3px; align-items: center; justify-content: flex-start; }
 .pvTicks label.held { color: var(--muted); }
 /* RUN · the zones' design loads and the units' sizing, heating and cooling apart with their air (2026-10-02) */
@@ -1123,7 +1123,7 @@ button.apply.mini { padding: 1px 8px; font-size: 11px; }
 .bomCard.pending { border-left-color: #5b6478; opacity: .85; }
 .bomEmpty { padding: 8px; }
 .bomTableWrap { flex: 0 0 auto; border: 1px solid var(--line); border-radius: 4px; background: #0f1218; overflow-x: auto; }
-.bomCostTable { border-collapse: collapse; width: 100%; font: 10.5px ui-monospace, monospace; }
+.bomCostTable { border-collapse: collapse; width: 100%; font: 10.5px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .bomCostTable th, .bomCostTable td { padding: 2px 6px; border-bottom: 1px solid #1c212b; text-align: left; white-space: nowrap; }
 .bomCostTable th.num, .bomCostTable td.num { text-align: right; }
 .bomCostTable tr.surplus td { color: #2dd4bf; }
@@ -1150,17 +1150,17 @@ button.apply.mini { padding: 1px 8px; font-size: 11px; }
 .stmtList { display: flex; flex-direction: column; gap: 4px; }
 .stmt { border: 1px solid var(--line); border-radius: 4px; }
 .stmt.open { border-color: #33405a; }
-.stmtRow { all: unset; box-sizing: border-box; width: 100%; cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; padding: 4px 6px; font: 11px ui-monospace, monospace; color: var(--text); }
+.stmtRow { all: unset; box-sizing: border-box; width: 100%; cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; padding: 4px 6px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: var(--text); }
 .stmtRow:hover { background: #1a202b; }
 .stmtRow:focus-visible { outline: 1px solid var(--sel); }
 .stmtArrow { color: var(--muted); width: 10px; }
 .stmtTotal { margin-left: auto; font-weight: 700; }
-.stmtBody { padding: 4px 6px 8px; display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); font: 11px ui-monospace, monospace; }
+.stmtBody { padding: 4px 6px 8px; display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .stmtBody table { border-collapse: collapse; }
 .stmtBody td, .stmtBody th { padding: 1px 4px; text-align: left; }
 .stmtBody th { color: var(--muted); font-weight: 600; }
 .stmtBody .num { text-align: right; }
-.bemCol .stmtBody input[type="text"] { background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 1px 4px; font: 11px ui-monospace, monospace; }
+.bemCol .stmtBody input[type="text"] { background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 1px 4px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .bemCol .stmtBody input.stmtDate { width: 76px; }
 .bemCol .stmtBody input.stmtText { width: 120px; }
 .bemCol .stmtBody input.stmtNum { text-align: right; }
@@ -1191,7 +1191,7 @@ button.apply.mini { padding: 1px 8px; font-size: 11px; }
 
 /* THE SPLASH PAGE (2026-10-10): once per launch, over the app loading behind it */
 .splashScrim { position: fixed; inset: 0; z-index: 200; background: #05070bf2; display: flex; align-items: center; justify-content: center; padding: 16px; }
-.splash { width: min(860px, 100%); max-height: 100%; overflow: auto; background: #12161f; border: 1px solid #33405a; border-radius: 8px; box-shadow: 0 16px 60px #000c; padding: 22px 28px; color: var(--text); font: 13px/1.5 system-ui, -apple-system, sans-serif; }
+.splash { width: min(860px, 100%); max-height: 100%; overflow: auto; background: #12161f; border: 1px solid #33405a; border-radius: 8px; box-shadow: 0 16px 60px #000c; padding: 22px 28px; color: var(--text); font: 13px/1.5 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; }
 .splash h1 { margin: 0; font-size: 26px; letter-spacing: 0.04em; }
 .splash .splashSub { color: var(--muted); margin-bottom: 10px; }
 .splash h2 { margin: 14px 0 4px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em; color: #7fd0a0; }
@@ -1199,7 +1199,7 @@ button.apply.mini { padding: 1px 8px; font-size: 11px; }
 .splash p { margin: 0 0 4px; }
 .splash ul { margin: 0 0 4px; padding-left: 20px; }
 .splash li { margin: 2px 0; }
-.splash code { font: 12px ui-monospace, monospace; }
+.splash code { font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .splash section { border-top: 1px solid var(--line); margin-top: 10px; }
 .splash .splashFoot { display: flex; justify-content: flex-end; margin-top: 16px; }
 .splash .splashFoot button { font-size: 14px; padding: 6px 18px; }
@@ -1211,7 +1211,7 @@ button.apply.needsRun:hover:not(:disabled) { background: #d84636; }
 .topbar button.explainBtn { margin-left: 0; }
 .topbar button.explainBtn.on { background: #fff; color: #12161f; }
 body.explaining .explainHover { outline: 1px dashed #7fd0a0; outline-offset: 1px; }
-.explainBox { position: fixed; z-index: 50; display: flex; flex-direction: column; background: #12161f; border: 1px solid #33405a; border-radius: 6px; box-shadow: 0 12px 40px #000c; color: var(--text); font: 13px/1.5 system-ui, -apple-system, sans-serif; }
+.explainBox { position: fixed; z-index: 50; display: flex; flex-direction: column; background: #12161f; border: 1px solid #33405a; border-radius: 6px; box-shadow: 0 12px 40px #000c; color: var(--text); font: 13px/1.5 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; }
 .explainHead { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 12px; border-bottom: 1px solid var(--line); cursor: move; user-select: none; }
 .explainTitle { flex: 1; min-width: 0; color: #7fd0a0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .explainHead button { background: #1b2130; color: var(--text); border: 1px solid #33405a; border-radius: 4px; padding: 2px 10px; cursor: pointer; }
@@ -1220,7 +1220,7 @@ body.explaining .explainHover { outline: 1px dashed #7fd0a0; outline-offset: 1px
 .explainBody p { margin: 0 0 6px; }
 .explainBody ul { margin: 0 0 6px; padding-left: 20px; }
 .explainBody li { margin: 2px 0; }
-.explainBody code { font: 12px ui-monospace, monospace; }
+.explainBody code { font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
 .explainGrip { position: absolute; right: 0; bottom: 0; width: 14px; height: 14px; cursor: nwse-resize; background: linear-gradient(135deg, transparent 50%, #33405a 50%); border-bottom-right-radius: 6px; }
 .explainGrip:hover { background: linear-gradient(135deg, transparent 50%, #4a90d9 50%); }
 /* look-ups in the user's browser (2026-10-16): the energy code's Find…, the utility's Search… */

@@ -27,16 +27,31 @@ const cmp = (a, b) => (a.major - b.major) || (a.minor - b.minor) || (a.patch - b
 const realOf = (p) => { try { return fs.realpathSync(p); } catch { return p; } };
 const hasInstall = (dir) => fs.existsSync(path.join(dir, "Energy+.idd"));
 
-/** the candidates, in the order they are asked: the pin, the installs under /Applications, the bin links */
-function candidates(env = process.env) {
+/** the installs' usual homes on each system (2026-10-20, Windows and Linux): EnergyPlus's own installers put
+ *  macOS in /Applications/EnergyPlus-<v>, Windows in C:\EnergyPlusV<v>, Linux in /usr/local/EnergyPlus-<v> with a link in /usr/local/bin */
+const HOMES = {
+  darwin: { roots: ["/Applications"], pattern: /^EnergyPlus/i, exe: "energyplus", links: ["/usr/local/bin/energyplus", "/opt/homebrew/bin/energyplus"] },
+  win32: { roots: ["C:\\", process.env.ProgramFiles, process.env["ProgramFiles(x86)"]].filter(Boolean), pattern: /^EnergyPlusV/i, exe: "energyplus.exe", links: [] },
+  linux: { roots: ["/usr/local", "/opt"], pattern: /^EnergyPlus-/i, exe: "energyplus", links: ["/usr/local/bin/energyplus", "/usr/bin/energyplus"] },
+};
+
+/** the candidates, in the order they are asked: the pin, the installs in the system's usual homes, the bin links */
+function candidates(env = process.env, platform = process.platform) {
   const c = [];
   if (env.ENERGYPLUS) c.push({ exe: env.ENERGYPLUS, from: "$ENERGYPLUS" });
-  try {
-    for (const d of fs.readdirSync("/Applications")) if (/^EnergyPlus/i.test(d)) c.push({ exe: path.join("/Applications", d, "energyplus"), from: "/Applications" });
-  } catch { /* no /Applications */ }
-  for (const p of ["/usr/local/bin/energyplus", "/opt/homebrew/bin/energyplus"]) c.push({ exe: p, from: path.dirname(p) });
+  const home = HOMES[platform] ?? HOMES.linux;
+  for (const root of home.roots) {
+    try {
+      for (const d of fs.readdirSync(root)) if (home.pattern.test(d)) c.push({ exe: path.join(root, d, home.exe), from: root });
+    } catch { /* no such folder */ }
+  }
+  for (const p of home.links) c.push({ exe: p, from: path.dirname(p) });
   return c;
 }
+
+/** a pinned .bat or .cmd (a shim) runs through the shell on Windows: Node refuses to spawn one directly; its path is quoted for the shell */
+const viaShell = (exe) => process.platform === "win32" && /\.(bat|cmd)$/i.test(exe);
+const spawnArgs = (exe, args) => (viaShell(exe) ? { exe: `"${exe}"`, args: args.map((a) => `"${a}"`), shell: true } : { exe, args, shell: false });
 
 /** every engine that answers `--version`, newest first; the pin (if any) flagged */
 function listEngines(env = process.env) {
@@ -46,7 +61,7 @@ function listEngines(env = process.env) {
     const real = realOf(cand.exe);
     if (seen.has(real)) { if (cand.from === "$ENERGYPLUS") seen.get(real).pinned = true; continue; }
     let out = "";
-    try { const r = spawnSync(cand.exe, ["--version"], { encoding: "utf8", timeout: 30000 }); if (r.status !== 0) continue; out = (r.stdout || "").trim().split("\n")[0]; } catch { continue; }
+    try { const sa = spawnArgs(cand.exe, ["--version"]); const r = spawnSync(sa.exe, sa.args, { encoding: "utf8", timeout: 30000, shell: sa.shell }); if (r.status !== 0) continue; out = (r.stdout || "").trim().split(/\r?\n/)[0]; } catch { continue; }
     const v = parseVersion(out);
     seen.set(real, { exe: cand.exe, real, dir: path.dirname(real), version: out, v, from: cand.from, pinned: cand.from === "$ENERGYPLUS" });
   }
@@ -88,9 +103,9 @@ function weatherDirs(repoRoot, engine) {
 function resolveEpw(p, dirs) {
   if (!p) return null;
   if (fs.existsSync(p)) return p;
-  const name = path.basename(String(p));
+  const name = String(p).split(/[\\/]/).pop();   // a path written on another system keeps its own separator
   for (const d of dirs) { const q = path.join(d, name); if (fs.existsSync(q)) return q; }
   return null;
 }
 
-module.exports = { parseVersion, listEngines, findEngine, weatherDirs, resolveEpw };
+module.exports = { parseVersion, listEngines, findEngine, weatherDirs, resolveEpw, spawnArgs };

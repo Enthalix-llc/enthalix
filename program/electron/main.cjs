@@ -10,9 +10,12 @@ const engines = require("./engineLocate.cjs");   // the engine and the weather f
 const projectStore = require("./projectStore.cjs");   // the ledgers by project and version, with their lineage (2026-09-30)
 const explainWindow = require("./explainWindow.cjs");   // the Explain help in a window of its own, for a second monitor (2026-10-15)
 
-// <repo>/data — the module contract's output location
-const REPO_DIR = path.resolve(__dirname, "..", "..");
-const DATA_DIR = path.resolve(__dirname, "..", "..", "data");
+// <repo>/data — the module contract's output location. INSTALLED (2026-10-20, the installers for macOS, Windows and Linux): the app's
+// own folder is read-only (inside the .app, under Program Files, in an AppImage), so the user's files — data/ and Weather/ — live in
+// Documents/Enthalix, and the shipped references and samples are read from the install's resources folder
+const REPO_DIR = app.isPackaged ? path.join(app.getPath("documents"), "Enthalix") : path.resolve(__dirname, "..", "..");
+const SHIPPED_DIR = app.isPackaged ? process.resourcesPath : path.resolve(__dirname, "..", "..");
+const DATA_DIR = path.join(REPO_DIR, "data");
 // <repo>/Weather — the project's weather files (the user's ruling, 2026-09-22): searched first, and where a download lands
 const WEATHER_DIR = path.join(REPO_DIR, "Weather");
 
@@ -40,8 +43,8 @@ function saveUser(what, write) {
   try { return write(); }
   catch (e) { broadcast({ kind: "save", ok: false, what, error: e instanceof Error ? e.message : String(e) }); throw e; }
 }
-const REF_IFC = path.resolve(__dirname, "..", "..", "references", "ifc");
-const REF_DIR = path.resolve(__dirname, "..", "..", "references");
+const REF_IFC = path.join(SHIPPED_DIR, "references", "ifc");
+const REF_DIR = path.join(SHIPPED_DIR, "references");
 
 // CRASH RECOVERY (user, 2026-10-09: "This raises an issue with using electron for the final program as it fails on occasion"). Two
 // failures measured: the page's renderer ran out of its 4 GB heap after ~16 h (V8 OOM), and Chromium's GPU process exited (exit_code=5),
@@ -77,6 +80,7 @@ async function createWindow() {
     width: 1720,
     height: 980,
     backgroundColor: "#0f1117",
+    autoHideMenuBar: true,   // Windows and Linux: the menu bar shows with Alt, as the macOS menu stays in the system bar
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -140,10 +144,8 @@ h1{font-size:18px;margin:0 0 18px;color:#e9b44c}code{color:#7fd1c0}p{max-width:7
 <p><b>Nothing was loaded.</b> The built bundle in <code>dist/</code> (${esc(bundle)}) was deliberately NOT used: an old build that looks like the app is worse than an empty window.</p>
 </div>
 <p>Start the dev server from <code>program/</code>:</p>
-<p><code>env -u ELECTRON_RUN_AS_NODE pnpm dev</code></p>
-<p>or, with the DevTools port:</p>
-<p><code>env -u ELECTRON_RUN_AS_NODE npx concurrently -k "vite" "electron . --remote-debugging-port=9222"</code></p>
-<p>Then reload this window (⌘R).</p>`;
+<p><code>${process.platform === "win32" ? "pnpm dev" : "env -u ELECTRON_RUN_AS_NODE pnpm dev"}</code></p>
+<p>Then reload this window (${process.platform === "darwin" ? "⌘R" : "Ctrl+R"}).</p>`;
 }
 
 ipcMain.handle("bim:open-ifc", async () => {
@@ -216,6 +218,7 @@ ipcMain.handle("bim:write-ifc", async (_ev, p, bytes) => {
 //    stdout streams to the renderer as progress. The renderer writes the IDF
 //    through the same functions the gate uses; main only moves bytes and
 //    spawns. Run folders: data/bem/runs/<stamp>/.
+const { unzipSync } = require("fflate");
 const { spawn, spawnSync } = require("node:child_process");
 // a path under a folder, never beside it: "data-other/x" starts with "data" but is outside it, so the separator is part of the test
 const inside = (dir, r) => r === dir || r.startsWith(dir + path.sep);
@@ -351,8 +354,8 @@ ipcMain.handle("bem:geocode", async (_ev, query) => {
     return { results };
   } catch (e) { return { error: e instanceof Error ? e.message : String(e) }; }
 });
-// A WEATHER FILE FROM THE WEB: the zip (epw + ddy + stat inside) is unpacked with
-// the system's unzip into Weather/; the epw's path comes back to be chosen like any installed file
+// A WEATHER FILE FROM THE WEB: the zip (epw + ddy + stat inside) is unpacked
+// into Weather/; the epw's path comes back to be chosen like any installed file
 ipcMain.handle("bem:download-weather", async (_ev, url) => {
   const stem = path.basename(String(url)).replace(/\.zip$/i, "").replace(/[^a-z0-9._-]/gi, "_");
   // THE DOWNLOAD LANDS IN Weather/ (2026-09-23): the epw, ddy and stat beside the project's other weather files; the zip in data/cache
@@ -367,8 +370,14 @@ ipcMain.handle("bem:download-weather", async (_ev, url) => {
     if (!res.ok) return { error: `HTTP ${res.status} from ${url}` };
     const zip = path.join(cache, `${stem}.zip`);
     fs.writeFileSync(zip, Buffer.from(await res.arrayBuffer()));
-    const un = spawnSync("unzip", ["-o", "-q", "-j", zip, "*.epw", "*.ddy", "*.stat", "-d", WEATHER_DIR], { encoding: "utf8" });
-    if (un.status !== 0) return { error: `unzip failed: ${(un.stderr || un.stdout || "").trim()}` };
+    // unpacked here, not by a system tool (2026-10-20: Windows has no unzip): the epw, ddy and stat only, by their plain file names
+    try {
+      const out = unzipSync(new Uint8Array(fs.readFileSync(zip)), { filter: (f) => /\.(epw|ddy|stat)$/i.test(f.name) });
+      for (const [name, bytes] of Object.entries(out)) {
+        const base = name.split(/[\\/]/).pop();
+        if (base && /^[^<>:"|?*]+$/.test(base)) fs.writeFileSync(path.join(WEATHER_DIR, base), bytes);
+      }
+    } catch (e) { return { error: `could not unpack ${path.basename(zip)}: ${e instanceof Error ? e.message : String(e)}` }; }
     const epw = epwOf();
     return epw ? { epw, dir: WEATHER_DIR, cached: false } : { error: "no .epw inside the zip" };
   } catch (e) { return { error: e instanceof Error ? e.message : String(e) }; }
@@ -400,7 +409,8 @@ ipcMain.handle("bem:run", async (ev, opts) => {
   const args = [...(opts.expand ? ["-x"] : []), ...(opts.epw ? ["-w", opts.epw] : ["-D"]), "-d", dir, idfPath];
   const t0 = Date.now();
   return await new Promise((resolve) => {
-    const child = spawn(exe, args, { cwd: dir });
+    const sa = engines.spawnArgs(exe, args);   // a pinned .bat or .cmd runs through the shell on Windows
+    const child = spawn(sa.exe, sa.args, { cwd: dir, shell: sa.shell });
     const send = (text) => { try { ev.sender.send("bem:progress", { stamp: opts.stamp, text }); } catch { /* window gone */ } };
     let buf = "";
     const onData = (d) => {
@@ -450,7 +460,8 @@ ipcMain.handle("bem:validate", async (_ev, idf) => {
   fs.mkdirSync(dir, { recursive: true });
   const idfPath = path.join(dir, "in.idf");
   fs.writeFileSync(idfPath, idf);
-  const res = spawnSync(exe, ["--convert-only", "-d", dir, idfPath], { encoding: "utf8", timeout: 120000 });
+  const sa = engines.spawnArgs(exe, ["--convert-only", "-d", dir, idfPath]);
+  const res = spawnSync(sa.exe, sa.args, { encoding: "utf8", timeout: 120000, shell: sa.shell });
   let err = "";
   try { err = fs.readFileSync(path.join(dir, "eplusout.err"), "utf8"); } catch { err = `${res.stdout}\n${res.stderr}`; }
   return { ok: res.status === 0, err };

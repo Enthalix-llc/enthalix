@@ -8,6 +8,7 @@
 // so main.cjs requires it and the gate tests it through createRequire.
 const fs = require("node:fs");
 const path = require("node:path");
+const { renameRetry } = require("./fsRetry.cjs");   // Windows holds a file open for a moment (2026-10-20)
 
 const historyDir = (file) => path.join(path.dirname(file), "history");
 const baseOf = (file) => path.basename(file, ".json");
@@ -45,7 +46,7 @@ function saveJson(file, json, opts) {
   }
   const tmp = `${file}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(json, null, 2));
-  fs.renameSync(tmp, file);
+  renameRetry(tmp, file);
   return { path: file, kept };
 }
 function readJson(p) { try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return null; } }

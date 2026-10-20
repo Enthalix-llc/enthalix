@@ -8,6 +8,7 @@
 import { LensPicker } from "./modules/bem/view/bemUi.js";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as WebIFC from "web-ifc";
+import { WASM_DIR, wasmUrl } from "./core/wasmUrl.js";
 import { runExtraction, type ExtractRun } from "./core/ifcStream.js";
 import type { Database } from "sql.js";
 import * as THREE from "three";
@@ -1236,7 +1237,7 @@ export function App(): React.ReactElement {
     const surfaces = split.out;
     const leakAfter = shell ? openEdges(edgeIn(shell.out)).leakLenM : leakBefore;
 
-    const SQL = await getSql((f) => `/wasm/${f}`);
+    const SQL = await getSql(wasmUrl);
     const idfDb = buildIdfDb(SQL, surfaces, ch, {
       sourceName: "ifc.db", sourceSha256: shaRef.current,
       shellApplied: useShell, leakBeforeM: leakBefore, leakAfterM: leakAfter,
@@ -1476,7 +1477,7 @@ export function App(): React.ReactElement {
     const run = runRef.current;
     const bytes = await window.bem.readDataFile("idf.db");
     if (!run || !bytes) return;
-    const SQL = await getSql((f) => `/wasm/${f}`);
+    const SQL = await getSql(wasmUrl);
     const idfDb = new SQL.Database(bytes);
     writeIdfElements(idfDb, run.elements, glazingResolver);
     writeElementTypes(idfDb, run.types);
@@ -1504,7 +1505,7 @@ export function App(): React.ReactElement {
     void window.bim.saveCorrections(shaRef.current, ledgerJson(shaRef.current));
     const bytes = await window.bem.readDataFile("idf.db");
     if (!bytes) return;
-    const SQL = await getSql((f) => `/wasm/${f}`);
+    const SQL = await getSql(wasmUrl);
     const idfDb = new SQL.Database(bytes);
     writeVoidRulings(idfDb, voidRulingRows());
     stampIdfContentSha(idfDb);
@@ -1563,7 +1564,7 @@ export function App(): React.ReactElement {
     setBemRunning(true); setBemLog([]); setStatus("simulation running (EnergyPlus)…");
     const off = window.bem.onProgress((m) => setBemLog((l) => [...l.slice(-199), m.text]));
     try {
-      const SQL = await getSql((f) => `/wasm/${f}`);
+      const SQL = await getSql(wasmUrl);
       const out = await runBemPipeline(SQL, {
         ledger: bemLedgerRef.current, epw: null, zone: countyZoneRef.current, library: libRef.current, materialsSha256: materialsRef.current?.sha, schema: schemaRef.current, tariff: appliedTariff(),
         onProgress: (t) => setBemLog((l) => [...l.slice(-199), t]), readMeta, reportUnits: imperial ? "ip" : "si",
@@ -1604,7 +1605,7 @@ export function App(): React.ReactElement {
   const loadMaterials = async (datasets: Array<{ file: string; text: string }>): Promise<void> => {
     datasetTextsRef.current = datasets;
     try {
-      const SQL = await getSql((f) => `/wasm/${f}`);
+      const SQL = await getSql(wasmUrl);
       const cat = await window.bem.fetchCached(OSSTD_URL, OSSTD_CACHE, null);
       const osstdJson = "text" in cat ? cat.text : null;
       const side = await window.bem.readDataFile(MATERIALS_SIDECAR);
@@ -1796,7 +1797,7 @@ export function App(): React.ReactElement {
     setBemBusy(true);
     try {
       await energyCodesRead();
-      const SQL = await getSql((f) => `/wasm/${f}`);
+      const SQL = await getSql(wasmUrl);
       countyZoneRef.current = await countyZoneFor(bemLedgerRef.current?.site?.location ?? runRef.current?.site ?? null);
       setCountyZone(countyZoneRef.current);
       const out = await buildBemModel(SQL, { ledger: bemLedgerRef.current, commit, epw: null, readMeta, engineVersion: bemEngine?.version, zone: countyZoneRef.current, library: libRef.current, materialsSha256: materialsRef.current?.sha, schema: schemaRef.current, tariff: appliedTariff() });
@@ -2096,7 +2097,7 @@ export function App(): React.ReactElement {
   const saveSystemsDiagram = async (s: SystemsRuling): Promise<void> => {
     const bytes = await window.bem.readDataFile("idf.db");
     if (!bytes) return;
-    const SQL = await getSql((f) => `/wasm/${f}`);
+    const SQL = await getSql(wasmUrl);
     const idfDb = new SQL.Database(bytes);
     const rows = diagramRows(s.assembly ?? { nodes: [], edges: [] }, s.assign ?? {});
     writeSystemsDiagram(idfDb, rows);
@@ -2311,7 +2312,7 @@ export function App(): React.ReactElement {
     if (!b) { setStatus("run the BEM first — the bills are compared to its daily meters"); return; }
     setBomBusy(true);
     try {
-      const SQL = await getSql((f) => `/wasm/${f}`);
+      const SQL = await getSql(wasmUrl);
       const out = await runBomPipeline(SQL, {
         imports, statements: bomStatementsRef.current, excluded: bomExcludedRef.current, meters, daily: b.daily, runStamp: b.stamp,
         epwPath: epwPathFor(), bemMeta: b.bemMeta, readMeta,
@@ -2357,7 +2358,7 @@ export function App(): React.ReactElement {
       const w = ownEpw ? { epw: ownEpw } : await makeActualWeather({ start: span.a, end, lat: Number(site.latitude.toFixed(4)), lon: Number(site.longitude.toFixed(4)), template: bemLedgerRef.current?.weather?.epw, onProgress: setCalBusy });
       if ("error" in w) { setStatus(`calibration weather: ${w.error}`); return; }
       setCalBusy("simulating the actual year …");
-      const SQL = await getSql((f) => `/wasm/${f}`);
+      const SQL = await getSql(wasmUrl);
       const r = await runCalibration(SQL, { epwPath: w.epw, schema: schemaRef.current, onProgress: setCalBusy });
       setCalRun(await calibrationView(r));
       setStatus(`calibration run ${r.run.completed ? "completed" : "did not complete"} · ${span.a} – ${end} · Fatal ${r.run.fatal} · Severe ${r.run.severe} — BEM's design run untouched`);
@@ -3314,7 +3315,7 @@ export function App(): React.ReactElement {
       const fb = new Uint8Array(file.bytes);
       const sha = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", fb.slice().buffer)), (b) => b.toString(16).padStart(2, "0")).join("");
       const sapi = new WebIFC.IfcAPI();
-      sapi.SetWasmPath("/wasm/", true);
+      sapi.SetWasmPath(WASM_DIR, true);
       await sapi.Init();
       const sid = sapi.OpenModel(fb, { COORDINATE_TO_ORIGIN: false });
       const pr = projectSiteFile(sapi, sid, { name: f.name, index, houseTrueNorth: run.trueNorth, rooms, turnDeg: siteFileTurnRef.current[f.name] ?? 0 });
@@ -3424,7 +3425,7 @@ export function App(): React.ReactElement {
       setStatus(`${picked.name}: extracting surfaces…`);
       await new Promise((r) => setTimeout(r, 30)); // let the status paint
       const api = new WebIFC.IfcAPI();
-      api.SetWasmPath("/wasm/", true);
+      api.SetWasmPath(WASM_DIR, true);
       await api.Init();
       const modelID = api.OpenModel(bytes);
       const run = runExtraction(api, modelID);
@@ -3456,7 +3457,7 @@ export function App(): React.ReactElement {
       let ledger = await window.bim.loadCorrections(sha);
       let bemLed = (await window.bem.loadDecisions(sha)) as BemLedger | null;
       let bomLed = (await window.bom.loadLedger(sha)) as BomLedger | null;
-      const SQL = await getSql((f) => `/wasm/${f}`);
+      const SQL = await getSql(wasmUrl);
       // WHICH VERSION IS THIS (2026-09-30, the user's rulings): the project is the IfcProject GlobalId the file states, a
       // version its sha. A file with ledgers of its own is that version. One without is compared against every version of
       // its project that HAS ledgers (their FileIndex is in the store) — and, as before 2026-09-30, against the previous
@@ -3589,7 +3590,7 @@ export function App(): React.ReactElement {
           const text = pv ? await window.bom.readImport(pv.sha256.slice(0, 12), "csv") : null;
           const read = text ? parsePvCsv(text) : null;
           setCalPv(pv && read && !("error" in read) ? { name: pv.name, read } : null);
-          const SQL = await getSql((f) => `/wasm/${f}`);
+          const SQL = await getSql(wasmUrl);
           const last = await readLatestCalibration(SQL).catch(() => null);
           setCalRun(last ? await calibrationView(last) : null);
         }
@@ -3696,7 +3697,7 @@ export function App(): React.ReactElement {
       // the lineage, exactly (2026-09-30): the new version was made from the one open, by this deletion
       const proj = runRef.current?.project ?? null;
       await window.projects.registerVersion({ sha, projectId: proj?.globalId, projectName: proj?.name, projectLongName: proj?.longName, parentSha: shaRef.current || null, madeBy: "delete-from-ifc", note: `${label} deleted`, fileName: nameRef.current, filePath: pathRef.current });
-      setStatus(`${label} deleted · ${formatDelete(report)[0]!.trim()} · backup ${backup.split("/").pop()}`);
+      setStatus(`${label} deleted · ${formatDelete(report)[0]!.trim()} · backup ${backup.split(/[\\/]/).pop()}`);
       await ifcPaneRef.current?.clear();
       await loadPicked({ name: nameRef.current, path: pathRef.current, bytes: out });
     } catch (err) {
@@ -4288,7 +4289,7 @@ export function App(): React.ReactElement {
               <h4 title={bomRail === "UTILITY" ? "the tariff cards — select one for its details in the column" : bomRail === "WEATHER" ? "the weather the run used, and an actual year" : "the bills imported"}>BOM · {bomRail}</h4>
               <BomFrame rail={bomRail} onRail={setBomRail} sel={bomSel} onSel={setBomSel}
                 cards={(tariffRead?.file?.cards ?? []).map((card) => ({ card, applied: bomTariff?.card === card.id || (!bomTariff && !!card.sample) }))}
-                weather={epwLine ? { name: (bem?.run.epw ?? bemEpw ?? "").split("/").pop() || "the weather file", line: epwLine } : null}
+                weather={epwLine ? { name: (bem?.run.epw ?? bemEpw ?? "").split(/[\\/]/).pop() || "the weather file", line: epwLine } : null}
                 imports={bomImports.map((i) => ({ sha256: i.sha256, name: i.name, rows: i.csv.rows.length }))} />
             </section>
           )}
@@ -4441,7 +4442,7 @@ export function App(): React.ReactElement {
           {module === "bom" && billFormatOpen && <BillFormatDialog format={bomStatements.formats[0] ?? DEFAULT_BILL_FORMAT} onSave={saveBillFormat} onCancel={() => setBillFormatOpen(false)} />}
           {module === "bom" && (
             <BomReport priced={pricedBom} tariff={bomTariff} project={(pathRef.current.split(/[\\/]/).pop() ?? "").replace(/\.ifc$/i, "")} runStamp={bem?.stamp ?? null}
-              weather={`${(bem?.run.epw ?? bemEpw ?? "").split("/").pop() || "the weather file"} · ${epwLine}`} />
+              weather={`${(bem?.run.epw ?? bemEpw ?? "").split(/[\\/]/).pop() || "the weather file"} · ${epwLine}`} />
           )}
             {tab === "bem-run" && open.has("bem-results") && bem && <BemResultsPanel bem={bem} selectedZone={selZone} onZone={setSelZone} imperial={imperial} />}
             {tab === "bem-run" && open.has("bem-run") && <BemRunPanel bem={bem} log={bemLog} />}
@@ -4457,7 +4458,7 @@ export function App(): React.ReactElement {
                 {open.has("project") && (
                   <ProjectPanel project={projectView} currentSha={shaRef.current} busy={busy} note={projectOpNote}
                     onExport={() => void (async () => { const r = await window.projects.exportProject(projectView.id, `${(projectView.longName ?? projectView.name ?? projectView.id).replace(/[^\w .,-]+/g, "_")}.bimproject`); setProjectOpNote(r ? `exported ${r.versions} versions → ${r.file}` : "export cancelled"); })()}
-                    onImport={() => void (async () => { const r = await window.projects.importProject(); setProjectOpNote(r ? `imported from ${r.file.split("/").pop()}: ${r.versions} versions, ${r.ledgers} rulings added or newer, ${r.kept} kept, ${r.history} history entries${r.ledgers ? " — reopen the file to load them" : ""}` : "import cancelled"); await refreshProject(runRef.current?.project); })()} />
+                    onImport={() => void (async () => { const r = await window.projects.importProject(); setProjectOpNote(r ? `imported from ${r.file.split(/[\\/]/).pop()}: ${r.versions} versions, ${r.ledgers} rulings added or newer, ${r.kept} kept, ${r.history} history entries${r.ledgers ? " — reopen the file to load them" : ""}` : "import cancelled"); await refreshProject(runRef.current?.project); })()} />
                 )}
               </>
             )}

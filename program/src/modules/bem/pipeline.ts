@@ -172,7 +172,7 @@ export interface BuildOpts {
 
 /** the proof's row in the model's checks: a commit reproduced to the byte, or the first line it did not */
 function modelStoreCheck(stored: ModelInputs, liveIdf: string | null, idf: string): CheckRow {
-  const held = `${stored.libraryCount} library objects held as values, the weather ${stored.weather ? stored.weather.path.split("/").pop() : "none"}`;
+  const held = `${stored.libraryCount} library objects held as values, the weather ${stored.weather ? stored.weather.path.split(/[\\/]/).pop() : "none"}`;
   if (liveIdf === null) return { rule: "idf-db", subject: "the model", verdict: "ok", text: `written from idf.db alone — committed ${stored.committedAt} · ${held}`, fix: "" };
   const { diff: d } = proveStore(liveIdf, idf);
   return d
@@ -311,7 +311,7 @@ export async function runCalibration(SQL: SqlJsStatic, opts: { epwPath: string; 
   const store = buildFromStore(db, model, opts.schema ?? null, texts);
   db.close();
   if (!store) throw new Error("idf.db holds no model yet — Apply on a BEM tab first");
-  if (!store.weather?.amy) throw new Error(`${texts.path.split("/").pop()} is not an actual-year file — a calibration runs on the year the bills were metered under`);
+  if (!store.weather?.amy) throw new Error(`${texts.path.split(/[\\/]/).pop()} is not an actual-year file — a calibration runs on the year the bills were metered under`);
   const mi = store.built.input;
   const w = writeIdf(mi.faces, mi.elements, mi.zoneVolumesM3, mi.site, mi.trueNorth, mi.sourceIfcName, store.weather, store.built.model);
   if (w.report.codeGap) throw new Error(w.report.codeGap);

@@ -1,0 +1,19 @@
+# Line endings (2026-10-20, Windows and Linux): files keep LF in the repository and in every checkout,
+# so a Windows clone reads the same bytes as macOS and Linux.
+* text=auto eol=lf
+
+# Model and weather files are read byte for byte: the sample IFC's SHA-256 is its identity (samples/README.md),
+# so git never rewrites their line ends.
+*.ifc -text
+*.epw -text
+*.ddy -text
+*.idf -text
+*.stat -text
+
+# Binary
+*.wasm binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.icns binary
+*.pdf binary
