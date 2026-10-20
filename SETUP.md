@@ -1,7 +1,8 @@
 # Setting up Enthalix
 
-Enthalix is a public preview, run from source. It is developed and tested on
-macOS (Apple silicon) with EnergyPlus 26.1.
+Enthalix is a public preview. It runs on macOS, Windows and Linux, with
+EnergyPlus 26.1. It is developed on macOS (Apple silicon); every change is
+built and run on all three systems automatically (`.github/workflows/ci.yml`).
 
 You install each part yourself, from its own publisher and under its own terms.
 To see what is installed and what is missing, run this in `program/`:
@@ -17,8 +18,17 @@ The check only reads; it installs nothing.
 | Part | Where to get it | Notes |
 | --- | --- | --- |
 | Node.js 22 or newer | [nodejs.org](https://nodejs.org/) | |
-| pnpm | [pnpm.io](https://pnpm.io/installation) | |
-| EnergyPlus 26.1 | [EnergyPlus releases](https://github.com/NatLabRockies/EnergyPlus/releases) | Enthalix finds an installation in `/Applications`. To use another one, set `ENERGYPLUS` to its `energyplus` program. |
+| pnpm | [pnpm.io](https://pnpm.io/installation) | or `npm install -g pnpm` |
+| git | [git-scm.com](https://git-scm.com/) | to copy the repository |
+| EnergyPlus 26.1 | [EnergyPlus releases](https://github.com/NatLabRockies/EnergyPlus/releases) | Install it with its own installer, in its usual folder (below). To use another installation, set `ENERGYPLUS` to its `energyplus` program. |
+
+Where Enthalix looks for EnergyPlus:
+
+| System | EnergyPlus's download | Where Enthalix looks |
+| --- | --- | --- |
+| macOS | `…-Darwin-macOS13-arm64.dmg` (Apple silicon) or `…-x86_64.dmg` (Intel) | `/Applications/EnergyPlus-*`, `/usr/local/bin`, `/opt/homebrew/bin` |
+| Windows | `…-Windows-x86_64.exe`, or `…-Windows-arm64.exe` on an ARM computer | `C:\EnergyPlusV*` and `Program Files` |
+| Linux | `…-Linux-Ubuntu24.04-x86_64.sh` (or `.tar.gz`) | `/usr/local/EnergyPlus-*`, `/opt/EnergyPlus-*`, `/usr/local/bin`, `/usr/bin` |
 
 Then, in a copy of this repository:
 
@@ -29,6 +39,36 @@ pnpm dev
 ```
 
 The first `pnpm dev` downloads Electron's binary.
+
+**On Windows**, building from source also needs the Microsoft Visual C++
+runtime ([download](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist));
+without it `pnpm dev` and `pnpm build` stop with "The specified module could
+not be found". Run the commands in PowerShell or the Command Prompt.
+
+**On Linux**, if Electron will not start because of its sandbox (Ubuntu 23.10 and
+later restrict unprivileged user namespaces), start it with
+`pnpm exec electron . --no-sandbox` while `pnpm exec vite` runs, or allow the
+namespaces as your distribution documents.
+
+### An installer instead
+
+`pnpm dist` builds an installer for the system you run it on, in `release/`: a
+`.dmg` on macOS, a setup `.exe` on Windows, an `.AppImage` and a `.deb` on Linux.
+They are not code-signed yet: macOS asks you to open the app with right-click ›
+Open the first time, and Windows SmartScreen asks you to choose "Run anyway". An
+AppImage needs `libfuse2` on recent Ubuntu.
+
+An installed Enthalix keeps your files in its app-data folder (see "Where your
+files are"). It still needs EnergyPlus installed separately.
+
+### Known issue: Windows in Parallels on a Mac
+
+In a Windows virtual machine under Parallels Desktop on Apple silicon, the
+EnergyPlus run can stop the whole virtual machine. It happens when EnergyPlus
+calculates shadows on the graphics card (SITE › shadows: PixelCounting, the
+default), through Parallels' 3D acceleration. Run Enthalix on macOS itself on
+such a Mac, or choose PolygonClipping under SITE › shadows (some buildings then
+report non-convex surfaces as Severe errors).
 
 ## 2. A building
 
@@ -92,7 +132,8 @@ values that are missing.
 
 | What | Where |
 | --- | --- |
-| Projects and your decisions | `projects.sqlite` in the app-data folder (on macOS, `~/Library/Application Support/Enthalix/`) |
-| Models, runs and your own tables | `data/`, never committed |
-| Weather files | `Weather/`, never committed |
+| Projects and your decisions | `projects.sqlite` in the app-data folder: `~/Library/Application Support/Enthalix/` on macOS, `%APPDATA%\Enthalix\` on Windows, `~/.config/Enthalix/` on Linux |
+| Models, runs and your own tables | `data/` in the repository, never committed; in an installed Enthalix, `data/` in the app-data folder |
+| Weather files | `Weather/` in the repository, never committed; in an installed Enthalix, `Weather/` in the app-data folder |
+| All of these, elsewhere | set `ENTHALIX_HOME` to a folder, and Enthalix keeps `projects.sqlite`, `data/` and `Weather/` there |
 | Settings | `data/settings.json`, for example `{ "geocoderUrl": "https://…/search" }` to use another Nominatim-compatible geocoder |

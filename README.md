@@ -7,9 +7,10 @@ Enthalix is open-source building energy modelling software, organised as
 model (EnergyPlus) out, and the building's measured operation compared back
 against the model.
 
-> **Status: public preview.** Run from source; developed and tested on macOS
-> with EnergyPlus 26.1. Results are simulation estimates, not code-compliance
-> documentation.
+> **Status: public preview.** Runs on macOS, Windows and Linux, from source or
+> from an installer you build (`pnpm dist`), with EnergyPlus 26.1. Developed on
+> macOS; every change is built and run on all three systems automatically.
+> Results are simulation estimates, not code-compliance documentation.
 
 ## What it does
 

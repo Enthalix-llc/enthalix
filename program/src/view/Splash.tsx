@@ -87,7 +87,7 @@ export function Splash(): ReactNode {
             <li>EnergyPlus, installed separately — run <code>pnpm setup:check</code> to see what is installed and what is missing (SETUP.md)</li>
             <li>A weather file from EnergyPlus's weather repository (picked on the map in BEM › SITE), or one you obtained</li>
             <li>The energy code your project is under: its climate zone for your county and its values, read from the code's own text
-              (free to read at codes.iccsafe.org) — no code table ships with Enthalix</li>
+              (free to read at codes.iccsafe.org) — until then, the DOE/PNNL prototype values for IECC 2006–2024 that ship with Enthalix</li>
             <li>Materials: EnergyPlus's datasets, the openstudio-standards catalogue, and your own entries</li>
             <li>Your utility's tariff, transcribed from its published schedule; your bills (typed or CSV) and a PV production export</li>
           </ul>
@@ -99,7 +99,7 @@ export function Splash(): ReactNode {
             <li>Calibration follows ASHRAE Guideline 14's statistics; a typical-year run cannot calibrate, and the actual year's sun is an
               estimate checked against the measured PV</li>
             <li>The tariff arithmetic covers a residential schedule with net metering (see references/tariffs/README.md)</li>
-            <li>A public preview: developed and tested on macOS, on few buildings</li>
+            <li>A public preview, tried on few buildings: developed on macOS; the Windows and Linux builds are run automatically on every change</li>
           </ul>
         </section>
 

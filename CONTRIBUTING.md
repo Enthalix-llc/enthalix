@@ -39,6 +39,22 @@ Signed-off-by: Your Name <you@example.com>
 
 Use your real name. Pull requests with unsigned commits can't be merged.
 
+### The checks on every change
+
+Every push and pull request is built on macOS, Windows and Linux
+(`.github/workflows/ci.yml`): typecheck, build, EnergyPlus 26.1, the app built,
+then a smoke run: the app opens the sample Duplex, builds the model and runs
+EnergyPlus, and the run must end with Fatal 0 and Severe 0. The installers it
+builds are kept with the run. To run the smoke test yourself, in `program/`:
+
+```bash
+pnpm build
+pnpm exec electron-builder --dir --publish never
+node scripts/smoke.mjs
+```
+
+It writes `smoke-result.json`; on a failure it keeps its folder and names it there.
+
 ### Before you open a pull request
 
 - For anything larger than a small fix, open an issue first so we can agree on
