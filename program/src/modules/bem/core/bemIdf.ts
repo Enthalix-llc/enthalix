@@ -185,7 +185,10 @@ export interface IdfWriteReport {
   /** rows no zone claimed: the exterior-facing share is envelope area the
    *  model does not see; the interior share is material between solids */
   unclaimed: { surfaces: number; exteriorSurfaces: number; exteriorAreaM2: number; interiorAreaM2: number;
-    exteriorByCategory: Record<string, number> };
+    exteriorByCategory: Record<string, number>;
+    /** the exterior-facing share by element (2026-10-21): its name, category, area and height span, so the red box can say
+     *  which walls they are and where they stand against the rooms */
+    exteriorElements: Array<{ elementId: number; name: string; category: string; m2: number; zMinM: number; zMaxM: number }> };
   /** THE ROOF OUTSIDE CONDITIONED SPACE (user, 2026-10-01: "the roof area should be tracked by roof over conditioned area
    *  and roof outside of conditioned space providing shade"): a roof cell no zone claims — the eave band, a porch roof — is
    *  written as Shading:Building:Detailed over its own area (the outline less the rooms' cells it wraps), in convex pieces,
@@ -1020,7 +1023,7 @@ export function writeIdf(
     holesOnBaseEdge: 0,
     groundFromTerrain: { count: 0, areaM2: 0 },
     belowResolution: { surfaces: 0, areaM2: 0 },
-    unclaimed: { surfaces: 0, exteriorSurfaces: 0, exteriorAreaM2: 0, interiorAreaM2: 0, exteriorByCategory: {} },
+    unclaimed: { surfaces: 0, exteriorSurfaces: 0, exteriorAreaM2: 0, interiorAreaM2: 0, exteriorByCategory: {}, exteriorElements: [] },
     storedRingsReversed: 0, windingViolations: 0, northAxisDeg: northAxis, out: [],
     subsurfaces: [], constructions: consList, notEmitted: [], nameCollisions: collisions, schedules: [], systems: [], rooms: [],
     zoneRows: zoneNames.map((z): IdfZoneOut => ({
@@ -1167,6 +1170,11 @@ export function writeIdf(
       if (exteriorFacing) {
         report.unclaimed.exteriorSurfaces++; report.unclaimed.exteriorAreaM2 += f.areaM2;
         report.unclaimed.exteriorByCategory[f.category] = (report.unclaimed.exteriorByCategory[f.category] ?? 0) + f.areaM2;
+        const ys = f.outer.map((q) => q[1]);
+        const byEl = report.unclaimed.exteriorElements;
+        const e = byEl.find((x) => x.elementId === f.elementId) ??
+          byEl[byEl.push({ elementId: f.elementId, name: el?.name ?? `${el?.ifcClass ?? "element"} ${gid}`, category: f.category, m2: 0, zMinM: Infinity, zMaxM: -Infinity }) - 1]!;
+        e.m2 += f.areaM2; e.zMinM = Math.min(e.zMinM, ...ys); e.zMaxM = Math.max(e.zMaxM, ...ys);
       }
       else report.unclaimed.interiorAreaM2 += f.areaM2;
       continue;
@@ -1778,7 +1786,9 @@ export function writeIdf(
     obj("Schedule:Compact", season, lim, ...blocks);
     const w = T.demandWindow!;
     obj("Schedule:Compact", tou, lim, "Through: 12/31", "For: AllDays", `Until: ${String(w.fromHour).padStart(2, "0")}:00`, "3", `Until: ${String(w.toHour).padStart(2, "0")}:00`, "1", "Until: 24:00", "3");
-    obj("UtilityCost:Tariff", tn, net ? "ElectricityNet:Facility" : "Electricity:Facility", "kWh", "", "", tou, season, "", "FullHour", usd(C.accessUsdMonth.value), usd(C.accessUsdMonth.value), "", "", "", net ? "NetMetering" : "BuyFromUtility");
+    // THE EXACT kWh (2026-10-21): the "kWh" choice converts J by 0.0000002778 (the IDD's own figure), 0.008 % over 1/3,600,000 — the
+    // engine's tariff then billed a cent or so more a month than its own meter; UserDefined with the exact factors prices the meter as metered
+    obj("UtilityCost:Tariff", tn, net ? "ElectricityNet:Facility" : "Electricity:Facility", "UserDefined", String(1 / 3_600_000), "0.001", tou, season, "", "FullHour", usd(C.accessUsdMonth.value), usd(C.accessUsdMonth.value), "", "", "", net ? "NetMetering" : "BuyFromUtility");
     obj("UtilityCost:Charge:Simple", name(`${T.id}-delivery`), tn, "totalEnergy", "Annual", "EnergyCharges", usd(C.deliveryUsdKwh.value));
     obj("UtilityCost:Charge:Simple", name(`${T.id}-supply-summer`), tn, "totalEnergy", "Summer", "EnergyCharges", usd(C.supplySummerUsdKwh.value));
     obj("UtilityCost:Charge:Simple", name(`${T.id}-supply-winter`), tn, "totalEnergy", "Winter", "EnergyCharges", usd(C.supplyWinterUsdKwh.value));

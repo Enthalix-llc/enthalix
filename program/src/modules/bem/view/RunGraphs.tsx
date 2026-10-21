@@ -51,7 +51,7 @@ export const ANNUAL_SERIES: Array<{ id: AnnualSeries; label: string; color: stri
   { id: "use", label: "Total use", color: "#e5e7eb", right: true, meters: ["Electricity:Facility"], none: "no facility electricity meter in this run" },
   { id: "heating", label: "Heating", color: "#e8603c", meters: ["Heating:Electricity", "DistrictHeatingWater:Facility"], none: "no heating meter in this run" },
   { id: "cooling", label: "Cooling", color: "#3c8ce8", meters: ["Cooling:Electricity", "DistrictCooling:Facility"], none: "no cooling meter in this run" },
-  { id: "ventilation", label: "Ventilation", color: "#4ade80", meters: ["Ventilation (simple):Fans:Electricity"], match: /^(?!General:)[^:]+:Fans:Electricity$/, none: "no ventilation fan meter in this run — a run made before 2026-10-08 did not ask for the ERVs' own meters; run again, or draw the ventilation on SYSTEMS" },
+  { id: "ventilation", label: "Ventilation", color: "#4ade80", meters: ["Ventilation (simple):Fans:Electricity"], match: /^(?!General:)[^:]+:Fans:Electricity$/, none: "no ventilation fans in this run — SYSTEMS › MECHANICAL › Ventilation, then Run" },
   { id: "lighting", label: "Lighting", color: "#f59e0b", meters: ["InteriorLights:Electricity", "ExteriorLights:Electricity"], none: "no lights in this run" },
   { id: "equipment", label: "Equipment", color: "#94a3b8", meters: ["InteriorEquipment:Electricity"], none: "no plug loads in this run" },
   { id: "hotwater", label: "Hot water", color: "#fb7185", meters: ["WaterSystems:Electricity", "WaterSystems:NaturalGas", "WaterSystems:Propane"], none: "no water heater in this run — SYSTEMS › PLUMBING, then Run" },

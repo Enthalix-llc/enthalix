@@ -188,7 +188,7 @@ export function BomCostView({ priced, calibrated = null, withoutPv, applied, why
         <div className="runLegend">{series.map((s) => <span key={s.id}><i style={{ background: s.color }} />{s.label}</span>)}<span className="dim">· w/o PV dark behind, w/ PV light in front</span></div>
       </div>
       {P.paired.length > 0 && <CompareTable P={P} />}
-      {P.run && <CostTable title={`THE RUN · by calendar month · ${P.runMeters.join(" + ")}${P.runPartial.length ? ` · left out, the run holds only part of: ${P.runPartial.join(", ")}` : ""}`} lines={P.run} engine={P.engine} />}
+      {P.run && <CostTable title={`THE RUN · by calendar month · ${P.runMeters.join(" + ")}${P.runPartial.length ? ` · left out, the run holds only part of: ${P.runPartial.join(", ")}` : ""}`} lines={P.run} engine={P.engine} engineAnnual={P.engineAnnual} />}
       {statements.length > 0 && <StatementsTable P={P} statements={statements} />}
       {P.bills.length > 0 && <CostTable title="THE BILLS · by their periods" lines={P.bills.map((b) => b.line)} billed={P.bills.map((b) => b.bill.costUsd ?? null)} />}
     </div>
@@ -269,7 +269,7 @@ export function CompareTable({ P }: { P: Priced }): ReactNode {
   );
 }
 
-export function CostTable({ title, lines, engine, billed }: { title: string; lines: BillLine[]; engine?: number[] | null; billed?: Array<number | null> }): ReactNode {
+export function CostTable({ title, lines, engine, engineAnnual, billed }: { title: string; lines: BillLine[]; engine?: number[] | null; engineAnnual?: number | null; billed?: Array<number | null> }): ReactNode {
   const sum = (f: (l: BillLine) => number | null): number => lines.reduce((t, l) => t + (f(l) ?? 0), 0);
   return (
     <div className="bomTableWrap">
@@ -291,7 +291,8 @@ export function CostTable({ title, lines, engine, billed }: { title: string; lin
           <tr className="sum"><td>the year</td><td className="num">{k0(sum((l) => l.kwhIn))}</td><td className="num">{k0(sum((l) => l.kwhOut))}</td><td></td><td className="num">{k0(sum((l) => l.billedKwh))}</td><td></td>
             <td className="num">{usd(sum((l) => l.access))}</td><td className="num">{usd(sum((l) => l.delivery))}</td><td className="num">{usd(sum((l) => l.demand))}</td><td className="num">{usd(sum((l) => l.supply))}</td>
             <td className="num">{usd(sum((l) => l.pca))}</td><td className="num"><b>{usd(sum((l) => l.total))}</b></td>
-            {engine && <td className="num">{usd(engine.reduce((t, v) => t + v, 0))}</td>}{billed && <td className="num">{usd(billed.reduce<number>((t, v) => t + (v ?? 0), 0))}</td>}</tr>
+            {/* the engine's own year, not its cent-rounded months summed (2026-10-21: three prices for one year) */}
+            {engine && <td className="num">{usd(engineAnnual ?? engine.reduce((t, v) => t + v, 0))}</td>}{billed && <td className="num">{usd(billed.reduce<number>((t, v) => t + (v ?? 0), 0))}</td>}</tr>
         </tbody>
       </table>
     </div>

@@ -43,7 +43,7 @@ export function BomReport({ priced: P, tariff, project, runStamp, weather }: { p
       {P && <MonthBars P={P} />}
       {P && P.paired.length > 0 && <section><h2>The bills against the model</h2><CompareTable P={P} /></section>}
       {P && P.paired.length === 0 && <p>no bills imported — the run is priced alone. {pairWords(P)}</p>}
-      {P?.run && <section><h2>The run, by month</h2><CostTable title={`${P.runMeters.join(" + ")}${P.runPartial.length ? ` · left out, the run holds only part of: ${P.runPartial.join(", ")}` : ""}`} lines={P.run} engine={P.engine} /></section>}
+      {P?.run && <section><h2>The run, by month</h2><CostTable title={`${P.runMeters.join(" + ")}${P.runPartial.length ? ` · left out, the run holds only part of: ${P.runPartial.join(", ")}` : ""}`} lines={P.run} engine={P.engine} engineAnnual={P.engineAnnual} /></section>}
       {P && P.bills.length > 0 && <section><h2>The bills, priced</h2><CostTable title="by their periods" lines={P.bills.map((b) => b.line)} billed={P.bills.map((b) => b.bill.costUsd ?? null)} /></section>}
     </div>
   );

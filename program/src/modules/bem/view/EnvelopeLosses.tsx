@@ -9,9 +9,22 @@
  * them (the user's word, the same day); idf.db keeps them for airflow.
  */
 import type { IdfWriteReport } from "../core/bemIdf.js";
-import { fmtArea } from "./bemUi.js";
+import { fmtArea, fmtLen } from "./bemUi.js";
 
 const label = (name: string): string => { const t = name.split(":"); return t.length >= 2 ? `${t[0]!.replace(/^(Door|Window)-/, "")}: ${t[1]}` : name; };
+
+/** WHY "NO ZONE CLAIMS" IT (user, 2026-10-21: "a tooltip explanation that clarifies that no zone claims the wall"): what the words
+ *  mean, then each element with its area and the heights it spans, so the reader can find it on the view */
+function unclaimedTip(els: IdfWriteReport["unclaimed"]["exteriorElements"], imperial: boolean): string {
+  const rows = [...els].sort((a, b) => b.m2 - a.m2).map((e) => `· ${e.name} — ${fmtArea(e.m2, imperial)}, from ${fmtLen(e.zMinM, imperial)} to ${fmtLen(e.zMaxM, imperial)}`);
+  return [
+    "No zone claims these surfaces: they face outdoors, but no room (IfcSpace) lies behind them,",
+    "so EnergyPlus has no zone to attach them to and they are left out of the energy model.",
+    "Usually the element runs past the rooms: a foundation wall below the lowest floor, a parapet above the roof,",
+    "or a wall beside a space the file does not model as a room. Each one is listed by element, with the heights it spans:",
+    ...rows,
+  ].join("\n");
+}
 
 export function EnvelopeLosses(p: { report: IdfWriteReport | null | undefined; imperial: boolean }): React.ReactElement | null {
   const r = p.report;
@@ -37,7 +50,7 @@ export function EnvelopeLosses(p: { report: IdfWriteReport | null | undefined; i
         </div>
       )}
       {ext.length > 0 && (
-        <div title="cells of the envelope that no room or void claims — not written; whether each is outside the building (an eave, a parapet) or envelope the model is missing is still to be traced">
+        <div title={unclaimedTip(r.unclaimed.exteriorElements, p.imperial)}>
           exterior-facing surfaces no zone claims: {ext.map(([c, a]) => `${word(c)} ${fmtArea(a, p.imperial)}`).join(" · ")}
         </div>
       )}
