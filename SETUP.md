@@ -58,6 +58,11 @@ They are not code-signed yet: macOS asks you to open the app with right-click â€
 Open the first time, and Windows SmartScreen asks you to choose "Run anyway". An
 AppImage needs `libfuse2` on recent Ubuntu.
 
+**On Windows on ARM**, use the x64 installer built by the project's checks
+(Windows runs it on ARM). An ARM64 installer made with `pnpm dist` on an ARM
+computer currently installs without `Enthalix.exe` and its DLLs; the cause is
+not yet known.
+
 An installed Enthalix keeps your files in its app-data folder (see "Where your
 files are"). It still needs EnergyPlus installed separately.
 
