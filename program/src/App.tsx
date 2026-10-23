@@ -4188,7 +4188,7 @@ export function App(): React.ReactElement {
         )}
         {costView && (
           <div className="paneHtml paneMapSlot runPane">
-            <BomCostView statements={bomStatements.bills} priced={pricedBom} calibrated={pricedCal} withoutPv={{ standard: pricedStdNo, calibrated: pricedCalNo, bills: billNoPv }} pv={hasPv} applied={(!!bomTariff && pricedBom?.card.id === bomTariff.card) || (!bomTariff && !!pricedBom?.card.sample)} why={!bem ? "no run yet — run the model on BEM › RUN; its months are priced here" : !tariffRead?.usable.length ? "no tariff card is readable (references/tariffs/)" : null} />
+            <BomCostView meters={pricedMeters} statements={bomStatements.bills} priced={pricedBom} calibrated={pricedCal} withoutPv={{ standard: pricedStdNo, calibrated: pricedCalNo, bills: billNoPv }} pv={hasPv} applied={(!!bomTariff && pricedBom?.card.id === bomTariff.card) || (!bomTariff && !!pricedBom?.card.sample)} why={!bem ? "no run yet — run the model on BEM › RUN; its months are priced here" : !tariffRead?.usable.length ? "no tariff card is readable (references/tariffs/)" : null} />
           </div>
         )}
         {reportView && (

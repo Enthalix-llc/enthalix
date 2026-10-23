@@ -76,16 +76,18 @@ export function priceBoth(card: TariffCard, t: BomLedger["tariff"] | undefined, 
 }
 
 /** the container's size */
-function useSize<T extends HTMLElement>(): [React.RefObject<T | null>, { w: number; h: number }] {
-  const ref = useRef<T | null>(null);
+/** the box's size, measured whenever the box itself appears (2026-10-23: BOM opened before its run is read draws the chart later — a
+ *  measure taken once, on the first render, found no box and left the chart at 800 × 300 in a box twice that) */
+function useSize<T extends HTMLElement>(): [(el: T | null) => void, { w: number; h: number }] {
+  const [el, setEl] = useState<T | null>(null);
   const [size, setSize] = useState({ w: 800, h: 300 });
   useEffect(() => {
-    const el = ref.current; if (!el) return;
+    if (!el) return;
     const ro = new ResizeObserver(() => setSize({ w: el.clientWidth, h: el.clientHeight }));
     ro.observe(el); setSize({ w: el.clientWidth, h: el.clientHeight });
     return () => ro.disconnect();
-  }, []);
-  return [ref, size];
+  }, [el]);
+  return [setEl, size];
 }
 function niceTop(v: number): number { if (!(v > 0)) return 1; const p = 10 ** Math.floor(Math.log10(v)); return ([1, 2, 2.5, 5, 10].find((f) => f * p >= v) ?? 10) * p; }
 
@@ -104,7 +106,7 @@ export interface MeterPriced { name: string; zones: string[]; priced: Priced }
 
 /** THE VIEW IS THE CHART (user, 2026-10-23: "The chart is the item to show in view, the tables in the view should be referenced in the
  *  right column under 5. Cost Tables") — the months' cost, w/o PV dark behind, w/ PV light in front; the tables are BomCostTables */
-export function BomCostView({ priced, calibrated = null, withoutPv, applied, why, pv = true }: BomCostProps): ReactNode {
+export function BomCostView({ priced, calibrated = null, withoutPv, applied, why, pv = true, meters = [] }: BomCostProps): ReactNode {
   const [ref, { w, h }] = useSize<HTMLDivElement>();
   const [hover, setHover] = useState<string | null>(null);
   if (!priced) return <div className="runGraphs"><div className="runGraphEmpty">{why ?? "pick the tariff in UTILITY below and Apply it"}</div></div>;
@@ -133,11 +135,17 @@ export function BomCostView({ priced, calibrated = null, withoutPv, applied, why
   // darker colour ("Use the darker colors for standard, and the lighter colors for renewable impacted values")
   const dark = (id: string): string => all.find((x) => x.id === `${id}-no`)?.color ?? "";
   const shown = pv ? all : all.filter((s) => !s.id.endsWith("-no")).map((s) => ({ ...s, label: s.label.replace(" w/ PV", ""), color: dark(s.id) || s.color }));
-  const series = shown.filter((s) => MONTHS.some((_, i) => s.val(i + 1) !== null));
+  // THE METERS IN THE VIEW (user, 2026-10-23: "the BOM view does not show the individual meters"): a bar per meter each month beside
+  // the sides — each meter its own account on the card, in its own dark colour (a meter takes no PV)
+  const METER_COLORS = ["#1f7a6e", "#a8741a", "#3f7d2a", "#8e2f6e", "#4a5670", "#9a3b3b"];
+  const meterSeries: Series[] = meters.map((m, i) => ({ id: `meter-${i}`, label: `${m.name} (${m.zones.join(", ")})`, color: METER_COLORS[i % METER_COLORS.length]!,
+    val: (mo) => m.priced.run?.find((l) => l.month === mo)?.total ?? null, line: (mo) => m.priced.run?.find((l) => l.month === mo) ?? null }));
+  const series = [...shown, ...meterSeries].filter((s) => MONTHS.some((_, i) => s.val(i + 1) !== null));
   // ONE SLOT PER SIDE (user, 2026-10-10: "use darker color graph for w/o and lighter color overlay w/PV"): the w/o PV bar full width and
   // dark behind, the w/ PV bar lighter and a little narrower in front, so neither hides the other whichever is taller
   const SIDES = ["std", "cal", "bill"] as const;
-  const groups = SIDES.map((k) => ({ k, no: series.find((s) => s.id === `${k}-no`) ?? null, w: series.find((s) => s.id === k) ?? null })).filter((g) => g.no || g.w);
+  const groups: Array<{ k: string; no: Series | null; w: Series | null }> = [...SIDES.map((k) => ({ k: k as string, no: series.find((s) => s.id === `${k}-no`) ?? null, w: series.find((s) => s.id === k) ?? null })),
+    ...series.filter((s) => s.id.startsWith("meter-")).map((s) => ({ k: s.id, no: null, w: s }))].filter((g) => g.no || g.w);
   const top = niceTop(Math.max(1, ...series.flatMap((s) => MONTHS.map((_, i) => s.val(i + 1) ?? 0))));
   const L = 56, R = 12, T = 10, B = 34, pw = Math.max(10, w - L - R), ph = Math.max(10, h - T - B);
   const y = (v: number): number => T + ph - (v / top) * ph;
