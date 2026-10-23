@@ -124,13 +124,14 @@ export function BomCostView({ priced, calibrated = null, withoutPv, applied, why
   for (const x of withoutPv?.bills ?? []) if (x.usd !== null) billNo.set(x.withPv.month, x);
   type Series = { id: string; label: string; color: string; val: (m: number) => number | null; line: (m: number) => BillLine | null; note?: (m: number) => string };
   const all: Series[] = [
-    { id: "std-no", label: "Standard w/o PV", color: "#1f5fae", val: (m) => withoutPv?.standard?.run?.[m - 1]?.total ?? null, line: (m) => withoutPv?.standard?.run?.[m - 1] ?? null },
-    { id: "std", label: "Standard w/ PV", color: "#8fc0f5", val: (m) => P.run?.[m - 1]?.total ?? null, line: (m) => P.run?.[m - 1] ?? null },
+    { id: "std-no", label: "Total w/o PV", color: "#1f5fae", val: (m) => withoutPv?.standard?.run?.[m - 1]?.total ?? null, line: (m) => withoutPv?.standard?.run?.[m - 1] ?? null },
+    { id: "std", label: "Total w/ PV", color: "#8fc0f5", val: (m) => P.run?.[m - 1]?.total ?? null, line: (m) => P.run?.[m - 1] ?? null },
     { id: "cal-no", label: "Calibrated w/o PV", color: "#5e33a8", val: (m) => calNo.get(m)?.total ?? null, line: (m) => calNo.get(m) ?? null },
     { id: "cal", label: "Calibrated w/ PV", color: "#c4a7ef", val: (m) => calW.get(m)?.total ?? null, line: (m) => calW.get(m) ?? null },
     { id: "bill-no", label: "Billed w/o PV (estimate)", color: "#b8401f", val: (m) => billNo.get(m)?.usd ?? null, line: (m) => billNo.get(m)?.withoutPv ?? null, note: (m) => billNo.get(m)?.why ?? "" },
     { id: "bill", label: "Billed w/ PV", color: "#f6a88b", val: (m) => billByMonth.get(m)?.bill.costUsd ?? null, line: (m) => billByMonth.get(m)?.line ?? null },
   ];
+  // "Total", not "Standard" (user, 2026-10-23: "Instead of \"Standard\" for utility, let us use \"Total\"")
   // NO RENEWABLE SYSTEM (user, 2026-10-23): one bar per side, the house as it is — no w/o PV, no "w/ PV" in a label; the side keeps its
   // darker colour ("Use the darker colors for standard, and the lighter colors for renewable impacted values")
   const dark = (id: string): string => all.find((x) => x.id === `${id}-no`)?.color ?? "";
@@ -216,7 +217,7 @@ export function BomCostTables({ priced, calibrated = null, withoutPv, why, state
       {P.bills.length > 0 && <CostTable pv={false} title="THE BILLS · by their periods" lines={P.bills.map((b) => b.line)} billed={P.bills.map((b) => b.bill.costUsd ?? null)} />}
       {meters.length > 0 && <MeterCosts meters={meters} building={stdW} card={P.card.name} pv={pv} />}
       <div className="bomTotals">
-          {stdW !== null && <span className="runKey"><i style={{ background: "#1f5fae" }} />Standard {usd(stdW)} /yr</span>}
+          {stdW !== null && <span className="runKey"><i style={{ background: "#1f5fae" }} />Total {usd(stdW)} /yr</span>}
           {calibrated ? <span className="runKey"><i style={{ background: "#5e33a8" }} />Calibrated {usd(cW.usd)} over {cW.n} bill period{cW.n === 1 ? "" : "s"}</span>
             : <span className="runKey dim">Calibrated: run the calibration year in the column (4 · calibration)</span>}
           {P.bills.length > 0 && <span className="runKey"><i style={{ background: "#b8401f" }} />Billed {usd(billedYear)} over {P.bills.length} bills</span>}
@@ -240,7 +241,7 @@ export function BomCostTables({ priced, calibrated = null, withoutPv, why, state
       {P.bills.length > 0 && <CostTable title="THE BILLS · by their periods" lines={P.bills.map((b) => b.line)} billed={P.bills.map((b) => b.bill.costUsd ?? null)} />}
       {meters.length > 0 && <MeterCosts meters={meters} building={stdW} card={P.card.name} pv={pv} />}
       <div className="bomTotals">
-          {stdW !== null && <span className="runKey"><i style={{ background: "#1f5fae", borderColor: "#8fc0f5" }} />Standard {pair(stdNo === null ? null : usd(stdNo), usd(stdW))} /yr</span>}
+          {stdW !== null && <span className="runKey"><i style={{ background: "#1f5fae", borderColor: "#8fc0f5" }} />Total {pair(stdNo === null ? null : usd(stdNo), usd(stdW))} /yr</span>}
           {calibrated ? <span className="runKey"><i style={{ background: "#5e33a8", borderColor: "#c4a7ef" }} />Calibrated {pair(usd(cNo.usd), usd(cW.usd))} over {cW.n} bill period{cW.n === 1 ? "" : "s"}</span>
             : <span className="runKey dim">Calibrated: run the calibration year in the column (4 · calibration)</span>}
           {P.bills.length > 0 && <span className="runKey"><i style={{ background: "#b8401f", borderColor: "#f6a88b" }} />Billed {usd(billedYear)} w/ PV over {P.bills.length} bills{noOk.length ? ` · w/o PV ${usd(noOk.reduce((t, x) => t + x.usd!, 0))} over ${noOk.length} (estimate)` : ""}</span>}
@@ -274,7 +275,7 @@ export function MeterCosts({ meters, building, card, pv }: { meters: MeterPriced
             </tr>
           ))}
           <tr className="sum"><td>the {rows.length} meters</td><td></td><td className="num">{k0(kwh)}</td><td className="num"><b>{usd(cost)}</b></td><td className="num">{kwh ? `$${(cost / kwh).toFixed(3)}` : "—"}</td></tr>
-          {building !== null && <tr className="dim" title="the run priced as the building on one service (Standard): the difference is the second account's monthly charges and the demand of each meter on its own peak"><td>the building, one account</td><td></td><td></td><td className="num">{usd(building)}</td><td className="num">{cost - building >= 0 ? "+" : ""}{usd(cost - building)} as meters</td></tr>}
+          {building !== null && <tr className="dim" title="the run priced as the building on one service (Total): the difference is the second account's monthly charges and the demand of each meter on its own peak"><td>Total, one account</td><td></td><td></td><td className="num">{usd(building)}</td><td className="num">{cost - building >= 0 ? "+" : ""}{usd(cost - building)} as meters</td></tr>}
         </tbody>
       </table>
       {rows.filter((r) => r.name === open && r.priced.run).map((r) => <CostTable key={r.name} pv={false} title={`${r.name} · by calendar month · ${r.zones.join(", ")}`} lines={r.priced.run!} />)}
