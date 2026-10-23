@@ -834,6 +834,26 @@ export function App(): React.ReactElement {
   // the ZONES frame's four rails want the height (2026-09-13): a nudge once, view state
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === "bem-zones" && inspH > 0 && inspH < 300) setInspH(300); }, [tab]);
+  /** LEVELS · SPACES is as wide as the user drags it (user, 2026-10-23: "adjustable width so names can be exposed"); view state */
+  const TREE_DEFAULT = 220;
+  const [treeW, setTreeW] = useState(() => {
+    const n = Number(window.localStorage.getItem("bim-tree-w"));
+    return Number.isFinite(n) && n > 0 ? Math.min(600, Math.max(140, n)) : TREE_DEFAULT;
+  });
+  useEffect(() => { window.localStorage.setItem("bim-tree-w", String(treeW)); }, [treeW]);
+  const dragTree = useCallback((ev: React.PointerEvent) => {
+    ev.preventDefault();
+    const x0 = ev.clientX, w0 = treeW;
+    const move = (e: PointerEvent): void => setTreeW(Math.min(600, Math.max(140, w0 + (e.clientX - x0))));
+    const up = (): void => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      document.body.style.cursor = "";
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    document.body.style.cursor = "col-resize";
+  }, [treeW]);
   const dragInsp = useCallback((ev: React.PointerEvent) => {
     ev.preventDefault();
     const y0 = ev.clientY, h0 = inspH;
@@ -3978,7 +3998,7 @@ export function App(): React.ReactElement {
         dots={{ bim: moduleState(chain, "idf"), bem: moduleState(chain, "bem"), bom: moduleState(chain, "bom") } as Record<AppModule, DotState>}
         onSelect={(m) => setTab(firstTab(m))}
       />
-      <aside className="tree">
+      <aside className="tree" style={{ flexBasis: treeW }}>
         <div className="treeHead">LEVELS · SPACES</div>
         {(hiddenLevels.size > 0 || hiddenSpaces.size > 0) && (
           <div className="allRow"><button onClick={showAllLevels}>show all</button></div>
@@ -4084,6 +4104,7 @@ export function App(): React.ReactElement {
           );
         })()}
       </aside>
+      <div className="treeGrip" onPointerDown={dragTree} onDoubleClick={() => setTreeW(TREE_DEFAULT)} title="drag to widen LEVELS · SPACES · double-click for the default width" />
       <div className="viewsCol">
       <div className="viewTabs">
         {module !== "bem" ? (
