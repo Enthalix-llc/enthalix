@@ -1870,7 +1870,9 @@ export function App(): React.ReactElement {
   const doorGlazingRuled = (elementIds: number[]): number => elementIds.filter((id) => { const g = elementIndexRef.current.get(id)?.globalId; return !!g && glazing.has(g); }).length;
 
   useEffect(() => {
-    if (module !== "bem") return;
+    // BOM reads the model too (2026-10-23: opened straight from BIM, BOM showed "no run yet" and no meters — the model, its meters
+    // and the last run were read only when BEM was opened)
+    if (module !== "bem" && module !== "bom") return;
     const sha = idfMetaRef.current?.get("content_sha256") ?? "";
     const msha = materialsRef.current?.sha ?? "";
     if (!bemModelRef.current || bemModelRef.current.sourceIdfSha !== sha || (bemModelRef.current.bemMeta.get("source_materials_sha256") ?? "") !== msha) void refreshBemModel();
