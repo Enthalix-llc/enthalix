@@ -1823,7 +1823,8 @@ export function writeIdf(
       return (d > 0 ? d : 0.1016).toFixed(4);
     });
   }
-  if (L.some((l) => /^Coil:(Heating|Cooling)/.test(l))) for (const v of [COIL_RATE.heating, COIL_RATE.cooling]) { obj("Output:Variable", "*", v, "Timestep", ddOnly); obj("Output:Variable", "*", v, "Hourly"); }
+  // a template's coils exist only once the engine expands it (2026-10-23: a PTHP sample ran with no coil rates, its Peak per system empty)
+  if (L.some((l) => /^(Coil:(Heating|Cooling)|HVACTemplate:(System:|Zone:(PTHP|PTAC|WaterToAirHeatPump|FanCoil|VRF|Unitary|VAV|ConstantVolume|DualDuct)))/.test(l))) for (const v of [COIL_RATE.heating, COIL_RATE.cooling]) { obj("Output:Variable", "*", v, "Timestep", ddOnly); obj("Output:Variable", "*", v, "Hourly"); }
   // EACH ZONE'S AIR HEAT BALANCE ON THE DESIGN DAYS (user, 2026-10-11: "Peak conditioning heating and cooling charts do not make sense"):
   // the engine's Zone Component Load Summary splits a peak by its radiant-pulse method, and with Kiva foundations in the model that split
   // came out unbounded (the Basement's equipment +14.6 kW against a floor at −8.9 kW, the total unchanged). The zone air's own balance at

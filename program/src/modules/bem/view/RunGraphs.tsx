@@ -64,7 +64,7 @@ export const ANNUAL_SERIES: Array<{ id: AnnualSeries; label: string; color: stri
 ];
 export const PEAK_KINDS: Array<{ id: PeakKind; label: string }> = [{ id: "heating", label: "Heating" }, { id: "cooling", label: "Cooling" }];
 export const PEAK_PARTS: Array<{ id: PeakPart; label: string; title: string }> = [
-  { id: "system", label: "Per structure", title: "each structure's (the House's, the ADU's) peak heating and cooling on the design days — its units' coils summed at the instant they peak together, each unit's share stacked" },
+  { id: "system", label: "Per system", title: "each system's (each heat pump card on SYSTEMS) peak heating and cooling on the design days — its units' coils summed at the instant they peak together, each unit's share stacked" },
   { id: "zone", label: "Per zone", title: "each zone's design-day peak, stacked by load component (the engine's Zone Component Load Summary), with its design air flow" },
 ];
 export const TEMP_LINES: Array<{ id: TempLine; label: string; color: string }> = [
@@ -381,8 +381,8 @@ export function StructurePeakGraph({ structures, kinds, imperial, size }: { stru
   const COLOR: Record<PeakKind, string> = { heating: "#e8603c", cooling: "#3c8ce8" };
   return (
     <div className="runGraph">
-      <div className="runGraphHead" title="each structure's units summed at the instant their summed load is largest on the design day of its kind — what the structure's real equipment must meet; each unit's share at that instant is stacked (not its own peak). The RUN column's Structure Peak tables carry the weather-year peaks too">
-        PEAK CONDITIONING · PER STRUCTURE · {unit}
+      <div className="runGraphHead" title="each system's units summed at the instant their summed load is largest on the design day of its kind — what the system's real equipment must meet; each unit's share at that instant is stacked (not its own peak). The RUN column's System Peak tables carry the weather-year peaks too">
+        PEAK CONDITIONING · PER SYSTEM · {unit}
         {kinds.map((k) => <span key={k} className="runKey"><i style={{ background: COLOR[k], borderColor: COLOR[k] }} />{k === "heating" ? "Heating" : "Cooling"}</span>)}
         {hover && <span className="runKey">{hover}</span>}
       </div>
@@ -425,7 +425,7 @@ export function StructurePeakGraph({ structures, kinds, imperial, size }: { stru
             );
           })}
         </svg>
-        {rows.length === 0 && <div className="runGraphEmpty">no structure's coil rates in this run — the units are drawn on SYSTEMS, and runs made before 2026-10-11 did not ask the engine for the rates: Run again</div>}
+        {rows.length === 0 && <div className="runGraphEmpty">no system's coil rates in this run — the units are drawn on SYSTEMS, and runs made before 2026-10-23 did not always ask the engine for the rates: Run again</div>}
       </div>
     </div>
   );
@@ -611,7 +611,7 @@ export function PeakGraph({ loads, kind, imperial, size, flows, basis = "engine"
 /** THE VIEW: the active section's graphs */
 export function RunGraphs({ bem, state, imperial, modelSha, onState, structures }: { bem: BemOutcome | null; state: RunGraphState; imperial: boolean; modelSha: string | null; onState: (s: RunGraphState) => void;
   /** the sheet's structures and their units (the RUN column's Structure Peak) — PEAK's per-structure part */
-  structures?: Array<{ name: string; units: string[] }> }): ReactNode {
+  structures?: Array<{ name: string; units: string[]; unitZones?: Record<string, string[]> }> }): ReactNode {
   if (!bem) return <div className="runGraphs"><div className="runGraphEmpty">no run yet — Run in the column, and its results are graphed here</div></div>;
   const stale = modelSha && bem.run.modelSha256 && bem.run.modelSha256 !== modelSha;
   const flowsOf = (k: PeakKind): Map<string, number> => new Map([...bem.loads.zones].map(([z, l]) => [z.toUpperCase(), k === "heating" ? l.designHeatingFlowM3s : l.designCoolingFlowM3s] as const).filter(([, v]) => v > 0));

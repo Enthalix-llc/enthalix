@@ -1975,7 +1975,8 @@ export function App(): React.ReactElement {
     // it is named for it — the card's name, or the card's name and a zone
     const own = (n.ident || n.label || n.id).trim();
     if (!units.some((u) => u === own || u.startsWith(`${own} `))) return [];
-    return units.length ? [{ name: own, units }] : [];
+    // the zones each unit serves: a template's coils are named by the engine for the zone, and found by it (2026-10-23)
+    return units.length ? [{ name: own, units, unitZones: Object.fromEntries(units.map((u) => [u, asmCompiled.hvac.find((h) => h.id === u)?.zones ?? []])) }] : [];
   }), [asm, asmCompiled]);
   const asmQa = useMemo(() => qaRowsByNode(asmCompiled, bemModel), [asmCompiled, bemModel]);
   // ── SYSTEMS › ELECTRICAL, THE SHEET (user, 2026-10-02: "assembled like the mechanical systems"): staged as systems.generation.assembly

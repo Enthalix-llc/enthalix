@@ -187,12 +187,17 @@ export function designDayShort(name: string): string {
  *  heating side on the winter day, the cooling side on the summer day) and the weather year by the hour. Cooling is the coil's total. */
 export interface StructurePeakSide { w: number; at: string; byUnit: Array<{ unit: string; zones: string; w: number; ownPeakW: number }> }
 export interface StructurePeak { name: string; units: string[]; design: { heating: StructurePeakSide | null; cooling: StructurePeakSide | null }; year: { heating: StructurePeakSide | null; cooling: StructurePeakSide | null } }
-export function structurePeaks(structures: Array<{ name: string; units: string[] }>, coils: CoilRow[], rates: { design: Array<{ coil: string; kind: "heating" | "cooling"; day: "summer" | "winter"; minute: number; w: number }>; year: Array<{ coil: string; kind: "heating" | "cooling"; values: number[] }> },
+export function structurePeaks(structures: Array<{ name: string; units: string[]; unitZones?: Record<string, string[]> }>, coils: CoilRow[], rates: { design: Array<{ coil: string; kind: "heating" | "cooling"; day: "summer" | "winter"; minute: number; w: number }>; year: Array<{ coil: string; kind: "heating" | "cooling"; values: number[] }> },
   yearStamp: (hour: number) => string): StructurePeak[] {
   // the engine names a unit's coils by its AIR LOOP ("HP-HOUSE MASTER AIR LOOP"); the sheet names the unit ("HP-HOUSE Master")
   const unitKey = (h: string): string => h.toUpperCase().replace(/ AIR LOOP$/, "");
-  const unitOfCoil = new Map(coils.map((c) => [c.name.toUpperCase(), unitKey(c.hvac || c.name)] as const));
-  const zonesOf = new Map(coils.map((c) => [unitKey(c.hvac || c.name), c.zones] as const));
+  // a TEMPLATE's unit is named by the engine for its zone ("APT A PTHP"), never for the card (2026-10-23): such a coil belongs to the unit
+  // that serves its zone
+  const known = new Set(structures.flatMap((s) => s.units.map((u) => u.toUpperCase())));
+  const unitOfZone = new Map(structures.flatMap((s) => Object.entries(s.unitZones ?? {}).flatMap(([u, zs]) => zs.map((z) => [z.toUpperCase(), u.toUpperCase()] as const))));
+  const ownerOf = (c: CoilRow): string => { const k = unitKey(c.hvac || c.name); return known.has(k) ? k : (unitOfZone.get(c.zones.trim().toUpperCase()) ?? k); };
+  const unitOfCoil = new Map(coils.map((c) => [c.name.toUpperCase(), ownerOf(c)] as const));
+  const zonesOf = new Map(coils.map((c) => [ownerOf(c), c.zones] as const));
   const clock = (min: number): string => `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
   const side = (units: string[], kind: "heating" | "cooling", series: Map<string, Map<number, number>>, stamp: (t: number) => string): StructurePeakSide | null => {
     const U = new Set(units.map((u) => u.toUpperCase()));

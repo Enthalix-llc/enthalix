@@ -26,7 +26,7 @@ export interface BemRunProps {
   model: BemModelOutcome | null;
   bem: BemOutcome | null;
   /** the sheet's cards written as units (2026-10-11): each a structure whose units are summed at their coincident peak */
-  structures?: Array<{ name: string; units: string[] }>;
+  structures?: Array<{ name: string; units: string[]; unitZones?: Record<string, string[]> }>;
   engine: { exe: string; version: string; others?: Array<{ version: string }> } | null | undefined;
   idfReady: boolean;
   running: boolean;
@@ -226,10 +226,10 @@ export function BemRun(p: BemRunProps): React.ReactElement {
             </div>
             {structures.length > 0 && (
               <>
-                <div className="idfInfo" title="the engine writes the house as a unit per thermostat zone (one controlling thermostat per unitary heat pump); the structure's real equipment meets the zones TOGETHER, so its size is the instant their summed load is largest — each unit's row is its load AT that instant, not its own peak">structure peak — each structure's units summed at the instant they peak together; the zones' loads at that instant</div>
+                <div className="idfInfo" title="the engine writes the house as a unit per thermostat zone (one controlling thermostat per unitary heat pump); the system's real equipment meets the zones TOGETHER, so its size is the instant their summed load is largest — each unit's row is its load AT that instant, not its own peak">system peak — each system's units summed at the instant they peak together; the zones' loads at that instant</div>
                 {structures.map((st) => {
                   const cell = (sd: StructurePeakSide | null, u: string): string => { const r = sd?.byUnit.find((x) => x.unit === u); return r ? pw(r.w) : "—"; };
-                  const tipU = (sd: StructurePeakSide | null, u: string): string => { const r = sd?.byUnit.find((x) => x.unit === u); return r ? `at the structure's peak ${pw(r.w)} · its own peak ${pw(r.ownPeakW)}` : ""; };
+                  const tipU = (sd: StructurePeakSide | null, u: string): string => { const r = sd?.byUnit.find((x) => x.unit === u); return r ? `at the system's peak ${pw(r.w)} · its own peak ${pw(r.ownPeakW)}` : ""; };
                   return (
                     <div key={st.name} className="qaPanel runLoads">
                       <table>
@@ -239,7 +239,7 @@ export function BemRun(p: BemRunProps): React.ReactElement {
                             const z = st.design.heating?.byUnit.find((x) => x.unit === u)?.zones ?? st.design.cooling?.byUnit.find((x) => x.unit === u)?.zones ?? "";
                             return <tr key={u} title={z ? `serves ${z}` : undefined}><td>{u}</td><td title={tipU(st.design.heating, u)}>{cell(st.design.heating, u)}</td><td title={tipU(st.design.cooling, u)}>{cell(st.design.cooling, u)}</td></tr>;
                           })}
-                          <tr className="sum"><td><b>Structure Peak</b></td>
+                          <tr className="sum"><td><b>System Peak</b></td>
                             <td title={st.design.heating?.at}><b>{st.design.heating ? pw(st.design.heating.w) : "—"}</b></td>
                             <td title={st.design.cooling?.at}><b>{st.design.cooling ? pw(st.design.cooling.w) : "—"}</b></td></tr>
                           <tr className="muted"><td>at</td><td>{st.design.heating?.at.replace(" design day", "") ?? "—"}</td><td>{st.design.cooling?.at.replace(" design day", "") ?? "—"}</td></tr>
@@ -253,7 +253,7 @@ export function BemRun(p: BemRunProps): React.ReactElement {
                 })}
               </>
             )}
-            {b && coils.length > 0 && structures.length === 0 && (p.structures ?? []).length > 0 && <div className="idfInfo">structure peak — this run carries no coil rates; Run again to sum each structure's units at their coincident peak</div>}
+            {b && coils.length > 0 && structures.length === 0 && (p.structures ?? []).length > 0 && <div className="idfInfo">system peak — this run carries no coil rates; Run again to sum each system's units at their coincident peak</div>}
             {units.flatMap((u) => u.others.map((c) => (
               <KV key={c.name} k={c.kind} title={`${c.name} · ${c.type}`} v={`${u.unit}: ${c.capacityW !== null ? pw(c.capacityW) : "—"}${c.waterM3s !== null && c.waterM3s > 0 ? ` · ${fmtFlowWater(c.waterM3s, p.imperial)}` : ""}`} />
             )))}
