@@ -72,7 +72,7 @@ import { zoneColor, SystemsAssembly } from "./modules/bem/view/SystemsAssembly.j
 import { qaRowsByNode } from "./modules/bem/view/SystemQaPanel.js";
 import { AssemblyBench } from "./modules/bem/view/AssemblyBench.js";
 import { ElectricalColumn } from "./modules/bem/view/ElectricalSheet.js";
-import { readElecCatalogue, compileElectrical, sheetFromFile, ELEC_SHELVES, ELEC_CLASS, zonesOn, withZones, zoneOnto } from "./modules/bem/core/elecSheet.js";
+import { readElecCatalogue, compileElectrical, sheetFromFile, ELEC_SHELVES, ELEC_CLASS, zonesOn, withZones, zoneOnto, withTodaysLabels } from "./modules/bem/core/elecSheet.js";
 import { PlumbingColumn, type PlumbRoom } from "./modules/bem/view/PlumbingSheet.js";
 import { readPlumbCatalogue, compilePlumbing, sheetFromFile as plumbFromFile, isFileWaterHeater, PLUMB_SHELVES, PLUMB_CLASS } from "./modules/bem/core/plumbSheet.js";
 import { readPanels } from "./modules/bem/core/pvArrays.js";
@@ -1991,10 +1991,11 @@ export function App(): React.ReactElement {
   const asmQa = useMemo(() => qaRowsByNode(asmCompiled, bemModel), [asmCompiled, bemModel]);
   // ── SYSTEMS › ELECTRICAL, THE SHEET (user, 2026-10-02: "assembled like the mechanical systems"): staged as systems.generation.assembly
   const elecCatalogue = useMemo(() => readElecCatalogue(catalogue ? schemaRef.current : null), [catalogue]);
-  const elecAsm: Assembly = sysStage.generation?.assembly ?? { nodes: [], edges: [] };
+  // a saved sheet's old card words read as today's (2026-10-23: "Load centre", "Utility — net metering"), on both sides of the diff
+  const elecAsm: Assembly = useMemo(() => withTodaysLabels(sysStage.generation?.assembly ?? { nodes: [], edges: [] }), [sysStage.generation?.assembly]);
   const pvPanels = useMemo(() => readPanels(bemModel?.input.siteElements ?? []).panels, [bemModel]);
   const elecCompiled = useMemo(() => compileElectrical(elecAsm, new Set(pvPanels.map((q) => q.expressId))), [elecAsm, pvPanels]);
-  const elecPending = diagramDiff({ assembly: elecAsm }, { assembly: bemLedger?.systems?.generation?.assembly }).pending;
+  const elecPending = diagramDiff({ assembly: elecAsm }, { assembly: withTodaysLabels(bemLedger?.systems?.generation?.assembly) }).pending;
   // ── SYSTEMS › PLUMBING, THE SHEET (user, 2026-10-02): staged as systems.dhw.assembly, the rooms the model's own (a room → its zone)
   const plumbCatalogue = useMemo(() => readPlumbCatalogue(catalogue ? schemaRef.current : null), [catalogue]);
   const plumbAsm: Assembly = sysStage.dhw?.assembly ?? { nodes: [], edges: [] };
@@ -4179,7 +4180,7 @@ export function App(): React.ReactElement {
                     setElecAssembly(r.asm);
                     return `${room} → ${r.note}`;
                   }}
-                  emptyText={<><div><b>ELECTRICAL — the assembly</b></div><div>drag a PV array, an inverter, a load center and the utility from the bench below, and connect DC out → DC in, AC out → AC in, Grid → Grid — or <b>make the sheet from the file</b> in the column: an array per roof face, wired. Select an array to tick its panels in the column.</div><div className="muted">nothing drawn here changes the model until Save.</div></>} />
+                  emptyText={<><div><b>ELECTRICAL — the assembly</b></div><div>drag a PV array, an inverter, a load center, a meter and the utility from the bench below, and connect DC out → DC in, AC out → AC in, Grid → Grid; drag a space from LEVELS · SPACES onto a load center to put its zone on it — or <b>make the sheet from the file</b> in the column: an array per roof face, wired. Select an array to tick its panels in the column.</div><div className="muted">nothing drawn here changes the model until Save.</div></>} />
               : <SystemsAssembly key="mech" asm={asm} assign={asmAssign} onChange={setAssembly} sel={asmSel} onSel={setAsmSel} compiled={asmCompiled} catalogue={catalogue} qa={asmQa} notWritten={asmNotWritten} migration={asmMigration} onMigrationSeen={() => setAsmMigration([])} />}
           </div>
         )}

@@ -25,7 +25,7 @@ const SPECS: Array<{ cls: string; shelf: string; label: string; sub: string; por
   { cls: ELEC_CLASS.inverter, shelf: "INVERTERS", label: "Inverter (PVWatts)", sub: "turns the arrays' DC to AC: its efficiency and the DC-to-AC ratio — microinverters on every panel are written as one, their shared efficiency", ports: [P("dc-in", "dc", "in", "DC"), P("ac-out", "ac", "out", "AC")] },
   { cls: ELEC_CLASS.centre, shelf: "DISTRIBUTION", label: "Load center", sub: "the panel: the zones dragged onto it (their loads and the units serving them) and the inverter that feeds it, if any — ElectricLoadCenter:Distribution when PV feeds it", ports: [P("ac-in", "ac", "in", "AC"), P("grid-out", "ac", "out", "Grid")] },
   { cls: ELEC_CLASS.meter, shelf: "DISTRIBUTION", label: "Meter", sub: "a revenue meter: the loads of the zones on the load centers wired to it — Meter:Custom, reported by month, day and hour", ports: [P("grid-in", "ac", "in", "Grid"), P("grid-out", "ac", "out", "Grid")] },
-  { cls: ELEC_CLASS.utility, shelf: "DISTRIBUTION", label: "Utility — net metering", sub: "the service: what the house buys, what it sells back and the net, the engine's facility meters (no batteries — the user's ruling); priced by BOM › TARIFFS", ports: [P("grid-in", "ac", "in", "Grid")] },
+  { cls: ELEC_CLASS.utility, shelf: "DISTRIBUTION", label: "Utility", sub: "the service: what the building buys from the grid — and, with PV, what it sends back and the net; net metering is the tariff's, in BOM › UTILITY", ports: [P("grid-in", "ac", "in", "Grid")] },
 ];
 
 /** the sheet's catalogue: the five cards, their connectors stated (the canvas and the bench read it as they read MECHANICAL's) */
@@ -76,7 +76,20 @@ export interface ElecCompiled { centres: ElecCentre[]; meters: ElecMeter[]; arra
   /** panel → the array card that holds it (the first; a second holder is refused) */
   owner: Map<number, string> }
 
-const nameOf = (n: AsmNode): string => n.ident?.trim() || n.label || SPECS.find((s) => s.cls === n.cls)?.label || n.id;
+const nameOf = (n: AsmNode): string => {
+  // a METER is named by both (user's sheet, 2026-10-23: label "Meter", ID "Apt A" read "Apt A" alone on RUN): "Meter Apt A"
+  if (n.cls === ELEC_CLASS.meter) { const l = n.label?.trim() || "Meter", id = n.ident?.trim(); return id && id !== l ? `${l} ${id}` : l; }
+  return n.ident?.trim() || n.label || SPECS.find((s) => s.cls === n.cls)?.label || n.id;
+};
+/** OLD WORDS ON A SAVED SHEET (2026-10-23): card labels as the first sheets stored them, read as today's — "Load centre" is "Load
+ *  center", "Utility — net metering" is "Utility" (net metering is the tariff's, not the card's) */
+const OLD_LABELS: Record<string, string> = { "Load centre": "Load center", "Utility — net metering": "Utility" };
+export function withTodaysLabels(asm: Assembly): Assembly;
+export function withTodaysLabels(asm: Assembly | undefined): Assembly | undefined;
+export function withTodaysLabels(asm: Assembly | undefined): Assembly | undefined {
+  if (!asm || !asm.nodes.some((n) => n.label && OLD_LABELS[n.label])) return asm;
+  return { ...asm, nodes: asm.nodes.map((n) => (n.label && OLD_LABELS[n.label] ? { ...n, label: OLD_LABELS[n.label] } : n)) };
+}
 const fieldsOf = (n: AsmNode): SystemFields => { const f: SystemFields = { ...(n.fields ?? {}) }; delete f[PANELS_FIELD]; delete f[ZONES_FIELD]; return f; };
 
 /** the sheet → the load centers the writer emits. `available` = the panels the projected files carry; absent, any id is taken */
@@ -178,7 +191,7 @@ export function sheetFromFile(panels: PvPanel[], legacy?: SystemFields): Assembl
   const mid = Math.max(0, (faces.length - 1) * 48);
   const inv = add(ELEC_CLASS.inverter, "Inverter", 296, mid, pick(["dc_to_ac_size_ratio", "inverter_efficiency"]));
   const elc = add(ELEC_CLASS.centre, "Load center", 560, mid);
-  const util = add(ELEC_CLASS.utility, "Utility — net metering", 824, mid);
+  const util = add(ELEC_CLASS.utility, "Utility", 824, mid);
   faces.forEach((ps, i) => {
     const tilt = ps.reduce((t, p) => t + p.tiltDeg, 0) / ps.length;
     const id = add(ELEC_CLASS.array, `Array ${String.fromCharCode(65 + (i % 26))} · ${ps.length} panel${ps.length === 1 ? "" : "s"} at ${tilt.toFixed(0)}°`, 0, i * 96, pick(["module_type", "array_type", "system_losses"]));

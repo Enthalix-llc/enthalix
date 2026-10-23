@@ -45,7 +45,7 @@ export function ElectricalColumn(p: ElectricalColumnProps): React.ReactElement {
       </div>
       {!p.asm.nodes.length && (
         <div className="sysBody">
-          <div className="sysNote">The sheet is empty. Drag cards from the bench under the view — a PV array, an inverter, a load center, the utility — and connect DC out → DC in, AC out → AC in, Grid → Grid; or make the first sheet from the file:</div>
+          <div className="sysNote">The sheet is empty. Drag cards from the bench under the view — a PV array, an inverter, a load center, a meter, the utility — and connect DC out → DC in, AC out → AC in, Grid → Grid (a load center → a meter → the utility); drag a space onto a load center to put its zone on it; or make the first sheet from the file:</div>
           <button className="qaBtn" disabled={!p.panels.length} onClick={p.onFromFile} title="one array per roof face holding its panels, one inverter (the microinverters' shared efficiency), one load center, the utility — wired; the PV form's settings carried onto the cards">
             make the sheet from the file · {p.panels.length} panels on {panelFaces(p.panels).length} roof face{panelFaces(p.panels).length === 1 ? "" : "s"}
           </button>
@@ -106,7 +106,7 @@ function CardSettings(p: ElectricalColumnProps & { n: AsmNode; refused: string[]
       {n.cls === ELEC_CLASS.centre && <div className="sysNote">writes ElectricLoadCenter:Distribution — Baseload, a DC buss with its one inverter, and its ElectricLoadCenter:Generators list of every panel its arrays hold. Nothing here is the user's to type yet; batteries (none installed) would join it here.</div>}
       {n.cls === ELEC_CLASS.centre && <div className="sysNote">its zones: {zonesOn(n).length ? zonesOn(n).join(", ") : "none — drag a space from LEVELS · SPACES onto the card; right-click a zone on the card to unassign it"} · wire its Grid to a Meter to meter them</div>}
       {n.cls === ELEC_CLASS.meter && <div className="sysNote">writes Meter:Custom, named as the card is: each zone's own electricity (its lights and equipment) on the load centers wired to its Grid in, and the electricity of every unit that serves only those zones — the engine meters a unit to HVAC, never to a zone. Reported by month, day and hour; the year is on RUN, beside what no meter holds.</div>}
-      {n.cls === ELEC_CLASS.utility && <div className="sysNote">the service: net metering by the engine's facility meters — ElectricityPurchased, ElectricitySurplusSold and ElectricityNet:Facility, asked for once (the RUN graph's utility lines; priced by BOM › TARIFFS)</div>}
+      {n.cls === ELEC_CLASS.utility && <div className="sysNote">the service: the building's connection to the grid. Nothing is written for the card itself — the engine's facility meters say what the building buys (Electricity:Facility; with PV also ElectricityPurchased, ElectricitySurplusSold and ElectricityNet:Facility). NET METERING is the tariff's, not this card's: BOM › UTILITY's card states it, and the run is billed net only when PV feeds the building. Wire each Meter's Grid out here.</div>}
       {(n.cls === ELEC_CLASS.array || n.cls === ELEC_CLASS.inverter) && <div className="pvNote">the defaults are the {PVWATTS_DEFAULTS.citation}</div>}
     </div>
   );
