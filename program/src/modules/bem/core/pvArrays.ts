@@ -27,14 +27,16 @@ export interface ResolvedPv {
   dcW: number;
   /** panels the file carries that cannot be written, each with its reason */
   refused: string[];
-  /** THE SHEET'S LOAD CENTRES (2026-10-02, ELECTRICAL assembled like MECHANICAL): each its inverter and its arrays, each array its
-   *  panels and its own module / mounting / losses; absent = the PV form's one load centre over every panel */
+  /** THE SHEET'S LOAD CENTERS (2026-10-02, ELECTRICAL assembled like MECHANICAL): each its inverter and its arrays, each array its
+   *  panels and its own module / mounting / losses; absent = the PV form's one load center over every panel */
   centres?: PvCentre[];
 }
 export interface PvArrayOut { name: string; panels: PvPanel[]; moduleType: ResolvedPv["moduleType"]; arrayType: ResolvedPv["arrayType"]; systemLosses: ResolvedPv["systemLosses"] }
 export interface PvCentre { name: string; inverter: { name: string; dcToAc: ResolvedPv["dcToAc"]; efficiency: ResolvedPv["inverterEfficiency"] }; arrays: PvArrayOut[] }
 /** the sheet as the resolver takes it (elecSheet.ts compiles it): cards by name, an array's panels by express id, the fields as typed */
-export interface PvSheetIn { centres: Array<{ name: string; inverter: { name: string; fields: Record<string, string | number> }; arrays: Array<{ name: string; panels: number[]; fields: Record<string, string | number> }> }>; refusals: Array<{ text: string }> }
+export interface PvSheetIn { centres: Array<{ name: string; inverter: { name: string; fields: Record<string, string | number> }; arrays: Array<{ name: string; panels: number[]; fields: Record<string, string | number> }> }>; refusals: Array<{ text: string }>;
+  /** the PV array cards drawn (2026-10-23): a sheet of load centers and meters alone draws none, and says nothing of panels */
+  arrayCards?: number }
 
 /** the PVWatts Version 5 Manual's defaults (NREL/TP-6A20-62641): system losses 14 %, DC-to-AC 1.1, inverter 96 % */
 export const PVWATTS_DEFAULTS = { systemLosses: 0.14, dcToAc: 1.1, inverterEfficiency: 0.96, arrayType: "FixedRoofMounted", citation: "PVWatts Version 5 Manual (Dobos 2014, NREL/TP-6A20-62641)" } as const;
@@ -142,12 +144,12 @@ export function resolvePv(elements: PvElementIn[], ruling: PvRulingIn | undefine
   };
 }
 
-/** THE SHEET'S PV (2026-10-02): each load centre its inverter and its arrays, each array its own panels and settings; a panel the
+/** THE SHEET'S PV (2026-10-02): each load center its inverter and its arrays, each array its own panels and settings; a panel the
  *  files do not read is named, a sheet that compiles to nothing writes nothing (its refusals named) */
 export function resolvePvSheet(elements: PvElementIn[], sheet: PvSheetIn): ResolvedPv {
   const read = readPanels(elements);
   const byId = new Map(read.panels.map((p) => [p.expressId, p]));
-  const refused = [...read.refused.filter((r) => !r.startsWith("no PV panel") || !sheet.centres.length), ...sheet.refusals.map((r) => r.text)];
+  const refused = [...read.refused.filter((r) => !r.startsWith("no PV panel") || (!sheet.centres.length && sheet.arrayCards !== 0)), ...sheet.refusals.map((r) => r.text)];
   const centres: PvCentre[] = sheet.centres.map((c) => ({
     name: c.name,
     inverter: { name: c.inverter.name, dcToAc: numOr(c.inverter.fields.dc_to_ac_size_ratio, PVWATTS_DEFAULTS.dcToAc), efficiency: numOr(c.inverter.fields.inverter_efficiency, PVWATTS_DEFAULTS.inverterEfficiency) },

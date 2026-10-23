@@ -631,6 +631,10 @@ input.src-dataset, select.src-dataset { color: var(--src-dataset); }
 .asmRoomX { background: none; border: 0; color: #8a94a6; cursor: pointer; font-size: 11px; padding: 0 3px; line-height: 1; }
 .asmRoomX:hover { color: #d6553b; }
 .asmRoomHint { font: italic 9px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: #8a94a6; padding: 2px 0 2px 8px; }
+.asmHeldHead { font: 700 9px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; color: #5b6478; letter-spacing: 0.04em; padding: 1px 0 1px 8px; }
+.asmHeld .asmRoom { cursor: context-menu; position: relative; }
+.asmZoneOut { position: absolute; right: 0; top: -2px; z-index: 5; font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; background: #12161f; color: #fff; border: 1px solid #33405a; border-radius: 3px; padding: 1px 6px; cursor: pointer; }
+.asmZoneOut:hover { background: #2b6cb0; }
 .tree .name.draggable { cursor: grab; user-select: none; }
 .tree .name.held { font-weight: 600; }   /* a room held by a Zone reads in the zone's colour */
 .asmNode.zoneBox { border-width: 2px; border-left-width: 4px; }

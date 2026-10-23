@@ -46,7 +46,9 @@ interface PortCtx { arm: Arm | null; takes: (n: AsmNode, q: Port) => boolean; on
   tip: (e: React.MouseEvent | null, head?: string, lines?: TipLine[]) => void }
 const PortContext = createContext<PortCtx>({ arm: null, takes: () => false, onMenu: () => undefined, onPick: () => undefined, ports: (n) => PORTS[n.kind], narrow: () => false, tip: () => undefined });
 
-interface AsmData extends Record<string, unknown> { node: AsmNode; label: string; sub: string; refused: string[]; cautions: string[]; notWritten: string[]; qa: SystemQaRow[]; zones: string[]; rooms: string[]; onRoomOut: (id: string, room: string) => void; onToggle: (id: string) => void; onThermostat: (id: string) => void }
+interface AsmData extends Record<string, unknown> { node: AsmNode; label: string; sub: string; refused: string[]; cautions: string[]; notWritten: string[]; qa: SystemQaRow[]; zones: string[]; rooms: string[]; onRoomOut: (id: string, room: string) => void; onToggle: (id: string) => void; onThermostat: (id: string) => void;
+  /** a LOAD CENTER's zones (ELECTRICAL, 2026-10-23), null on every other card; a right-click on one takes it off */
+  held: string[] | null; onZoneOut: (id: string, zone: string) => void }
 /** a line of a hover tip: the QA's own colours — ok, gap, n/a */
 interface TipLine { kind: "ok" | "gap" | "na"; text: string }
 type AsmFlowNode = Node<AsmData, "asm">;
@@ -55,6 +57,7 @@ type AsmFlowEdge = Edge<EdgeData, "ortho">;
 
 function AsmNodeView(p: NodeProps<AsmFlowNode>): React.ReactElement {
   const d = p.data, n = d.node, loop = isLoop(n.kind);
+  const [zoneMenu, setZoneMenu] = useState<string | null>(null);
   const ctx = useContext(PortContext);
   const ports = ctx.ports(n);
   const narrow = ctx.narrow(n);
@@ -77,6 +80,20 @@ function AsmNodeView(p: NodeProps<AsmFlowNode>): React.ReactElement {
           <button className="asmToggle nodrag nopan" style={{ color: bar }} onClick={(e) => { e.stopPropagation(); d.onToggle(n.id); }} title={n.collapsed ? "expand: list the rooms" : "collapse: count the rooms"}>{n.collapsed ? "▸" : "▾"} {d.rooms.length} room{d.rooms.length === 1 ? "" : "s"}</button>
           {!n.collapsed && d.rooms.map((r) => <div key={r} className="asmRoom"><span>{r}</span><button className="asmRoomX nodrag nopan" onClick={(e) => { e.stopPropagation(); d.onRoomOut(n.id, r); }} title="take this room out of the zone">×</button></div>)}
           {!n.collapsed && !d.rooms.length && <div className="asmRoomHint">drag rooms here from LEVELS · SPACES</div>}
+        </div>
+      )}
+      {d.held && (
+        // THE ZONES ON A LOAD CENTER (user, 2026-10-23): dragged onto it from LEVELS · SPACES; "right clicking on zone name in load center
+        // should allow for that zone to be unassigned"
+        <div className="asmRooms asmHeld" onMouseLeave={() => setZoneMenu(null)}>
+          <div className="asmHeldHead">{d.held.length} zone{d.held.length === 1 ? "" : "s"}</div>
+          {d.held.map((z) => (
+            <div key={z} className="asmRoom" onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setZoneMenu(zoneMenu === z ? null : z); }} title={`${z} — its loads, and the units serving it alone, are on this load center's meter · right-click to unassign it`}>
+              <span>{z}</span>
+              {zoneMenu === z && <button className="asmZoneOut nodrag nopan" onClick={(e) => { e.stopPropagation(); setZoneMenu(null); d.onZoneOut(n.id, z); }}>Unassign {z}</button>}
+            </div>
+          ))}
+          {!d.held.length && <div className="asmRoomHint">drag a space here from LEVELS · SPACES — its zone goes on this load center</div>}
         </div>
       )}
       {d.zones.length > 0 && n.kind !== "zone" && <div className="asmZones" title={d.zones.join(", ")}>serves {d.zones.length === 1 ? d.zones[0] : `${d.zones.slice(0, 2).join(", ")}${d.zones.length > 2 ? ` +${d.zones.length - 2}` : ""}`}</div>}
@@ -183,6 +200,11 @@ export interface AssemblyProps {
   /** THE ELECTRICAL SHEET (2026-10-02) is this canvas with its own cards: no rooms dropped onto it, no MECHANICAL kinds in a card's
    *  "change to" list, its own words on an empty sheet */
   rooms?: boolean; paletteKinds?: boolean; emptyText?: React.ReactNode;
+  /** ELECTRICAL (2026-10-23): a space dropped on the sheet — the card under it (null: none) and the space; the words for what happened */
+  onRoomDrop?: (node: AsmNode | null, room: string) => string;
+  /** a card's zones held in its fields (a Load center's), and the zone taken off one */
+  heldOf?: (n: AsmNode) => string[] | null;
+  onZoneOut?: (id: string, zone: string) => void;
   /** the component catalogue: a card that IS an EnergyPlus class takes its connectors from it */
   catalogue?: Catalogue | null;
   /** the system QA's rows per card (2026-09-13), read back from bem.db through qaRowsByNode */
@@ -237,10 +259,11 @@ function Canvas(p: AssemblyProps): React.ReactElement {
   const onRoomOut = useCallback((id: string, room: string) => { const q = pRef.current; q.onChange(removeRoom(q.asm, id, room)); }, []);
   const onToggle = useCallback((id: string) => { const q = pRef.current; q.onChange(toggleZone(q.asm, id)); }, []);
   const onThermostat = useCallback((id: string) => { const q = pRef.current; q.onChange(toggleThermostat(q.asm, id)); q.onSel(id); }, []);
+  const onZoneOut = useCallback((id: string, zone: string) => { pRef.current.onZoneOut?.(id, zone); }, []);
   const toFlow = useCallback((a: Assembly, selected: string | null): AsmFlowNode[] => a.nodes.map((n) => ({
     id: n.id, type: "asm" as const, position: { x: n.x, y: n.y }, selected: n.id === selected,
-    data: { node: n, label: label(n), sub: sub(n), refused: refusedOf.get(n.id) ?? [], cautions: cautionsOf.get(n.id) ?? [], notWritten: p.notWritten?.get(n.id) ?? [], qa: p.qa?.get(n.id) ?? [], zones: servedBy(n.id), rooms: n.rooms ?? [], onRoomOut, onToggle, onThermostat },
-  })), [refusedOf, cautionsOf, p.qa, p.notWritten, p.assign, onRoomOut, onToggle, onThermostat]);   // eslint-disable-line react-hooks/exhaustive-deps
+    data: { node: n, label: label(n), sub: sub(n), refused: refusedOf.get(n.id) ?? [], cautions: cautionsOf.get(n.id) ?? [], notWritten: p.notWritten?.get(n.id) ?? [], qa: p.qa?.get(n.id) ?? [], zones: servedBy(n.id), rooms: n.rooms ?? [], onRoomOut, onToggle, onThermostat, held: p.heldOf?.(n) ?? null, onZoneOut },
+  })), [refusedOf, cautionsOf, p.qa, p.notWritten, p.assign, onRoomOut, onToggle, onThermostat, onZoneOut]);   // eslint-disable-line react-hooks/exhaustive-deps
   const [nodes, setNodes] = useState<AsmFlowNode[]>(() => toFlow(p.asm, p.sel));
   const dragging = useRef(false);
   useEffect(() => { if (!dragging.current) setNodes(toFlow(p.asm, p.sel)); }, [p.asm, p.sel, toFlow]);
@@ -354,6 +377,13 @@ function Canvas(p: AssemblyProps): React.ReactElement {
       if (!r || cx < r.left || cx > r.right || cy < r.top || cy > r.bottom) return;
       // A ROOM from the level tree (2026-09-10): onto a Zone it joins it; onto the sheet it makes a Zone holding it
       if ("room" in payload) {
+        if (p.onRoomDrop) {
+          const el = document.elementFromPoint(cx, cy)?.closest<HTMLElement>(".react-flow__node");
+          const n = el?.dataset.id ? p.asm.nodes.find((x) => x.id === el.dataset.id) ?? null : null;
+          setSwapNote(p.onRoomDrop(n, payload.room));
+          if (n) p.onSel(n.id);
+          return;
+        }
         if (p.rooms === false) return;
         const el = document.elementFromPoint(cx, cy)?.closest<HTMLElement>(".react-flow__node");
         const id = el?.dataset.id;

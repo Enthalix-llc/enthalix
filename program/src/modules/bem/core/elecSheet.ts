@@ -3,12 +3,12 @@
 //
 // THE ELECTRICAL SHEET (user, 2026-10-02: "the PV panel system needs to be assembled like the mechanical systems" — "with components
 // below the system view, and details of the components shown in right column"; the chain ruled the same day: Array → Inverter →
-// Load centre → Utility; the panel count edited by PICKING panels). The sheet is the MECHANICAL sheet's own canvas, bench and
+// Load center → Utility; the panel count edited by PICKING panels). The sheet is the MECHANICAL sheet's own canvas, bench and
 // column; what differs is its cards and its connectors. A card is one EnergyPlus object, as on MECHANICAL — but these objects are
-// joined by NAMING one another (a load centre names its generator list and its inverter), not by nodes, so the schema has no node
+// joined by NAMING one another (a load center names its generator list and its inverter), not by nodes, so the schema has no node
 // field to read a connector from: the connectors are STATED here, one line per card, direct current from an array to an inverter,
-// alternating current from the inverter to a load centre and from the load centre to the utility. The compile reads the lines into
-// the load centres the writer emits; what the engine cannot take is refused and named on the card.
+// alternating current from the inverter to a load center and from the load center to the utility. The compile reads the lines into
+// the load centers the writer emits; what the engine cannot take is refused and named on the card.
 
 import { type Assembly, type AsmNode, addNode, addEdge, patchNode } from "./assembly.js";
 import type { EpSchema } from "./epSchema.js";
@@ -16,18 +16,19 @@ import type { Catalogue, CatEntry, CatPort } from "./epCatalogue.js";
 import type { SystemFields } from "./bemDb.js";
 import type { PvPanel } from "./pvArrays.js";
 
-export const ELEC_CLASS = { array: "Generator:PVWatts", inverter: "ElectricLoadCenter:Inverter:PVWatts", centre: "ElectricLoadCenter:Distribution", utility: "Output:Meter" } as const;
+export const ELEC_CLASS = { array: "Generator:PVWatts", inverter: "ElectricLoadCenter:Inverter:PVWatts", centre: "ElectricLoadCenter:Distribution", meter: "Meter:Custom", utility: "Output:Meter" } as const;
 /** the bench's shelves for the sheet, outside in: what generates, what converts, what distributes */
 export const ELEC_SHELVES = ["GENERATION", "INVERTERS", "DISTRIBUTION"];
 const P = (key: string, medium: "dc" | "ac", dir: "in" | "out", label: string): CatPort => ({ key, medium, dir, label });
 const SPECS: Array<{ cls: string; shelf: string; label: string; sub: string; ports: CatPort[] }> = [
   { cls: ELEC_CLASS.array, shelf: "GENERATION", label: "PV array", sub: "the panels it holds (ticked in the column, read from the projected files) — one Generator:PVWatts per panel on its own top face, the module, mounting and losses the array's", ports: [P("dc-out", "dc", "out", "DC")] },
   { cls: ELEC_CLASS.inverter, shelf: "INVERTERS", label: "Inverter (PVWatts)", sub: "turns the arrays' DC to AC: its efficiency and the DC-to-AC ratio — microinverters on every panel are written as one, their shared efficiency", ports: [P("dc-in", "dc", "in", "DC"), P("ac-out", "ac", "out", "AC")] },
-  { cls: ELEC_CLASS.centre, shelf: "DISTRIBUTION", label: "Load centre", sub: "the panel the inverter feeds: ElectricLoadCenter:Distribution, Baseload, a DC buss with its one inverter", ports: [P("ac-in", "ac", "in", "AC"), P("grid-out", "ac", "out", "Grid")] },
+  { cls: ELEC_CLASS.centre, shelf: "DISTRIBUTION", label: "Load center", sub: "the panel: the zones dragged onto it (their loads and the units serving them) and the inverter that feeds it, if any — ElectricLoadCenter:Distribution when PV feeds it", ports: [P("ac-in", "ac", "in", "AC"), P("grid-out", "ac", "out", "Grid")] },
+  { cls: ELEC_CLASS.meter, shelf: "DISTRIBUTION", label: "Meter", sub: "a revenue meter: the loads of the zones on the load centers wired to it — Meter:Custom, reported by month, day and hour", ports: [P("grid-in", "ac", "in", "Grid"), P("grid-out", "ac", "out", "Grid")] },
   { cls: ELEC_CLASS.utility, shelf: "DISTRIBUTION", label: "Utility — net metering", sub: "the service: what the house buys, what it sells back and the net, the engine's facility meters (no batteries — the user's ruling); priced by BOM › TARIFFS", ports: [P("grid-in", "ac", "in", "Grid")] },
 ];
 
-/** the sheet's catalogue: the four cards, their connectors stated (the canvas and the bench read it as they read MECHANICAL's) */
+/** the sheet's catalogue: the five cards, their connectors stated (the canvas and the bench read it as they read MECHANICAL's) */
 export function readElecCatalogue(schema: EpSchema | null): Catalogue {
   const entries = new Map<string, CatEntry>(), missing: string[] = [];
   for (const s of SPECS) {
@@ -49,16 +50,36 @@ export function withPanels(asm: Assembly, id: string, panels: number[]): Assembl
   return patchNode(asm, id, (n) => { const f: SystemFields = { ...(n.fields ?? {}) }; if (panels.length) f[PANELS_FIELD] = [...new Set(panels)].sort((a, b) => a - b).join(","); else delete f[PANELS_FIELD]; return { ...n, fields: f }; });
 }
 
+/** THE ZONES ON A LOAD CENTER (user, 2026-10-23: "Dragging a zone space to a load center on the Electrical System view should assign
+ *  that zone to the load center"): the model's zone names, kept in its fields as one list ("|" between — a zone name may hold a comma) */
+export const ZONES_FIELD = "zones";
+export const zonesOn = (n: AsmNode): string[] => String(n.fields?.[ZONES_FIELD] ?? "").split("|").map((x) => x.trim()).filter(Boolean);
+export function withZones(asm: Assembly, id: string, zones: string[]): Assembly {
+  return patchNode(asm, id, (n) => { const f: SystemFields = { ...(n.fields ?? {}) }; const z = [...new Set(zones)]; if (z.length) f[ZONES_FIELD] = z.join("|"); else delete f[ZONES_FIELD]; return { ...n, fields: f }; });
+}
+/** a zone onto a load center: off any other it was on (a zone is on one), the words for what moved */
+export function zoneOnto(asm: Assembly, id: string, zone: string): { asm: Assembly; note: string } {
+  let a = asm, from: string | null = null;
+  for (const x of asm.nodes.filter((y) => y.cls === ELEC_CLASS.centre && y.id !== id)) if (zonesOn(x).includes(zone)) { from = nameOf(x); a = withZones(a, x.id, zonesOn(x).filter((z) => z !== zone)); }
+  const n = a.nodes.find((x) => x.id === id)!;
+  if (zonesOn(n).includes(zone)) return { asm: a, note: `${zone} is already on ${nameOf(n)}` };
+  a = withZones(a, id, [...zonesOn(n), zone]);
+  return { asm: a, note: from ? `${zone} moved from ${from} to ${nameOf(n)}` : `${zone} is on ${nameOf(n)}` };
+}
+
 export interface ElecArray { node: string; name: string; panels: number[]; fields: SystemFields }
 export interface ElecCentre { node: string; name: string; inverter: { node: string; name: string; fields: SystemFields }; arrays: ElecArray[]; utility: string | null }
-export interface ElecCompiled { centres: ElecCentre[]; refusals: Array<{ node: string; text: string }>; cautions: Array<{ node: string; text: string }>;
+/** a METER (user, 2026-10-23: "assign each load center to a meter (with label) … multiple load centers to one meter"): the zones of the
+ *  load centers whose Grid runs to it */
+export interface ElecMeter { node: string; name: string; centres: string[]; zones: string[] }
+export interface ElecCompiled { centres: ElecCentre[]; meters: ElecMeter[]; arrayCards: number; refusals: Array<{ node: string; text: string }>; cautions: Array<{ node: string; text: string }>;
   /** panel → the array card that holds it (the first; a second holder is refused) */
   owner: Map<number, string> }
 
 const nameOf = (n: AsmNode): string => n.ident?.trim() || n.label || SPECS.find((s) => s.cls === n.cls)?.label || n.id;
-const fieldsOf = (n: AsmNode): SystemFields => { const f: SystemFields = { ...(n.fields ?? {}) }; delete f[PANELS_FIELD]; return f; };
+const fieldsOf = (n: AsmNode): SystemFields => { const f: SystemFields = { ...(n.fields ?? {}) }; delete f[PANELS_FIELD]; delete f[ZONES_FIELD]; return f; };
 
-/** the sheet → the load centres the writer emits. `available` = the panels the projected files carry; absent, any id is taken */
+/** the sheet → the load centers the writer emits. `available` = the panels the projected files carry; absent, any id is taken */
 export function compileElectrical(asm: Assembly, available?: ReadonlySet<number>): ElecCompiled {
   const refusals: ElecCompiled["refusals"] = [], cautions: ElecCompiled["cautions"] = [];
   const refuse = (n: AsmNode, text: string): void => { refusals.push({ node: n.id, text: `${nameOf(n)} ${text}` }); };
@@ -82,7 +103,7 @@ export function compileElectrical(asm: Assembly, available?: ReadonlySet<number>
     if (inv.length > 1) { refuse(n, "— its DC out runs to two inverters: an array feeds one"); ok = false; }
     if (ok) goodArrays.set(n.id, { a: { node: n.id, name: nameOf(n), panels: ids, fields: fieldsOf(n) }, inverter: inv[0]!.id });
   }
-  // the inverters: the arrays they take and the one load centre their AC runs to
+  // the inverters: the arrays they take and the one load center their AC runs to
   const goodInverters = new Map<string, { n: AsmNode; arrays: ElecArray[]; centre: string }>();
   for (const n of of(ELEC_CLASS.inverter)) {
     const arrays = [...goodArrays.values()].filter((g) => g.inverter === n.id).map((g) => g.a);
@@ -91,26 +112,43 @@ export function compileElectrical(asm: Assembly, available?: ReadonlySet<number>
     let ok = true;
     if (!fed) { refuse(n, "— no array feeds its DC in"); ok = false; }
     else if (!arrays.length) { refuse(n, "— every array feeding it is refused (see the arrays)"); ok = false; }
-    if (!centres.length) { refuse(n, "— its AC out runs to no load centre"); ok = false; }
-    if (centres.length > 1) { refuse(n, "— its AC out runs to two load centres: an inverter feeds one"); ok = false; }
+    if (!centres.length) { refuse(n, "— its AC out runs to no load center"); ok = false; }
+    if (centres.length > 1) { refuse(n, "— its AC out runs to two load centers: an inverter feeds one"); ok = false; }
     if (ok) goodInverters.set(n.id, { n, arrays, centre: centres[0]!.id });
   }
-  // the load centres: ONE inverter each (ElectricLoadCenter:Distribution names one), the utility their Grid runs to
+  // the load centers: ONE inverter each (ElectricLoadCenter:Distribution names one), the utility their Grid runs to
   const centres: ElecCentre[] = [];
+  const zoneHolder = new Map<string, string>();
   for (const n of of(ELEC_CLASS.centre)) {
     const invs = [...goodInverters.values()].filter((g) => g.centre === n.id);
     const fed = linesInto(n, "ac-in").length;
-    const util = linesFrom(n, "grid-out").filter((x) => x.cls === ELEC_CLASS.utility);
-    if (!fed) { refuse(n, "— nothing feeds its AC in"); continue; }
-    if (fed > 1) { refuse(n, "— two inverters feed it: EnergyPlus gives a load centre ONE inverter (ElectricLoadCenter:Distribution names one) — give the second inverter its own load centre"); continue; }
+    const util = linesFrom(n, "grid-out").filter((x) => x.cls === ELEC_CLASS.utility || x.cls === ELEC_CLASS.meter);
+    for (const z of zonesOn(n)) { const h = zoneHolder.get(z); if (h) refuse(n, `holds ${z}, which ${h} holds too — a zone is on one load center`); else zoneHolder.set(z, nameOf(n)); }
+    // A LOAD CENTER OF LOADS ALONE (2026-10-23): no inverter feeds it — its zones are metered, nothing is written for it as a load center
+    if (!fed) {
+      if (!zonesOn(n).length) cautions.push({ node: n.id, text: `${nameOf(n)} holds no zone and no inverter feeds it — drag a space from LEVELS · SPACES onto it to put that space's zone on it` });
+      else if (!linesFrom(n, "grid-out").some((x) => x.cls === ELEC_CLASS.meter)) cautions.push({ node: n.id, text: `${nameOf(n)}'s Grid runs to no Meter — its zones (${zonesOn(n).join(", ")}) count on the building's total alone` });
+      continue;
+    }
+    if (fed > 1) { refuse(n, "— two inverters feed it: EnergyPlus gives a load center ONE inverter (ElectricLoadCenter:Distribution names one) — give the second inverter its own load center"); continue; }
     if (!invs.length) { refuse(n, "— the inverter feeding it is refused (see the inverter)"); continue; }
-    if (!util.length) cautions.push({ node: n.id, text: `${nameOf(n)} is not connected to the utility — what it produces is still metered (the facility meters are the house's), the sheet just does not show where the surplus goes` });
+    if (!util.length) cautions.push({ node: n.id, text: `${nameOf(n)} is not connected to a meter or the utility — what it produces is still metered (the facility meters are the house's), the sheet just does not show where the surplus goes` });
     const inv = invs[0]!;
     centres.push({ node: n.id, name: nameOf(n), inverter: { node: inv.n.id, name: nameOf(inv.n), fields: fieldsOf(inv.n) }, arrays: inv.arrays, utility: util[0]?.id ?? null });
   }
+  // the meters: the zones of the load centers wired to each
+  const meters: ElecMeter[] = [];
+  for (const n of of(ELEC_CLASS.meter)) {
+    const cs = linesInto(n, "grid-in").filter((x) => x.cls === ELEC_CLASS.centre);
+    const zones = [...new Set(cs.flatMap(zonesOn))];
+    if (!cs.length) cautions.push({ node: n.id, text: `${nameOf(n)}: no load center's Grid runs to it — it meters nothing` });
+    else if (!zones.length) cautions.push({ node: n.id, text: `${nameOf(n)}: its load centers hold no zone — drag spaces onto them` });
+    if (!linesFrom(n, "grid-out").some((x) => x.cls === ELEC_CLASS.utility)) cautions.push({ node: n.id, text: `${nameOf(n)} is not connected to the utility — it is still written; the sheet just does not show the service it is on` });
+    if (zones.length) meters.push({ node: n.id, name: nameOf(n), centres: cs.map((c) => c.id), zones });
+  }
   const utils = of(ELEC_CLASS.utility);
   for (const n of utils.slice(1)) cautions.push({ node: n.id, text: `${nameOf(n)}: the house has one service — the utility is the facility's meters, a second card adds nothing` });
-  return { centres, refusals, cautions, owner };
+  return { centres, meters, arrayCards: of(ELEC_CLASS.array).length, refusals, cautions, owner };
 }
 
 /** the roof faces the panels sit on: one normal within 3° and one plane within 0.3 m — the file's own arrays */
@@ -125,7 +163,7 @@ export function panelFaces(panels: PvPanel[]): PvPanel[][] {
   return faces.map((f) => f.ps).sort((a, b) => b.length - a.length);
 }
 
-/** A FIRST SHEET FROM THE FILE: an array per roof face holding its panels, one inverter, one load centre, the utility, wired — the
+/** A FIRST SHEET FROM THE FILE: an array per roof face holding its panels, one inverter, one load center, the utility, wired — the
  *  house's one service; `legacy` carries the fields of the PV form this sheet replaces onto its cards (module, mounting, losses on
  *  every array; the inverter's efficiency and ratio) */
 export function sheetFromFile(panels: PvPanel[], legacy?: SystemFields): Assembly {
@@ -139,7 +177,7 @@ export function sheetFromFile(panels: PvPanel[], legacy?: SystemFields): Assembl
   };
   const mid = Math.max(0, (faces.length - 1) * 48);
   const inv = add(ELEC_CLASS.inverter, "Inverter", 296, mid, pick(["dc_to_ac_size_ratio", "inverter_efficiency"]));
-  const elc = add(ELEC_CLASS.centre, "Load centre", 560, mid);
+  const elc = add(ELEC_CLASS.centre, "Load center", 560, mid);
   const util = add(ELEC_CLASS.utility, "Utility — net metering", 824, mid);
   faces.forEach((ps, i) => {
     const tilt = ps.reduce((t, p) => t + p.tiltDeg, 0) / ps.length;

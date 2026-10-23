@@ -201,6 +201,8 @@ export interface IdfWriteReport {
     /** PV panels written as their array's top face instead of their triangles (2026-10-02) */ pv?: number };
   /** the PV arrays written (2026-10-02): one Generator:PVWatts per panel on its top face */
   pv?: { panels: number; dcW: number; surfaces: string[]; generators: string[]; refused: string[] };
+  /** the Meter:Custom written per Meter card (2026-10-23): its zones, the units it took whole, what it could not take — named, never dropped */
+  meters?: Array<{ name: string; emitted: string; zones: string[]; units: string[]; parts: number; left: string[] }>;
   /** the tariff written (2026-10-03): its card, the meter it prices, net metering or not, the PCA when one value was typed */
   tariff?: { card: string; meter: string; net: boolean; pca: number | null };
   /** stored rings wound clockwise about their own stored normal (informational) */
@@ -446,6 +448,8 @@ export interface IdfModel {
   shading?: ShadingElementIn[];
   /** ELECTRICAL › GENERATION (2026-10-02): the PV panels as PVWatts arrays on their own top faces; null / absent = no PV */
   pv?: ResolvedPv | null;
+  /** ELECTRICAL › METERS (user, 2026-10-23): each Meter card's zones — a Meter:Custom of their loads and the units that serve them */
+  meters?: Array<{ name: string; zones: string[] }>;
   /** BOM › UTILITY (2026-10-03): the tariff applied — the card's charges as the engine's UtilityCost objects; absent = energy only */
   tariff?: { card: TariffCard; pca?: PcaRuling } | null;
   /** the user's rulings per zone (the BEM ledger); anything unset is the code default */
@@ -551,6 +555,34 @@ export function codeCatalogue(zone: string | null | undefined, code?: string | n
     { kind: k.door[0]!, section: "door", uWm2k: ip(t.fenestrationU), shgc: null, vt: null, layers: "one NoMass layer at the code's fenestration U less the films" },
     { kind: k.door[1]!, section: "door", uWm2k: null, shgc: null, vt: null, layers: "door wood 45 mm — an interior door, no code U" },
   ];
+}
+
+/** WHAT A UNIT'S ELECTRICITY IS REPORTED AS (2026-10-23, the meters): each written class's own electricity variables. A template's parts
+ *  are named by the engine's expansion for its zone ("APT A PTHP HEATING COIL" — read from a run's eplusout.mtd); a class not listed
+ *  that runs on electricity is NAMED as not taken, so its use stays on the building's total and the meter says so */
+const ELEC_PARTS: Array<[RegExp, string[]]> = [
+  [/^Fan:/, ["Fan Electricity Energy"]],
+  [/^Coil:Heating:DX:/, ["Heating Coil Electricity Energy", "Heating Coil Defrost Electricity Energy", "Heating Coil Crankcase Heater Electricity Energy"]],
+  [/^Coil:Heating:Electric/, ["Heating Coil Electricity Energy"]],
+  [/^Coil:Cooling:DX/, ["Cooling Coil Electricity Energy"]],
+  [/^Coil:Heating:WaterToAirHeatPump:/, ["Heating Coil Electricity Energy"]],
+  [/^Coil:Cooling:WaterToAirHeatPump:/, ["Cooling Coil Electricity Energy"]],
+  [/^Pump:/, ["Pump Electricity Energy"]],
+  [/^ZoneHVAC:Baseboard:\w+:Electric$/, ["Baseboard Electricity Energy"]],
+];
+const TEMPLATE_PARTS: Record<string, (z: string) => Array<[string, string]>> = {
+  "HVACTemplate:Zone:PTHP": (z) => [[`${z} PTHP Heating Coil`, "Heating Coil Electricity Energy"], [`${z} PTHP Heating Coil`, "Heating Coil Defrost Electricity Energy"], [`${z} PTHP Heating Coil`, "Heating Coil Crankcase Heater Electricity Energy"],
+    [`${z} PTHP Cooling Coil`, "Cooling Coil Electricity Energy"], [`${z} PTHP Supp Heating Coil`, "Heating Coil Electricity Energy"], [`${z} PTHP Supply Fan`, "Fan Electricity Energy"]],
+  "HVACTemplate:Zone:PTAC": (z) => [[`${z} PTAC Heating Coil`, "Heating Coil Electricity Energy"], [`${z} PTAC Cooling Coil`, "Cooling Coil Electricity Energy"], [`${z} PTAC Supply Fan`, "Fan Electricity Energy"]],
+};
+/** an object's electricity parts (key, variable); [] when it uses none; null when it may and cannot be named */
+function electricParts(cls: string, emitted: string): Array<[string, string]> | null {
+  const t = TEMPLATE_PARTS[cls];
+  if (t) return t(emitted);
+  if (/^HVACTemplate:(Zone|System):/.test(cls)) return /IdealLoadsAirSystem$/.test(cls) ? [] : null;
+  const e = ELEC_PARTS.find(([re]) => re.test(cls));
+  if (e) return e[1].map((v) => [emitted, v]);
+  return /^(Fan|Pump|Humidifier|WaterHeater|ZoneHVAC:Baseboard|HeatPump|Chiller|Boiler:.*Electric)/.test(cls) ? null : [];
 }
 
 export function writeIdf(
@@ -1608,6 +1640,8 @@ export function writeIdf(
   // ── THE RULED SYSTEMS (2026-09-10): each one of the engine's own objects, its fields in IDD order as resolved, the
   //    references the writer alone can resolve (a zone's emitted name, its thermostat, the system object, the zone
   //    list, a schedule) filled here; every name through the namer; trailing blanks trimmed to the class's minimum
+  /** each written system's electricity parts and the zones it serves — the meters read them (2026-10-23) */
+  const sysParts: Array<{ label: string; zones: string[]; parts: Array<[string, string]>; unnamed: string[] }> = [];
   if (model.systems) {
     const emittedName = new Map<string, string>();
     const resolveRef = (f: ResolvedField): string => {
@@ -1627,15 +1661,19 @@ export function writeIdf(
     for (const sys of model.systems.list) {
       const names: string[] = [];
       const fieldsOut: IdfSystemOut["fields"] = [];
+      const parts: Array<[string, string]> = [], unnamed: string[] = [];
       for (const o of sys.objects) {
         const n = o.fields[0]?.key === "name" ? name(o.name) : o.name;   // an HVACTemplate:Zone:* object has no Name field: the zone is its key
         emittedName.set(o.name, n);
         names.push(n);
         const vals = o.fields.map((f, i) => (i === 0 && f.key === "name" ? n : resolveRef(f)));
         obj(o.cls, ...trimmed(vals, o.minFields));
+        const ep = electricParts(o.cls, o.fields[0]?.key === "name" ? n : vals[0]!);
+        if (ep) parts.push(...ep); else unnamed.push(`${o.cls} ${o.fields[0]?.key === "name" ? n : vals[0]}`);
         for (const [i, f] of o.fields.entries()) if (vals[i] !== "" && f.key !== "name") fieldsOut.push({ obj: n, key: f.key, label: f.label, value: vals[i]!, source: f.source, units: f.units });
       }
       report.systems.push({ id: sys.id, section: sys.section, kind: sys.kind, label: sys.label, source: sys.source, zones: sys.zones, objects: sys.objects.length, objectNames: names, fields: fieldsOut, refused: sys.refused, note: sys.note });
+      sysParts.push({ label: sys.label, zones: sys.zones, parts, unnamed });
     }
     // A ZONE ON REAL ZoneHVAC EQUIPMENT OWNS ITS CONTROL (2026-09-11). An HVACTemplate zone gets its thermostat and its
     // Sizing:Zone from the expansion; a zone on a ZoneHVAC:* object gets neither, so both are written here. A unit heater is
@@ -1735,12 +1773,12 @@ export function writeIdf(
   }
   // ── ELECTRICAL › GENERATION — THE PV ARRAYS (user, 2026-10-02): one Generator:PVWatts per panel, on the panel's own top face as a
   //    shading surface (the engine reads its tilt, its azimuth from true north and its shade from it — the schema's note), listed
-  //    on one load centre through the PVWatts inverter, Baseload, a DC buss with the inverter (the engine's Generator_PVWatts.idf).
+  //    on one load center through the PVWatts inverter, Baseload, a DC buss with the inverter (the engine's Generator_PVWatts.idf).
   //    Net metering (the user's ruling: no batteries) is accounted by the engine's own facility meters: produced, purchased,
   //    surplus sold, net — asked for here, priced by BOM › TARIFFS.
   if (model.pv?.panels.length) {
     const pv = model.pv, surfaces: string[] = [], generators: string[] = [], centreNames: string[] = [];
-    // the sheet's load centres (2026-10-02), or the PV form's one over every panel — the same objects either way, the names the cards'
+    // the sheet's load centers (2026-10-02), or the PV form's one over every panel — the same objects either way, the names the cards'
     const centres = pv.centres ?? [{ name: "PV load center", inverter: { name: "PV inverter", dcToAc: pv.dcToAc, efficiency: pv.inverterEfficiency }, arrays: [{ name: "", panels: pv.panels, moduleType: pv.moduleType, arrayType: pv.arrayType, systemLosses: pv.systemLosses }] }];
     for (const c of centres) {
       const gens: Array<{ gn: string; w: number }> = [];
@@ -1763,6 +1801,30 @@ export function writeIdf(
     report.systems.push({ id: "PV", section: "generation", kind: "Generator:PVWatts", label: `${pv.panels.length} × ${[...new Set(pv.panels.map((p) => p.kind))].join(", ")} · ${(pv.dcW / 1000).toFixed(2)} kW DC`, source: src, zones: [],
       objects: pv.panels.length * 2 + centreNames.length, objectNames: [...surfaces, ...generators, ...centreNames], fields: [], refused: pv.refused,
       note: pv.centres ? `the ELECTRICAL sheet: ${pv.centres.map((c) => `${c.name} ← ${c.inverter.name} ← ${c.arrays.map((a) => `${a.name} (${a.panels.length})`).join(", ")}`).join(" · ")} · one PVWatts array per panel on its own top face · net metering by the facility meters` : `one PVWatts array per panel on its own top face (tilt, azimuth and shade the engine's) · module ${pv.moduleType.value} (${pv.moduleType.why}) · ${pv.arrayType.value} · losses ${pv.systemLosses.value} · inverter ${pv.inverterEfficiency.value}, DC/AC ${pv.dcToAc.value} · net metering by the facility meters` });
+  }
+  // ── ELECTRICAL › METERS (user, 2026-10-23: "two meters … so that we can assign zones to each meter (Meter for Apt A and Meter for
+  //    Apt B)"): a Meter:Custom per Meter card — each zone's own electricity meter (its lights and equipment) and the electricity parts of
+  //    every unit that serves ONLY that meter's zones (the engine meters a unit to HVAC, never to a zone). A unit serving zones on two
+  //    meters, or one whose parts cannot be named, stays on the building's total — named in the report, never dropped silently
+  if (model.meters?.length) {
+    report.meters = [];
+    for (const m of model.meters) {
+      const zs = new Set(m.zones), pairs: Array<[string, string]> = [], units: string[] = [], left: string[] = [];
+      for (const z of m.zones) { const ep = zoneEp.get(z); if (ep) pairs.push(["", `Electricity:Zone:${ep}`]); else left.push(`${z}: no such zone in the model`); }
+      for (const u of sysParts) {
+        const on = u.zones.filter((z) => zs.has(z));
+        if (!on.length) continue;
+        if (on.length < u.zones.length) { left.push(`${u.label} also serves ${u.zones.filter((z) => !zs.has(z)).join(", ")} — on the building's total`); continue; }
+        if (u.unnamed.length) left.push(`${u.label}: ${u.unnamed.join(", ")} not named — on the building's total`);
+        if (u.parts.length) { pairs.push(...u.parts); units.push(u.label); }
+      }
+      if (!pairs.length) { left.push("nothing to meter"); report.meters.push({ name: m.name, emitted: "", zones: m.zones, units, parts: 0, left }); continue; }
+      const mn = name(m.name);
+      obj("Meter:Custom", mn, "Electricity", ...pairs.flat());
+      meter(mn);
+      report.meters.push({ name: m.name, emitted: mn, zones: m.zones, units, parts: pairs.length, left });
+    }
+    meter("Electricity:Facility");
   }
   // ── BOM › UTILITY — THE TARIFF (user, 2026-10-03: "utility costs included in both energyplus runs and utility bills"): the card's
   //    charges as the engine's own UtilityCost objects (ExampleFiles/5ZoneEconomicsTariffAndLifeCycleCosts.idf's form). The season by a

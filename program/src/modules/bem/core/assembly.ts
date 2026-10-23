@@ -250,7 +250,9 @@ export function refusedByNode(compiled: CompiledAssembly, rows: ReadonlyArray<{ 
 export const nodeSize = (n: AsmNode, ports: Port[] = PORTS[n.kind], narrow = false): { w: number; h: number } => {
   const l = ports.filter((q) => q.side === "left").length, r = ports.filter((q) => q.side === "right").length;
   const rooms = n.kind === "zone" ? 16 + (n.collapsed ? 0 : Math.max(1, n.rooms?.length ?? 0) * 14) : 0;   // a zone's rooms below its title
-  return { w: narrow ? NODE_W / 2 : NODE_W, h: Math.max(NODE_H, 22 + Math.max(l, r) * PORT_STEP + 8, 24 + rooms + 8) };
+  // a LOAD CENTER's zones (ELECTRICAL, 2026-10-23: kept in its fields as "|"-joined names) below its title
+  const held = n.cls === "ElectricLoadCenter:Distribution" ? 16 + Math.max(1, String(n.fields?.zones ?? "").split("|").filter((x) => x.trim()).length) * 14 + (n.fields?.zones ? 0 : 14) : 0;
+  return { w: narrow ? NODE_W / 2 : NODE_W, h: Math.max(NODE_H, 22 + Math.max(l, r) * PORT_STEP + 8, 24 + rooms + 8, 24 + held + 8) };
 };
 /** a port's vertical position on its node: stacked from the top under the title, in the order declared */
 export const portX = (n: AsmNode, id: string, ports: Port[] = PORTS[n.kind]): number => {

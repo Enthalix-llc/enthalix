@@ -5,11 +5,11 @@
 // Mechanical system, with components below the system view, and details of the components shown in right column"). As on
 // MECHANICAL: the sheet's save state at the head (Save · n changes, revert), then the SELECTED card's settings — an array's panels
 // (ticked, the panel count edited by picking, each roof face a group) and its module, mounting and losses; an inverter's efficiency
-// and ratio; what a load centre and the utility write — or, with nothing selected, what the sheet compiles to and what it refuses.
+// and ratio; what a load center and the utility write — or, with nothing selected, what the sheet compiles to and what it refuses.
 
 import type { Assembly, AsmNode } from "../core/assembly.js";
 import { patchNode } from "../core/assembly.js";
-import { ELEC_CLASS, panelsOf, withPanels, panelFaces, type ElecCompiled } from "../core/elecSheet.js";
+import { ELEC_CLASS, panelsOf, withPanels, panelFaces, zonesOn, type ElecCompiled } from "../core/elecSheet.js";
 import { PV_MODULE_TYPES, PV_ARRAY_TYPES, PVWATTS_DEFAULTS, type PvPanel, type ResolvedPv } from "../core/pvArrays.js";
 import type { IoReference } from "../core/ioReference.js";
 import { RefButton } from "./SystemOptions.js";
@@ -23,7 +23,7 @@ export interface ElectricalColumnProps {
   /** what the SAVED model writes (its generation setting, read back) */
   written: ResolvedPv | null | undefined; writtenNote: string | null;
   pending: number; onSave: () => void; onRevert: () => void; busy: boolean;
-  /** an empty sheet: an array per roof face, one inverter, one load centre, the utility, wired (the PV form's fields carried) */
+  /** an empty sheet: an array per roof face, one inverter, one load center, the utility, wired (the PV form's fields carried) */
   onFromFile: () => void;
   /** light these panels in the model view */
   onShow: (ids: number[]) => void;
@@ -45,16 +45,17 @@ export function ElectricalColumn(p: ElectricalColumnProps): React.ReactElement {
       </div>
       {!p.asm.nodes.length && (
         <div className="sysBody">
-          <div className="sysNote">The sheet is empty. Drag cards from the bench under the view — a PV array, an inverter, a load centre, the utility — and connect DC out → DC in, AC out → AC in, Grid → Grid; or make the first sheet from the file:</div>
-          <button className="qaBtn" disabled={!p.panels.length} onClick={p.onFromFile} title="one array per roof face holding its panels, one inverter (the microinverters' shared efficiency), one load centre, the utility — wired; the PV form's settings carried onto the cards">
+          <div className="sysNote">The sheet is empty. Drag cards from the bench under the view — a PV array, an inverter, a load center, the utility — and connect DC out → DC in, AC out → AC in, Grid → Grid; or make the first sheet from the file:</div>
+          <button className="qaBtn" disabled={!p.panels.length} onClick={p.onFromFile} title="one array per roof face holding its panels, one inverter (the microinverters' shared efficiency), one load center, the utility — wired; the PV form's settings carried onto the cards">
             make the sheet from the file · {p.panels.length} panels on {panelFaces(p.panels).length} roof face{panelFaces(p.panels).length === 1 ? "" : "s"}
           </button>
         </div>
       )}
       {n ? <CardSettings {...p} n={n} refused={refused(n.id)} cautions={cautions(n.id)} byId={byId} kw={kw} /> : p.asm.nodes.length > 0 && (
         <div className="sysBody">
-          <KV k="the sheet" v={`${p.compiled.centres.length} load centre${p.compiled.centres.length === 1 ? "" : "s"} · ${p.compiled.centres.reduce((t, c) => t + c.arrays.length, 0)} arrays · ${p.compiled.owner.size} of ${p.panels.length} panels`} />
+          <KV k="the sheet" v={(() => { const lc = p.asm.nodes.filter((x) => x.cls === ELEC_CLASS.centre).length; return `${lc} load center${lc === 1 ? "" : "s"}${p.compiled.centres.length ? ` (${p.compiled.centres.length} fed by PV)` : ""} · ${p.compiled.meters.length} meter${p.compiled.meters.length === 1 ? "" : "s"} · ${p.compiled.centres.reduce((t, c) => t + c.arrays.length, 0)} arrays · ${p.compiled.owner.size} of ${p.panels.length} panels`; })()} />
           {p.compiled.centres.map((c) => <div key={c.node} className="sysNote"><b>{c.name}</b> ← {c.inverter.name} ← {c.arrays.map((a) => `${a.name} (${a.panels.length})`).join(", ")}{c.utility ? " → the utility" : ""}</div>)}
+          {p.compiled.meters.map((m) => <div key={m.node} className="sysNote"><b>{m.name}</b> meters {m.zones.join(", ")}</div>)}
           {p.compiled.refusals.map((r, i) => <div key={i} className="src-warn">{r.text}</div>)}
           {p.compiled.cautions.map((r, i) => <div key={`c${i}`} className="src-user">{r.text}</div>)}
           {p.writtenNote && <KV k="in the saved model" src="user" v={p.writtenNote} />}
@@ -101,8 +102,10 @@ function CardSettings(p: ElectricalColumnProps & { n: AsmNode; refused: string[]
           <tr><td title="the arrays' DC rating over the inverter's AC rating">DC / AC ratio</td><td><NumInput value={typeof f.dc_to_ac_size_ratio === "number" ? (f.dc_to_ac_size_ratio as number) : null} placeholder={`${PVWATTS_DEFAULTS.dcToAc} (the manual's)`} digits={2} onValue={(v) => set("dc_to_ac_size_ratio", v)} /></td></tr>
         </tbody></table>
       )}
-      {n.cls === ELEC_CLASS.inverter && <div className="sysNote">the house's microinverters (one per panel) are written as one PVWatts inverter at their shared efficiency — the engine's PVWatts inverter is one per load centre</div>}
+      {n.cls === ELEC_CLASS.inverter && <div className="sysNote">the house's microinverters (one per panel) are written as one PVWatts inverter at their shared efficiency — the engine's PVWatts inverter is one per load center</div>}
       {n.cls === ELEC_CLASS.centre && <div className="sysNote">writes ElectricLoadCenter:Distribution — Baseload, a DC buss with its one inverter, and its ElectricLoadCenter:Generators list of every panel its arrays hold. Nothing here is the user's to type yet; batteries (none installed) would join it here.</div>}
+      {n.cls === ELEC_CLASS.centre && <div className="sysNote">its zones: {zonesOn(n).length ? zonesOn(n).join(", ") : "none — drag a space from LEVELS · SPACES onto the card; right-click a zone on the card to unassign it"} · wire its Grid to a Meter to meter them</div>}
+      {n.cls === ELEC_CLASS.meter && <div className="sysNote">writes Meter:Custom, named as the card is: each zone's own electricity (its lights and equipment) on the load centers wired to its Grid in, and the electricity of every unit that serves only those zones — the engine meters a unit to HVAC, never to a zone. Reported by month, day and hour; the year is on RUN, beside what no meter holds.</div>}
       {n.cls === ELEC_CLASS.utility && <div className="sysNote">the service: net metering by the engine's facility meters — ElectricityPurchased, ElectricitySurplusSold and ElectricityNet:Facility, asked for once (the RUN graph's utility lines; priced by BOM › TARIFFS)</div>}
       {(n.cls === ELEC_CLASS.array || n.cls === ELEC_CLASS.inverter) && <div className="pvNote">the defaults are the {PVWATTS_DEFAULTS.citation}</div>}
     </div>

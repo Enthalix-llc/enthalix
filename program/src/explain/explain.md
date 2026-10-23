@@ -100,7 +100,7 @@ The frame under it holds that schedule's **daily** values for the part picked (A
 The model alone, without the site, each room painted by the Zone it belongs to on the SYSTEMS sheet. Rooms in no zone are grey.
 
 ## ASSEMBLY
-The systems sheet, where a system is **assembled**: drag components from the bench under the view onto the sheet — MECHANICAL heat pumps, fans, coils, pumps and loops; ELECTRICAL PV arrays, inverters and load centres; PLUMBING water heaters and hot-water uses — and link them together: drag from one connector to another, or right-click a connector and choose **Connect to …**. The connectors are typed (water, air, location), so only compatible ones join.
+The systems sheet, where a system is **assembled**: drag components from the bench under the view onto the sheet — MECHANICAL heat pumps, fans, coils, pumps and loops; ELECTRICAL PV arrays, inverters and load centers; PLUMBING water heaters and hot-water uses — and link them together: drag from one connector to another, or right-click a connector and choose **Connect to …**. The connectors are typed (water, air, location), so only compatible ones join.
 
 Select a component to edit its EnergyPlus inputs in the right column. A red mark on a card names what is missing; hover over it. **Save** in the right column writes the sheet into the model.
 
@@ -192,7 +192,7 @@ Bench shelf: PV arrays and other generators.
 Bench shelf: the inverters between the PV and the building's power.
 
 ## DISTRIBUTION
-Bench shelf: load centres and the utility connection.
+Bench shelf: load centers (drag a space from LEVELS · SPACES onto one to put its zone on it; right-click a zone on the card to unassign it), meters (a load center's Grid wired to a meter puts its zones on that meter) and the utility connection.
 
 ## WATER HEATERS
 Bench shelf: tanks and heat-pump water heaters.

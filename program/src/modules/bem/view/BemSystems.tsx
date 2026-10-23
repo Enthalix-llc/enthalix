@@ -112,7 +112,7 @@ export function DisciplineColumn(p: { main: MainSection; model: BemModelOutcome 
               <div className="sysBody">
                 {/* the applied ruling governs once there is one (2026-10-02: the line read "none — no PV" over 35 applied panels) */}
                 {rows.length ? <KV k="governs" src="user" v={rows.map((r) => r.label).join("; ")} /> : <KV k="governs" src="code-default" v={CODE_DEFAULT_SYSTEM[sub.id]} />}
-                {sub.id === "generation" && <div className="sysNote">assembled on the sheet above — PV arrays, inverters, load centres and the utility (2026-10-02)</div>}
+                {sub.id === "generation" && <div className="sysNote">assembled on the sheet above — PV arrays, inverters, load centers and the utility (2026-10-02)</div>}
                 {sub.id === "generation" && panels.map((k) => { const r = ratingFromName(k.kind, k.ifcClass); return <div key={k.kind} className="sysNote">{k.count} × {k.kind.split(":").pop()}{r ? <span className={srcClass("code-default")} title="read out of the type name — a default, adopted only by a ruling"> · {r.value} {r.unit} from the name</span> : null} · on the roof, in the shading set</div>; })}
               </div>
             )}

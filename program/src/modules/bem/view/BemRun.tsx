@@ -166,6 +166,24 @@ export function BemRun(p: BemRunProps): React.ReactElement {
                 </table>
               </div>
             )}
+            {(m?.report.meters?.length ?? 0) > 0 && (() => {
+              // THE METERS (user, 2026-10-23): each Meter card's year, and what no meter holds — the building's total less theirs; a
+              // meter's unit left on the building (serving zones on two meters, its parts not named) said beside it
+              const yr = (nm: string): number | null => { const k = [...b.monthlyMeters.keys()].find((x) => x.toUpperCase() === nm.toUpperCase()); return k ? b.monthlyMeters.get(k)!.reduce((t, v) => t + v, 0) : null; };
+              const fac = yr("Electricity:Facility"), rows = m!.report.meters!.map((x) => ({ ...x, kwh: x.emitted ? yr(x.emitted) : null }));
+              const sum = rows.reduce((t, x) => t + (x.kwh ?? 0), 0);
+              return (
+                <div className="qaPanel runLoads">
+                  <table>
+                    <thead><tr><th>meter</th><th title="the Meter:Custom's year, kWh">kWh</th><th>zones · units</th></tr></thead>
+                    <tbody>
+                      {rows.map((x) => <tr key={x.name} title={x.left.join("\n")}><td>{x.name}</td><td>{x.kwh === null ? "not in this run — Run again" : k0(x.kwh)}</td><td>{x.zones.join(", ")}{x.units.length ? ` · ${x.units.join(", ")}` : ""}{x.left.length ? ` · ${x.left.length} not on it (hover)` : ""}</td></tr>)}
+                      {fac !== null && <tr className="muted" title="Electricity:Facility less the meters: what is on no meter — exterior lights, shared equipment, a unit serving zones on two meters"><td>on no meter</td><td>{k0(fac - sum)}</td><td>the building's total {k0(fac)} less the meters</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
             <KV k="unmet" v={`${b.facility.unmetHeatingH.toFixed(0)} h heating · ${b.facility.unmetCoolingH.toFixed(0)} h cooling`} />
             <KV k="conditioned" v={p.imperial ? `${(area * 10.7639).toFixed(0)} ft²` : `${area.toFixed(1)} m²`} />
             <button className={`qaBtn${p.isOpen("bem-results") ? " on" : ""}`} onClick={() => p.onDock("bem-results")} title="the frame under the view: the annual end uses, the months, the loads, the units' sizing and the zones — each as a table or a chart">results — tables and charts</button>

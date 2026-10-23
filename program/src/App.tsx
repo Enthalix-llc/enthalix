@@ -72,7 +72,7 @@ import { zoneColor, SystemsAssembly } from "./modules/bem/view/SystemsAssembly.j
 import { qaRowsByNode } from "./modules/bem/view/SystemQaPanel.js";
 import { AssemblyBench } from "./modules/bem/view/AssemblyBench.js";
 import { ElectricalColumn } from "./modules/bem/view/ElectricalSheet.js";
-import { readElecCatalogue, compileElectrical, sheetFromFile, ELEC_SHELVES } from "./modules/bem/core/elecSheet.js";
+import { readElecCatalogue, compileElectrical, sheetFromFile, ELEC_SHELVES, ELEC_CLASS, zonesOn, withZones, zoneOnto } from "./modules/bem/core/elecSheet.js";
 import { PlumbingColumn, type PlumbRoom } from "./modules/bem/view/PlumbingSheet.js";
 import { readPlumbCatalogue, compilePlumbing, sheetFromFile as plumbFromFile, isFileWaterHeater, PLUMB_SHELVES, PLUMB_CLASS } from "./modules/bem/core/plumbSheet.js";
 import { readPanels } from "./modules/bem/core/pvArrays.js";
@@ -1149,7 +1149,8 @@ export function App(): React.ReactElement {
   const elecSheet = asmView && MAIN_OF[sysFocus] === "electrical";
   // and the PLUMBING sheet (2026-10-02): the water heaters and the hot-water uses
   const plumbSheet = asmView && MAIN_OF[sysFocus] === "plumbing";
-  const roomDrag = asmView && !elecSheet && !plumbSheet;
+  // ELECTRICAL takes a space too (2026-10-23): dropped on a Load center, the space's ZONE goes on it
+  const roomDrag = asmView && !plumbSheet;
   const calView = eff.has("calendar");
   const graphView = eff.has("graphs");
   const reportView = eff.has("report");
@@ -4030,7 +4031,7 @@ export function App(): React.ReactElement {
                   <div key={sp.name} className={`row space${soff ? " off" : ""}${related.spaces.has(sp.name) ? " sel" : ""}`}>
                     <button className={`eye${soff ? " off" : ""}`} onClick={() => toggleSpace(sp.name)} title={soff ? (off ? "show this space alone: its level comes back with the other spaces still hidden" : "show this space") : "hide this space"} aria-label={soff ? "show space" : "hide space"}><Eye on={!soff} /></button>
                     <span className="swatch" style={{ background: spaceColor(sp.colorIndex).getStyle() }} />
-                    {(() => { const h = roomNameProps(sp.name); return <span className={`name${roomDrag ? " draggable" : ""}${h.className}`} style={h.style} onContextMenu={h.onContextMenu} onClick={() => selectSpaceName(sp.name)} onPointerDown={roomDrag ? (e) => { e.preventDefault(); startPaletteDrag({ room: sp.name }, sp.name, e); } : undefined} title={`${h.held ? (h.via ? `merged into ${h.via} on ZONES, which is in zone ${h.held.name} on the SYSTEMS sheet` : `in zone ${h.held.name} on the SYSTEMS sheet · right-click to un-assign it`) : asmView ? "drag this room onto a Zone on the sheet (or onto the sheet for a new Zone); click to select it" : "select this room: every cell that bounds it lights up and the table reads it"}\nright-click: zoom to it${h.held || h.via ? "" : " and assign it to a Zone"} · double right-click: back to the view before`}>{sp.name}</span>; })()}
+                    {(() => { const h = roomNameProps(sp.name); return <span className={`name${roomDrag ? " draggable" : ""}${h.className}`} style={h.style} onContextMenu={h.onContextMenu} onClick={() => selectSpaceName(sp.name)} onPointerDown={roomDrag ? (e) => { e.preventDefault(); startPaletteDrag({ room: sp.name }, sp.name, e); } : undefined} title={`${h.held ? (h.via ? `merged into ${h.via} on ZONES, which is in zone ${h.held.name} on the SYSTEMS sheet` : `in zone ${h.held.name} on the SYSTEMS sheet · right-click to un-assign it`) : asmView ? (elecSheet ? "drag this space onto a Load center on the sheet: its zone goes on that load center; click to select it" : "drag this room onto a Zone on the sheet (or onto the sheet for a new Zone); click to select it") : "select this room: every cell that bounds it lights up and the table reads it"}\nright-click: zoom to it${h.held || h.via ? "" : " and assign it to a Zone"} · double right-click: back to the view before`}>{sp.name}</span>; })()}
                     {voidMark(sp.name)}
                   </div>
                 );
@@ -4040,7 +4041,7 @@ export function App(): React.ReactElement {
                 return (
                   <div key={an} className={`row attic${aoff ? " off" : ""}${related.spaces.has(an) ? " sel" : ""}`}>
                     <button className={`eye${aoff ? " off" : ""}`} onClick={() => toggleSpace(an)} title={aoff ? (off ? "show this attic alone: its level comes back with the other spaces still hidden" : "show this attic") : "hide this attic"} aria-label={aoff ? "show attic" : "hide attic"}><Eye on={!aoff} /></button>
-                    {(() => { const h = roomNameProps(an); return <span className={`name${roomDrag ? " draggable" : ""}${h.className}`} style={h.style} onContextMenu={h.onContextMenu} onClick={() => selectSpaceName(an)} onPointerDown={roomDrag ? (e) => { e.preventDefault(); startPaletteDrag({ room: an }, an, e); } : undefined} title={`${h.held ? (h.via ? `merged into ${h.via} on ZONES, which is in zone ${h.held.name} on the SYSTEMS sheet` : `in zone ${h.held.name} on the SYSTEMS sheet · right-click to un-assign it`) : asmView ? "drag this attic onto a Zone on the sheet" : "select this void: every cell that bounds it lights up"}\nright-click: zoom to it${h.held || h.via ? "" : " and assign it to a Zone"} · double right-click: back to the view before`}>{an}</span>; })()}
+                    {(() => { const h = roomNameProps(an); return <span className={`name${roomDrag ? " draggable" : ""}${h.className}`} style={h.style} onContextMenu={h.onContextMenu} onClick={() => selectSpaceName(an)} onPointerDown={roomDrag ? (e) => { e.preventDefault(); startPaletteDrag({ room: an }, an, e); } : undefined} title={`${h.held ? (h.via ? `merged into ${h.via} on ZONES, which is in zone ${h.held.name} on the SYSTEMS sheet` : `in zone ${h.held.name} on the SYSTEMS sheet · right-click to un-assign it`) : asmView ? (elecSheet ? "drag this space onto a Load center on the sheet: its zone goes on that load center" : "drag this attic onto a Zone on the sheet") : "select this void: every cell that bounds it lights up"}\nright-click: zoom to it${h.held || h.via ? "" : " and assign it to a Zone"} · double right-click: back to the view before`}>{an}</span>; })()}
                     {voidMark(an)}
                   </div>
                 );
@@ -4122,7 +4123,7 @@ export function App(): React.ReactElement {
           <>
             {tab === "bem-constructions" && <button className={eff.has("idf") ? "on" : ""} onClick={() => setConsView("plan")} title={`the model from above, every cell painted ${consPaint === "source" ? "by what governs each type" : "by the file's type"} — click a cell to select its type`}>PLAN</button>}
             {tab === "bem-constructions" && <button className={eff.has("detail") ? "on" : ""} onClick={() => setConsView("detail")} title="the selected type's assembly, drawn to scale from the file's own layers, with the U the governing construction gives it">DETAIL · {detailRow ? detailName ?? detailRow.label : "select a type"}</button>}
-            {tab === "bem-systems" && <button className={asmView ? "on" : ""} onClick={() => setSysView("assembly")} title={MAIN_OF[sysFocus] === "plumbing" ? "the plumbing assembly: water heaters and the hot-water uses they supply, from the bench, connected; each heater in its room; the selected card's settings in the column" : MAIN_OF[sysFocus] === "electrical" ? "the electrical assembly: PV arrays, inverters, load centres and the utility from the bench, connected; the selected card's settings in the column" : "the mechanical assembly: components from the bench, connected into systems, the zones assigned in ZONES; the selected component's settings in the column"}>ASSEMBLY · {MAIN_OF[sysFocus].toUpperCase()}</button>}
+            {tab === "bem-systems" && <button className={asmView ? "on" : ""} onClick={() => setSysView("assembly")} title={MAIN_OF[sysFocus] === "plumbing" ? "the plumbing assembly: water heaters and the hot-water uses they supply, from the bench, connected; each heater in its room; the selected card's settings in the column" : MAIN_OF[sysFocus] === "electrical" ? "the electrical assembly: PV arrays, inverters, load centers and the utility from the bench, connected; the selected card's settings in the column" : "the mechanical assembly: components from the bench, connected into systems, the zones assigned in ZONES; the selected component's settings in the column"}>ASSEMBLY · {MAIN_OF[sysFocus].toUpperCase()}</button>}
             {tab === "bem-schedules" && <button className={calView ? "on" : ""} onClick={() => setSchedView("calendar")} title="the run's calendar — a card in the column paints it with that schedule's values; click a month, a week, a day; double-click backs up">CALENDAR · {schedCard ? `${ROLE_LABELS[schedCard]} · ${calProfile?.name ?? "the code default"} · ` : ""}{calAt.level}</button>}
             {/* ANNUAL and PEAK, each its own tab (user, 2026-10-12: "What happened to the Annual plots?" — one tab named for the section
                 shown hid the other behind the frame's title) */}
@@ -4158,7 +4159,18 @@ export function App(): React.ReactElement {
                   emptyText={<><div><b>PLUMBING — the assembly</b></div><div>drag a water heater (heat pump, electric or gas) and a hot-water use from the bench below and connect HW out → HW in; pick the heater's room in the column — or <b>make the sheet from the file</b> in the column: the file's heaters in their rooms</div></>} />
               : elecSheet
               ? <SystemsAssembly key="elec" asm={elecAsm} assign={{}} onChange={(a) => setElecAssembly(a)} sel={elecSel} onSel={setElecSel} compiled={elecCompiled} catalogue={elecCatalogue} rooms={false} paletteKinds={false}
-                  emptyText={<><div><b>ELECTRICAL — the assembly</b></div><div>drag a PV array, an inverter, a load centre and the utility from the bench below, and connect DC out → DC in, AC out → AC in, Grid → Grid — or <b>make the sheet from the file</b> in the column: an array per roof face, wired. Select an array to tick its panels in the column.</div><div className="muted">nothing drawn here changes the model until Save.</div></>} />
+                  heldOf={(n) => (n.cls === ELEC_CLASS.centre ? zonesOn(n) : null)}
+                  onZoneOut={(id, z) => { const n = elecAsm.nodes.find((x) => x.id === id); if (n) setElecAssembly(withZones(elecAsm, id, zonesOn(n).filter((x) => x !== z))); }}
+                  onRoomDrop={(n, room) => {
+                    // the space's zone in the model (spacesByZone, the writer's own), then onto the Load center under the pointer
+                    const zone = Object.entries(bemModel?.report.model.spacesByZone ?? {}).find(([, rs]) => rs.includes(room))?.[0];
+                    if (!zone) return `${room} is in no zone of the model yet — open BEM so the model is built, then drag it again`;
+                    if (!n || n.cls !== ELEC_CLASS.centre) return `${room} is in ${zone}: drop it ONTO a Load center to put ${zone} on it`;
+                    const r = zoneOnto(elecAsm, n.id, zone);
+                    setElecAssembly(r.asm);
+                    return `${room} → ${r.note}`;
+                  }}
+                  emptyText={<><div><b>ELECTRICAL — the assembly</b></div><div>drag a PV array, an inverter, a load center and the utility from the bench below, and connect DC out → DC in, AC out → AC in, Grid → Grid — or <b>make the sheet from the file</b> in the column: an array per roof face, wired. Select an array to tick its panels in the column.</div><div className="muted">nothing drawn here changes the model until Save.</div></>} />
               : <SystemsAssembly key="mech" asm={asm} assign={asmAssign} onChange={setAssembly} sel={asmSel} onSel={setAsmSel} compiled={asmCompiled} catalogue={catalogue} qa={asmQa} notWritten={asmNotWritten} migration={asmMigration} onMigrationSeen={() => setAsmMigration([])} />}
           </div>
         )}
