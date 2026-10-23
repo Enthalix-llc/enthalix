@@ -69,8 +69,8 @@ export const ANNUAL_SERIES: Array<{ id: AnnualSeries; label: string; color: stri
 export const PEAK_KINDS: Array<{ id: PeakKind; label: string }> = [{ id: "heating", label: "Heating" }, { id: "cooling", label: "Cooling" }];
 export const PEAK_PARTS: Array<{ id: PeakPart; label: string; title: string }> = [
   { id: "system", label: "Per system", title: "each system's (each heat pump card on SYSTEMS) peak heating and cooling on the design days — its units' coils summed at the instant they peak together, each unit's share stacked" },
-  { id: "space", label: "Per space", title: "each space's design air flow, cooling and heating — its design sensible load (the engine's space sizing) across the coil's ΔT typed below: CFM = Btu/h ÷ (1.08 × ΔT °F)" },
   { id: "zone", label: "Per zone", title: "each zone's design-day peak, stacked by load component (the engine's Zone Component Load Summary), with its design air flow" },
+  { id: "space", label: "Per space", title: "each space's design air flow, cooling and heating — its design sensible load (the engine's space sizing) across the coil's ΔT typed below: CFM = Btu/h ÷ (1.08 × ΔT °F)" },
 ];
 export const TEMP_LINES: Array<{ id: TempLine; label: string; color: string }> = [
   { id: "high", label: "Outside high", color: "#fca5a5" }, { id: "low", label: "Outside low", color: "#93c5fd" }, { id: "avg", label: "Outside average", color: "#d1d5db" },
@@ -727,11 +727,12 @@ export function RunGraphs({ bem, state, imperial, modelSha, onState, structures,
             {state.checksOpen && <AnnualChecks state={state} onState={onState} bem={bem} />}
           </div>
         </>
-        : state.peak.length === 0 || parts.length === 0 ? <div className="runGraphEmpty">check a part (per system, per space, per zone) and Heating or Cooling in the frame below</div>
+        : state.peak.length === 0 || parts.length === 0 ? <div className="runGraphEmpty">check a part (per system, per zone, per space) and Heating or Cooling in the frame below</div>
         : <>
             {parts.includes("system") && <StructurePeakGraph structures={structurePeaks(structures ?? [], coilRows(bem.sizingDetails), bem.coilRates ?? { design: [], year: [] }, () => "")} kinds={state.peak} imperial={imperial} />}
-            {parts.includes("space") && <SpaceFlowGraphs rows={spaceRowsOf(bem, spacesByZone ?? {})} kinds={state.peak} state={state} imperial={imperial} />}
             {parts.includes("zone") && state.peak.map((k) => <PeakGraph key={k} {...peakLoadsOf(bem)} kind={k} imperial={imperial} flows={flowsOf(k)} tall />)}
+            {/* per space after per zone (user, 2026-10-23): a zone holds spaces, the lower detail follows */}
+            {parts.includes("space") && <SpaceFlowGraphs rows={spaceRowsOf(bem, spacesByZone ?? {})} kinds={state.peak} state={state} imperial={imperial} />}
           </>}
     </div>
   );
