@@ -94,11 +94,13 @@ function niceTop(v: number): number { if (!(v > 0)) return 1; const p = 10 ** Ma
  *  side as the house without the panels and as it is — BEM's design run priced by the card; BOM's calibration run priced by the same card
  *  over each bill's own dates; each bill's total as billed and, without the panels, that total moved by the card's price of what they made */
 export type BomCostProps = { priced: Priced | null; calibrated?: Priced | null;
-  withoutPv?: { standard: Priced | null; calibrated: Priced | null; bills: BillNoPv[] | null }; applied: boolean; why: string | null; statements?: Statement[] };
+  withoutPv?: { standard: Priced | null; calibrated: Priced | null; bills: BillNoPv[] | null }; applied: boolean; why: string | null; statements?: Statement[];
+  /** the building has a PV or other renewable system (user, 2026-10-23: without one, BOM shows no PV values) */
+  pv?: boolean };
 
 /** THE VIEW IS THE CHART (user, 2026-10-23: "The chart is the item to show in view, the tables in the view should be referenced in the
  *  right column under 5. Cost Tables") — the months' cost, w/o PV dark behind, w/ PV light in front; the tables are BomCostTables */
-export function BomCostView({ priced, calibrated = null, withoutPv, applied, why }: BomCostProps): ReactNode {
+export function BomCostView({ priced, calibrated = null, withoutPv, applied, why, pv = true }: BomCostProps): ReactNode {
   const [ref, { w, h }] = useSize<HTMLDivElement>();
   const [hover, setHover] = useState<string | null>(null);
   if (!priced) return <div className="runGraphs"><div className="runGraphEmpty">{why ?? "pick the tariff in UTILITY below and Apply it"}</div></div>;
@@ -123,7 +125,11 @@ export function BomCostView({ priced, calibrated = null, withoutPv, applied, why
     { id: "bill-no", label: "Billed w/o PV (estimate)", color: "#b8401f", val: (m) => billNo.get(m)?.usd ?? null, line: (m) => billNo.get(m)?.withoutPv ?? null, note: (m) => billNo.get(m)?.why ?? "" },
     { id: "bill", label: "Billed w/ PV", color: "#f6a88b", val: (m) => billByMonth.get(m)?.bill.costUsd ?? null, line: (m) => billByMonth.get(m)?.line ?? null },
   ];
-  const series = all.filter((s) => MONTHS.some((_, i) => s.val(i + 1) !== null));
+  // NO RENEWABLE SYSTEM (user, 2026-10-23): one bar per side, the house as it is — no w/o PV, no "w/ PV" in a label; the side keeps its
+  // darker colour ("Use the darker colors for standard, and the lighter colors for renewable impacted values")
+  const dark = (id: string): string => all.find((x) => x.id === `${id}-no`)?.color ?? "";
+  const shown = pv ? all : all.filter((s) => !s.id.endsWith("-no")).map((s) => ({ ...s, label: s.label.replace(" w/ PV", ""), color: dark(s.id) || s.color }));
+  const series = shown.filter((s) => MONTHS.some((_, i) => s.val(i + 1) !== null));
   // ONE SLOT PER SIDE (user, 2026-10-10: "use darker color graph for w/o and lighter color overlay w/PV"): the w/o PV bar full width and
   // dark behind, the w/ PV bar lighter and a little narrower in front, so neither hides the other whichever is taller
   const SIDES = ["std", "cal", "bill"] as const;
@@ -151,22 +157,22 @@ export function BomCostView({ priced, calibrated = null, withoutPv, applied, why
                 <g key={mn}>
                   {groups.flatMap((g, j) => {
                     const bx = cx + (j - groups.length / 2) * bw;
-                    return ([[g.no, 0], [g.w, Math.max(1, bw * 0.18)]] as const).map(([s, inset]) => {
+                    return ([[g.no, 0], [g.w, g.no ? Math.max(1, bw * 0.18) : 0]] as const).map(([s, inset]) => {
                       if (!s) return null;
                       const v = s.val(i + 1); if (v === null) return null;
                       const line = s.line(i + 1);
-                      const words = `${mn} · ${s.label}: ${usd(v)}${line ? ` · ${line.label} · in ${k0(line.kwhIn)} kWh, out ${k0(line.kwhOut)} · billed ${k0(line.billedKwh)} kWh${line.creditOut > 0 ? ` · credit banked ${k0(line.creditOut)} kWh` : ""}` : ""}${s.note ? ` · ${s.note(i + 1)}` : ""}`;
+                      const words = `${mn} · ${s.label}: ${usd(v)}${line ? ` · ${line.label} · in ${k0(line.kwhIn)} kWh${pv ? `, out ${k0(line.kwhOut)}` : ""} · billed ${k0(line.billedKwh)} kWh${line.creditOut > 0 ? ` · credit banked ${k0(line.creditOut)} kWh` : ""}` : ""}${s.note ? ` · ${s.note(i + 1)}` : ""}`;
                       return <rect key={s.id} x={bx + inset} y={y(Math.max(0, v))} width={Math.max(1, bw - 2 - 2 * inset)} height={Math.max(0.5, y(0) - y(Math.max(0, v)))} fill={s.color} onMouseEnter={() => setHover(words)} onMouseLeave={() => setHover(null)} />;
                     });
                   })}
                   <text x={cx} y={T + ph + 14} textAnchor="middle" className="axisText">{mn}</text>
-                  {P.run?.[i] && P.run[i]!.creditOut > 0 && <text x={cx} y={T + ph + 27} textAnchor="middle" className="axisText dim">bank {k0(P.run[i]!.creditOut)}</text>}
+                  {pv && P.run?.[i] && P.run[i]!.creditOut > 0 && <text x={cx} y={T + ph + 27} textAnchor="middle" className="axisText dim">bank {k0(P.run[i]!.creditOut)}</text>}
                 </g>
               );
             })}
           </svg>
         </div>
-        <div className="runLegend">{series.map((s) => <span key={s.id}><i style={{ background: s.color }} />{s.label}</span>)}<span className="dim">· w/o PV dark behind, w/ PV light in front</span></div>
+        <div className="runLegend">{series.map((s) => <span key={s.id}><i style={{ background: s.color }} />{s.label}</span>)}{pv && <span className="dim">· w/o PV dark behind, w/ PV light in front</span>}</div>
       </div>
     </div>
   );
@@ -174,7 +180,7 @@ export function BomCostView({ priced, calibrated = null, withoutPv, applied, why
 
 /** 5 · COST TABLES, the column (user, 2026-10-23): the Equivalent $/kWh at the top, the tables the view used to carry, and under them
  *  the Standard · Calibrated · Billed totals */
-export function BomCostTables({ priced, calibrated = null, withoutPv, why, statements = [] }: BomCostProps): ReactNode {
+export function BomCostTables({ priced, calibrated = null, withoutPv, why, statements = [], pv = true }: BomCostProps): ReactNode {
   if (!priced) return <div className="idfInfo">{why ?? "pick the tariff in UTILITY below and Apply it"}</div>;
   const P = priced;
   const sumRun = (Q: Priced | null | undefined): number | null => (Q?.run ? Q.run.reduce((t, l) => t + l.total, 0) : null);
@@ -185,7 +191,26 @@ export function BomCostTables({ priced, calibrated = null, withoutPv, why, state
   const noWhy = (withoutPv?.bills ?? []).find((x) => x.usd === null)?.why ?? "";
   const eq = equivalentPerKwh(P.bills.map((b) => b.bill)), eqNo = equivalentWithoutPv(withoutPv?.bills ?? []);
   const missing = [...(P.run ?? []), ...P.bills.map((b) => b.line)].some((l) => l.pcaMissing);
-  const pair = (no: string | null, w: string | null): string => `${no ?? "—"} w/o · ${w ?? "—"} w/ PV`;
+  const pair = (no: string | null, w: string | null): string => (pv ? `${no ?? "—"} w/o · ${w ?? "—"} w/ PV` : (w ?? "—"));
+  if (!pv) return (
+    <div className="bomCostCol">
+      <div className="bomEquiv" title={eq ? `the ${eq.n} bills' total ${usd(eq.usd)} ÷ the ${k0(eq.kwh)} kWh the grid delivered over them` : "no bill states its total"}>
+        <b>Equivalent $/kWh {eq ? `$${eq.perKwh.toFixed(3)}` : "—"}</b>
+        {eq && <span className="dim">{usd(eq.usd)} billed ÷ {k0(eq.kwh)} kWh delivered · {eq.n} bills</span>}
+      </div>
+      {P.paired.length > 0 && <CompareTable P={P} />}
+      {P.run && <CostTable pv={false} title={`THE RUN · by calendar month · ${P.runMeters.join(" + ")}${P.runPartial.length ? ` · left out, the run holds only part of: ${P.runPartial.join(", ")}` : ""}`} lines={P.run} engine={P.engine} engineAnnual={P.engineAnnual} />}
+      {statements.length > 0 && <StatementsTable P={P} statements={statements} pv={false} />}
+      {P.bills.length > 0 && <CostTable pv={false} title="THE BILLS · by their periods" lines={P.bills.map((b) => b.line)} billed={P.bills.map((b) => b.bill.costUsd ?? null)} />}
+      <div className="bomTotals">
+          {stdW !== null && <span className="runKey"><i style={{ background: "#1f5fae" }} />Standard {usd(stdW)} /yr</span>}
+          {calibrated ? <span className="runKey"><i style={{ background: "#5e33a8" }} />Calibrated {usd(cW.usd)} over {cW.n} bill period{cW.n === 1 ? "" : "s"}</span>
+            : <span className="runKey dim">Calibrated: run the calibration year in the column (4 · calibration)</span>}
+          {P.bills.length > 0 && <span className="runKey"><i style={{ background: "#b8401f" }} />Billed {usd(billedYear)} over {P.bills.length} bills</span>}
+          {missing && P.card.pca && <span className="runKey dim">the PCA is not typed — left out of every total (type it from a bill in the column)</span>}
+      </div>
+    </div>
+  );
   return (
     <div className="bomCostCol">
       <div className="bomEquiv" title={eq ? `the ${eq.n} bills' total ${usd(eq.usd)} ÷ the ${k0(eq.kwh)} kWh the grid delivered over them (each bill's Consumption: its net and what it sent to the grid)` : "no bill states its total"}>
@@ -214,7 +239,7 @@ export function BomCostTables({ priced, calibrated = null, withoutPv, why, state
 
 /** THE BILLS AS PRINTED (2026-10-09): each bill's Detail of Charges by group, its total, and the card's price for the same usage — the card
  *  holds no taxes, so its price is set against the bill's charges less its taxes */
-export function StatementsTable({ P, statements }: { P: Priced; statements: Statement[] }): ReactNode {
+export function StatementsTable({ P, statements, pv = true }: { P: Priced; statements: Statement[]; pv?: boolean }): ReactNode {
   const rows = [...statements].filter((s) => s.from && s.to).sort((a, b) => a.from.localeCompare(b.from));
   const groups = rows[0] ? rows[0].groups : [];
   const priced = (s: Statement): number | null => P.bills.find((b) => b.bill.periodStart === s.from && b.bill.account === s.meter)?.line.total ?? null;
@@ -223,14 +248,14 @@ export function StatementsTable({ P, statements }: { P: Priced; statements: Stat
     <div className="bomTableWrap">
       <div className="runGraphHead">THE BILLS AS PRINTED · the Detail of Charges by group · {P.card.name} priced on the same usage (no taxes on the card)</div>
       <table className="bomCostTable">
-        <thead><tr><th>bill</th><th>period</th><th className="num">consumption</th><th className="num">generation</th><th className="num">net kWh</th><th className="num">kW</th>
+        <thead><tr><th>bill</th><th>period</th><th className="num">consumption</th>{pv && <th className="num">generation</th>}<th className="num">net kWh</th><th className="num">kW</th>
           {groups.map((g) => <th key={g.id} className="num">{g.label}</th>)}<th className="num">total</th><th className="num">less taxes</th><th className="num">card priced</th><th className="num">Δ</th></tr></thead>
         <tbody>
           {rows.map((s) => {
             const sub = groupSubtotals(s), t = statementTotal(s), p = priced(s), lt = t.total - taxes(s);
             return (
               <tr key={s.id} title={t.open ? `${t.open} line(s) not figured yet` : ""} className={t.open ? "dim" : ""}>
-                <td>{statementMonth(s)}</td><td>{s.from} – {s.to}</td><td className="num">{k0(s.usage.consumption.kwh ?? 0)}</td><td className="num">{k0(s.usage.generation.kwh ?? 0)}</td>
+                <td>{statementMonth(s)}</td><td>{s.from} – {s.to}</td><td className="num">{k0(s.usage.consumption.kwh ?? 0)}</td>{pv && <td className="num">{k0(s.usage.generation.kwh ?? 0)}</td>}
                 <td className="num">{k0(s.usage.net.kwh ?? 0)}</td><td className="num">{s.usage.net.kw ?? "—"}</td>
                 {groups.map((g) => <td key={g.id} className="num">{usd(sub.find((x) => x.id === g.id)?.total ?? 0)}</td>)}
                 <td className="num"><b>{usd(t.total)}</b></td><td className="num">{usd(lt)}</td><td className="num">{p === null ? "—" : usd(p)}</td>
@@ -286,26 +311,27 @@ export function CompareTable({ P }: { P: Priced }): ReactNode {
   );
 }
 
-export function CostTable({ title, lines, engine, engineAnnual, billed }: { title: string; lines: BillLine[]; engine?: number[] | null; engineAnnual?: number | null; billed?: Array<number | null> }): ReactNode {
+export function CostTable({ title, lines, engine, engineAnnual, billed, pv = true }: { title: string; lines: BillLine[]; engine?: number[] | null; engineAnnual?: number | null; billed?: Array<number | null>;
+  /** a renewable system: the kWh sent out and the credit bank are shown (2026-10-23) */ pv?: boolean }): ReactNode {
   const sum = (f: (l: BillLine) => number | null): number => lines.reduce((t, l) => t + (f(l) ?? 0), 0);
   return (
     <div className="bomTableWrap">
       <div className="runGraphHead">{title}</div>
       <table className="bomCostTable">
-        <thead><tr><th>month</th><th className="num">kWh in</th><th className="num">kWh out</th><th className="num">credit kWh</th><th className="num">billed kWh</th><th className="num">peak kW</th>
+        <thead><tr><th>month</th><th className="num">kWh in</th>{pv && <><th className="num">kWh out</th><th className="num">credit kWh</th></>}<th className="num">billed kWh</th><th className="num">peak kW</th>
           <th className="num">access</th><th className="num">delivery</th><th className="num">demand</th><th className="num">supply</th><th className="num">PCA</th><th className="num">total</th>
           {engine && <th className="num">Simulated</th>}{billed && <th className="num">as billed</th>}</tr></thead>
         <tbody>
           {lines.map((l, i) => (
             <tr key={`${l.key}-${i}`} title={l.notes.join(" · ")} className={l.surplus ? "surplus" : ""}>
-              <td>{l.label}</td><td className="num">{k0(l.kwhIn)}</td><td className="num">{k0(l.kwhOut)}</td><td className="num">{l.creditOut > 0 || l.creditApplied > 0 ? `${k0(l.creditApplied)} used · ${k0(l.creditOut)} banked` : "—"}</td>
+              <td>{l.label}</td><td className="num">{k0(l.kwhIn)}</td>{pv && <><td className="num">{k0(l.kwhOut)}</td><td className="num">{l.creditOut > 0 || l.creditApplied > 0 ? `${k0(l.creditApplied)} used · ${k0(l.creditOut)} banked` : "—"}</td></>}
               <td className="num">{k0(l.billedKwh)}</td><td className="num">{l.peakKw === null ? "—" : l.peakKw.toFixed(2)}</td>
               <td className="num">{usd(l.access)}</td><td className="num">{usd(l.delivery)}</td><td className="num">{l.demand === null ? "not stated" : usd(l.demand)}</td><td className="num">{usd(l.supply)}</td>
               <td className="num">{l.pca === null ? "not typed" : usd(l.pca)}</td><td className="num"><b>{usd(l.total)}</b></td>
               {engine && <td className="num">{engine[l.month - 1] !== undefined ? usd(engine[l.month - 1]!) : "—"}</td>}{billed && <td className="num">{billed[i] !== null && billed[i] !== undefined ? usd(billed[i]!) : "—"}</td>}
             </tr>
           ))}
-          <tr className="sum"><td>the year</td><td className="num">{k0(sum((l) => l.kwhIn))}</td><td className="num">{k0(sum((l) => l.kwhOut))}</td><td></td><td className="num">{k0(sum((l) => l.billedKwh))}</td><td></td>
+          <tr className="sum"><td>the year</td><td className="num">{k0(sum((l) => l.kwhIn))}</td>{pv && <><td className="num">{k0(sum((l) => l.kwhOut))}</td><td></td></>}<td className="num">{k0(sum((l) => l.billedKwh))}</td><td></td>
             <td className="num">{usd(sum((l) => l.access))}</td><td className="num">{usd(sum((l) => l.delivery))}</td><td className="num">{usd(sum((l) => l.demand))}</td><td className="num">{usd(sum((l) => l.supply))}</td>
             <td className="num">{usd(sum((l) => l.pca))}</td><td className="num"><b>{usd(sum((l) => l.total))}</b></td>
             {/* the engine's own year, not its cent-rounded months summed (2026-10-21: three prices for one year) */}

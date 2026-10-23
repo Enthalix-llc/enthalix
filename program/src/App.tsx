@@ -52,7 +52,7 @@ import { ProjectPanel, type ProjectView } from "./view/ProjectPanel.js";
 import { FileChanges } from "./view/FileChanges.js";
 import { runBemPipeline, buildBemModel, readLatestRun, runCalibration, readLatestCalibration, type BemOutcome, type BemModelOutcome } from "./modules/bem/pipeline.js";
 import { BomCalibration, type CalibrationRunView } from "./modules/bom/view/BomCalibration.js";
-import { pvOffBefore, billedWithoutPv, type HourSeries } from "./modules/bom/core/calibration.js";
+import { pvOffBefore, billedWithoutPv, producesElectricity, type HourSeries } from "./modules/bom/core/calibration.js";
 import { sha256Hex } from "./core/sha256.js";
 import { parsePvCsv, type PvRead } from "./modules/bom/core/pvRead.js";
 import { makeActualWeather, latestEnd } from "./modules/bom/weatherMake.js";
@@ -1117,6 +1117,11 @@ export function App(): React.ReactElement {
     const firstGen = bomPricing.bills.filter((b) => (b.receivedKwh ?? 0) > 0).map((b) => b.periodStart).sort()[0] ?? null;
     return billedWithoutPv(bomPricing.card, bomPricing.tt, bomPricing.bills, calPv ? new Map(calPv.read.days.map((d) => [d.date, d.kwh] as const)) : null, calPvOn || firstGen);
   }, [bomPricing, calPv, calPvOn]);
+  /** A PV OR OTHER RENEWABLE SYSTEM (user, 2026-10-23: "When there isn't a PV or renewable energy system (not including heat reclaim),
+   *  then the BOM should not show PV (or other renewable) values"): a run made electricity, a bill sent energy to the grid, or the
+   *  panels' production is imported */
+  const hasPv = useMemo(() => producesElectricity((bem?.hourly ?? []) as HourSeries[]) || producesElectricity(calRun?.hourly ?? [])
+    || (bomPricing?.bills ?? []).some((b) => (b.receivedKwh ?? 0) > 0) || !!calPv, [bem, calRun, bomPricing, calPv]);
   // THE PRINTED REPORT'S NAME (user, 2026-10-07: "which should be labeled BOM, not BIM for pdf print"): the print dialog names the PDF
   // after the window's title — the report's own while it prints, the app's back after
   const projectName = (pathRef.current.split(/[\\/]/).pop() ?? "").replace(/\.ifc$/i, "") || "the project";
@@ -4158,7 +4163,7 @@ export function App(): React.ReactElement {
         )}
         {costView && (
           <div className="paneHtml paneMapSlot runPane">
-            <BomCostView statements={bomStatements.bills} priced={pricedBom} calibrated={pricedCal} withoutPv={{ standard: pricedStdNo, calibrated: pricedCalNo, bills: billNoPv }} applied={(!!bomTariff && pricedBom?.card.id === bomTariff.card) || (!bomTariff && !!pricedBom?.card.sample)} why={!bem ? "no run yet — run the model on BEM › RUN; its months are priced here" : !tariffRead?.usable.length ? "no tariff card is readable (references/tariffs/)" : null} />
+            <BomCostView statements={bomStatements.bills} priced={pricedBom} calibrated={pricedCal} withoutPv={{ standard: pricedStdNo, calibrated: pricedCalNo, bills: billNoPv }} pv={hasPv} applied={(!!bomTariff && pricedBom?.card.id === bomTariff.card) || (!bomTariff && !!pricedBom?.card.sample)} why={!bem ? "no run yet — run the model on BEM › RUN; its months are priced here" : !tariffRead?.usable.length ? "no tariff card is readable (references/tariffs/)" : null} />
           </div>
         )}
         {reportView && (
@@ -4489,21 +4494,21 @@ export function App(): React.ReactElement {
               statements={bomStatements} format={bomStatements.formats[0] ?? DEFAULT_BILL_FORMAT}
               onStatements={changeStatements} onFormat={() => setBillFormatOpen(true)}
               onDock={(d) => toggleSection(d)} isOpen={(d) => open.has(d)} onPrint={() => printAs(`BOM · Energy & Cost — ${projectName}`)}
-              costTables={<BomCostTables statements={bomStatements.bills} priced={pricedBom} calibrated={pricedCal} withoutPv={{ standard: pricedStdNo, calibrated: pricedCalNo, bills: billNoPv }} applied={(!!bomTariff && pricedBom?.card.id === bomTariff.card) || (!bomTariff && !!pricedBom?.card.sample)} why={!bem ? "no run yet — run the model on BEM › RUN; its months are priced here" : !tariffRead?.usable.length ? "no tariff card is readable (references/tariffs/)" : null} />}
+              costTables={<BomCostTables statements={bomStatements.bills} priced={pricedBom} calibrated={pricedCal} withoutPv={{ standard: pricedStdNo, calibrated: pricedCalNo, bills: billNoPv }} pv={hasPv} applied={(!!bomTariff && pricedBom?.card.id === bomTariff.card) || (!bomTariff && !!pricedBom?.card.sample)} why={!bem ? "no run yet — run the model on BEM › RUN; its months are priced here" : !tariffRead?.usable.length ? "no tariff card is readable (references/tariffs/)" : null} />}
               calibrationRun={(() => {
                 const bills = [...bomImports.flatMap((i) => i.bills), ...statementBills(bomStatements)].filter((b) => !bomExcluded.has(`${b.account}|${b.periodStart}`));
                 const span = bills.length ? { a: bills.reduce((m, b) => (b.periodStart < m ? b.periodStart : m), bills[0]!.periodStart), b: bills.reduce((m, b) => (b.periodEnd > m ? b.periodEnd : m), bills[0]!.periodEnd) } : null;
                 // the PV's first day, until typed: the first bill that sent energy to the grid — the bills' own word
                 const firstGen = bills.filter((b) => (b.receivedKwh ?? 0) > 0).map((b) => b.periodStart).sort()[0] ?? "";
                 return <BomCalibration bills={bills} span={span} archiveEnd={latestEnd()} pvOn={calPvOn || firstGen} onPvOn={(v) => { setCalPvOn(v); setCalibration({ pvOn: v }); }}
-                  pv={calPv} onImportPv={() => void importPv()} run={calRun} busy={calBusy} onRun={() => span && void runCalibrationYear(span)}
+                  pv={calPv} hasPv={hasPv} onImportPv={() => void importPv()} run={calRun} busy={calBusy} onRun={() => span && void runCalibrationYear(span)}
                   onRunOwn={() => { if (span) void window.bem.pickEpw().then((f) => { if (f) void runCalibrationYear(span, f); }); }} />;
               })()}
             />
           )}
           {module === "bom" && billFormatOpen && <BillFormatDialog format={bomStatements.formats[0] ?? DEFAULT_BILL_FORMAT} onSave={saveBillFormat} onCancel={() => setBillFormatOpen(false)} />}
           {module === "bom" && (
-            <BomReport priced={pricedBom} tariff={bomTariff} project={(pathRef.current.split(/[\\/]/).pop() ?? "").replace(/\.ifc$/i, "")} runStamp={bem?.stamp ?? null}
+            <BomReport pv={hasPv} priced={pricedBom} tariff={bomTariff} project={(pathRef.current.split(/[\\/]/).pop() ?? "").replace(/\.ifc$/i, "")} runStamp={bem?.stamp ?? null}
               weather={`${(bem?.run.epw ?? bemEpw ?? "").split(/[\\/]/).pop() || "the weather file"} · ${epwLine}`} />
           )}
             {tab === "bem-run" && open.has("bem-results") && bem && <BemResultsPanel bem={bem} selectedZone={selZone} onZone={setSelZone} imperial={imperial} />}

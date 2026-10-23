@@ -99,6 +99,13 @@ export function calibrationDays(hourly: HourSeries[], pvOn: string | null): Map<
 
 /** the run's hours with every hour before `pvOn` made the house without PV — its facility use bought, nothing sold or made — so the
  *  tariff prices the calibration run as the bills were billed (2026-10-10) */
+/** A RENEWABLE SYSTEM IN THE RUN (user, 2026-10-23): the run's ElectricityProduced made some energy — the meter counts the building's
+ *  generators (PV, wind, …), never heat reclaim */
+export function producesElectricity(hourly: ReadonlyArray<{ name: string; values: number[] }>): boolean {
+  const p = hourly.find((h) => h.name.toUpperCase() === METERS.produced.toUpperCase());
+  return !!p && p.values.some((v) => v > 0);
+}
+
 export function pvOffBefore(hourly: HourSeries[], pvOn: string | null): HourSeries[] {
   const fac = hourly.find((h) => h.name.toUpperCase() === METERS.facility.toUpperCase());
   if (!pvOn || !fac?.start) return hourly;

@@ -14,7 +14,8 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 const usd = (v: number): string => `$${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const PAGE_W = 700;
 
-export function BomReport({ priced: P, tariff, project, runStamp, weather }: { priced: Priced | null; tariff: BomLedger["tariff"] | undefined; project: string; runStamp: string | null; weather: string }): React.ReactElement {
+export function BomReport({ priced: P, tariff, project, runStamp, weather, pv = true }: { priced: Priced | null; tariff: BomLedger["tariff"] | undefined; project: string; runStamp: string | null; weather: string;
+  /** a renewable system (2026-10-23): without one, no net metering, kWh out or credit in the report */ pv?: boolean }): React.ReactElement {
   const C = P?.card.charges;
   const applied = !!P && (tariff?.card === P.card.id || (!tariff && !!P.card.sample));   // the sample is the run's card when none is applied
   const pca = tariff?.pca;
@@ -36,15 +37,15 @@ export function BomReport({ priced: P, tariff, project, runStamp, weather }: { p
               <tr key={k}><td style={{ textAlign: "left" }}>{k}</td><td>{c.unit.startsWith("$/kWh") ? `${(c.value * 100).toFixed(3)} ¢/kWh` : `$${c.value.toFixed(2)} ${c.unit.replace("$", "")}`}</td><td style={{ textAlign: "left" }}>{c.cite}</td></tr>
             ))}
             <tr><td style={{ textAlign: "left" }}>power cost adjustment</td><td>{pca?.all !== undefined ? `${(pca.all * 100).toFixed(3)} ¢/kWh` : pca?.byMonth ? "by month" : "not typed"}</td><td style={{ textAlign: "left" }}>{pca?.byMonth ? Object.entries(pca.byMonth).map(([k, v]) => `${MONTHS[Number(k) - 1] ?? k} ${(v * 100).toFixed(3)}¢`).join(" · ") : pca?.all === undefined ? "left out of every total" : "typed from a bill"}</td></tr>
-            {P.card.netMetering && <tr><td style={{ textAlign: "left" }}>net metering</td><td>{P.card.netMetering.schedule}</td><td style={{ textAlign: "left" }}>the 12-month period opens in {MONTHS[(tariff?.nemStartMonth ?? 1) - 1]}</td></tr>}
+            {pv && P.card.netMetering && <tr><td style={{ textAlign: "left" }}>net metering</td><td>{P.card.netMetering.schedule}</td><td style={{ textAlign: "left" }}>the 12-month period opens in {MONTHS[(tariff?.nemStartMonth ?? 1) - 1]}</td></tr>}
           </tbody></table>
         </section>
       )}
       {P && <MonthBars P={P} />}
       {P && P.paired.length > 0 && <section><h2>The bills against the model</h2><CompareTable P={P} /></section>}
       {P && P.paired.length === 0 && <p>no bills imported — the run is priced alone. {pairWords(P)}</p>}
-      {P?.run && <section><h2>The run, by month</h2><CostTable title={`${P.runMeters.join(" + ")}${P.runPartial.length ? ` · left out, the run holds only part of: ${P.runPartial.join(", ")}` : ""}`} lines={P.run} engine={P.engine} engineAnnual={P.engineAnnual} /></section>}
-      {P && P.bills.length > 0 && <section><h2>The bills, priced</h2><CostTable title="by their periods" lines={P.bills.map((b) => b.line)} billed={P.bills.map((b) => b.bill.costUsd ?? null)} /></section>}
+      {P?.run && <section><h2>The run, by month</h2><CostTable pv={pv} title={`${P.runMeters.join(" + ")}${P.runPartial.length ? ` · left out, the run holds only part of: ${P.runPartial.join(", ")}` : ""}`} lines={P.run} engine={P.engine} engineAnnual={P.engineAnnual} /></section>}
+      {P && P.bills.length > 0 && <section><h2>The bills, priced</h2><CostTable pv={pv} title="by their periods" lines={P.bills.map((b) => b.line)} billed={P.bills.map((b) => b.bill.costUsd ?? null)} /></section>}
     </div>
   );
   return createPortal(page, document.body);

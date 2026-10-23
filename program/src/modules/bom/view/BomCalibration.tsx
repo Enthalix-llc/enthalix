@@ -28,6 +28,8 @@ export function BomCalibration(p: {
   archiveEnd: string;
   pvOn: string; onPvOn: (iso: string) => void;
   pv: { name: string; read: PvRead } | null; onImportPv: () => void;
+  /** the building has a PV or other renewable system (user, 2026-10-23): without one, no PV input or value is shown */
+  hasPv?: boolean;
   run: CalibrationRunView | null; busy: string; onRun: () => void;
   /** run on the user's own actual-year EPW — for paid work, where the Open-Meteo archive's free API may not be used */
   onRunOwn: () => void;
@@ -46,6 +48,7 @@ export function BomCalibration(p: {
     <div className="calRun" title="BOM's own run: the model as BEM holds it, on the actual year the bills were metered under — the station's measured temperature, humidity and wind, the sun and sky estimated by the Open-Meteo archive and checked against your panels' measured production. BEM's run on the typical year is not touched.">
       <div className="kv"><span>bills</span><b>{p.span ? `${p.bills.length} · ${p.span.a} – ${p.span.b}` : "none with dates — type the bills above"}</b></div>
       {p.span && p.span.b > p.archiveEnd && <div className="src-warn">the weather archive reaches {p.archiveEnd}: the run ends there and a later bill is left uncovered</div>}
+      {p.hasPv !== false && <>
       <label className="lensRow" title="the day the PV was connected (the first meter reading with generation): before it a day is the house without PV — its own use bought, nothing sold or made">
         PV connected <input type="date" value={p.pvOn} onChange={(e) => p.onPvOn(e.target.value)} />
       </label>
@@ -54,6 +57,7 @@ export function BomCalibration(p: {
         {p.pv && <span className="idfInfo">{p.pv.name} · {p.pv.read.days.length} days {pvSpan} · {p.pv.read.energyColumn}{p.pv.read.problems.length ? ` · ${p.pv.read.problems.length} rows not read` : ""}</span>}
       </div>
       {p.pv?.read.problems.length ? <div className="idfInfo" title={p.pv.read.problems.join("\n")}>not read: {p.pv.read.problems.slice(0, 2).join("; ")}{p.pv.read.problems.length > 2 ? " …" : ""}</div> : null}
+      </>}
       <div className="allRow">
         <button className="apply" disabled={!p.span || !!p.busy} onClick={p.onRun} title={`makes (or reuses) the actual-year weather for ${p.span ? `${p.span.a} – ${end}` : "the bills' dates"} and runs the model on it — about a minute`}>{p.busy ? "…" : "Run the calibration year"}</button>
         <button className="qaBtn" disabled={!p.span || !!p.busy} onClick={p.onRunOwn} title="run the model on an actual-year weather file you obtained yourself (a .epw covering the bills' dates) — for paid work, where Open-Meteo's free archive may not be used">Run on my own weather file…</button>
@@ -72,22 +76,22 @@ export function BomCalibration(p: {
           )}
           <div className="idfInfo">Guideline 14, bill periods: CVRMSE ≤ {verdict?.limitCvrmse ?? 15} %, |NMBE| ≤ {verdict?.limitNmbe ?? 5} % — the verdict on Consumption and Net</div>
           {g14Line("Consumption", st.consumption, "the bills state no generation")}
-          {g14Line("Generation", st.generation, "the bills state no generation")}
+          {p.hasPv !== false && g14Line("Generation", st.generation, "the bills state no generation")}
           {g14Line("Net", st.net, "")}
-          {g14Line("PV measured", st.pv, p.pv ? "no bill period wholly in the export after the connection" : "import the PV production CSV")}
+          {p.hasPv !== false && g14Line("PV measured", st.pv, p.pv ? "no bill period wholly in the export after the connection" : "import the PV production CSV")}
           <table className="calTable">
             <thead><tr><th>period</th><th className="num" title="delivered by the grid: the bill's Consumption against the run's ElectricityPurchased">cons. bill</th><th className="num">model</th><th className="num">Δ</th>
-              <th className="num" title="sent to the grid: the bill's Generation against ElectricitySurplusSold">gen. bill</th><th className="num">model</th>
+              {p.hasPv !== false && <><th className="num" title="sent to the grid: the bill's Generation against ElectricitySurplusSold">gen. bill</th><th className="num">model</th></>}
               <th className="num" title="the bill's Net against ElectricityNet">net bill</th><th className="num">model</th><th className="num">Δ</th>
-              <th className="num" title="your panels' measured production against the run's ElectricityProduced, over the days the export holds">PV meas.</th><th className="num">model</th></tr></thead>
+              {p.hasPv !== false && <><th className="num" title="your panels' measured production against the run's ElectricityProduced, over the days the export holds">PV meas.</th><th className="num">model</th></>}</tr></thead>
             <tbody>
               {periods.map((x) => (
                 <tr key={`${x.bill.periodStart}|${x.bill.line}`} className={x.covered ? "" : "muted"} title={x.covered ? "" : `the run covers ${x.daysCovered} of the period's ${x.days} days`}>
                   <td>{x.bill.periodStart.slice(5)} – {x.bill.periodEnd.slice(5)}</td>
                   <td className="num">{x.consumption.billed === null ? "—" : k0(x.consumption.billed)}</td><td className="num">{k0(x.consumption.model)}</td><td className="num">{pct(x.consumption.billed, x.consumption.model)}</td>
-                  <td className="num">{x.generation.billed === null ? "—" : k0(x.generation.billed)}</td><td className="num">{k0(x.generation.model)}</td>
+                  {p.hasPv !== false && <><td className="num">{x.generation.billed === null ? "—" : k0(x.generation.billed)}</td><td className="num">{k0(x.generation.model)}</td></>}
                   <td className="num">{k0(x.net.billed)}</td><td className="num">{k0(x.net.model)}</td><td className="num">{pct(x.net.billed, x.net.model)}</td>
-                  <td className="num">{x.pv ? k0(x.pv.measured) : ""}</td><td className="num">{x.pv ? k0(x.pv.model) : ""}</td>
+                  {p.hasPv !== false && <><td className="num">{x.pv ? k0(x.pv.measured) : ""}</td><td className="num">{x.pv ? k0(x.pv.model) : ""}</td></>}
                 </tr>
               ))}
             </tbody>
