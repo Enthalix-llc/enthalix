@@ -77,6 +77,9 @@ async function evaluate(wsUrl, expression) {
     ws.send(JSON.stringify({ id: 1, method: "Runtime.evaluate", params: { expression, awaitPromise: true, returnByValue: true } }));
   });
   ws.close();
+  // a protocol error is said, never read as an empty verdict (2026-10-23: the window navigated under the first evaluation on a macOS
+  // runner — "Execution context was destroyed" — and the result read "no verdict")
+  if (reply.error) throw new Error(`DevTools: ${reply.error.message ?? JSON.stringify(reply.error)}`);
   if (reply.result?.exceptionDetails) throw new Error(reply.result.exceptionDetails.exception?.description ?? "the page threw");
   return reply.result?.result?.value;
 }
@@ -121,8 +124,19 @@ async function main() {
   child.stdout.on("data", (d) => { log += d; });
   child.stderr.on("data", (d) => { log += d; });
   try {
-    const ws = await pageSocket(Date.now() + 120000);
-    const r = await evaluate(ws, PAGE_SCRIPT(ifc));
+    // THE PAGE MAY STILL BE LOADING when its socket first answers: an evaluation the page's own navigation cuts off is tried once more,
+    // on the page as it then stands, after a pause; any other failure stands
+    let r;
+    for (let attempt = 1; ; attempt++) {
+      const ws = await pageSocket(Date.now() + 120000);
+      try { r = await evaluate(ws, PAGE_SCRIPT(ifc)); break; }
+      catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (attempt >= 2 || !/context was destroyed|navigated|Target closed|Cannot find context/i.test(msg)) throw e;
+        result.retried = msg;
+        await new Promise((res) => setTimeout(res, 3000));
+      }
+    }
     Object.assign(result, r);
     const m = /EnergyPlus completed · Fatal (\d+) · Severe (\d+) · Warning (\d+) · heating (\d+) · cooling (\d+) kWh/.exec(r?.status ?? "");
     if (m) Object.assign(result, { fatal: +m[1], severe: +m[2], warning: +m[3], heatingKwh: +m[4], coolingKwh: +m[5] });
