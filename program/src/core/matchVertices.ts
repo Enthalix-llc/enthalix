@@ -480,7 +480,7 @@ export function matchVertices(
           const endVerts = { start: 0, end: 0 };
           for (let vi = 0; vi < f2.outer.length; vi++) {
             const p = f2.outer[vi]!;
-            const au = authored[vi] ?? p;
+            const au = auOf.get(p) ?? p;   // by vertex object: the s phase may have spliced vertices in ahead of it
             const sv = P.th[0] * p[0] + P.th[1] * p[2];
             const [lo, hi] = envelope(f2.outer, P.th, sv);
             // at a jog both corners share one height: ask just above and just below

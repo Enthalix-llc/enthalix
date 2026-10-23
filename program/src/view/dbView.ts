@@ -116,12 +116,21 @@ export function buildDbView(rows: DbFaceRow[], fillOpacity: number, hidden?: Rea
     // the panes standing in the openings: glass or wood, each answering a
     // click with the window's or door's own element id and this row
     if (style?.panes) {
+      const uv = (p: [number, number, number]): [number, number] => [p[0] * u[0] + p[1] * u[1] + p[2] * u[2], p[0] * v[0] + p[1] * v[1] + p[2] * v[2]];
       for (const pane of style.panes(row)) {
-        const q = pane.quad;
-        if (q.length < 3 || hidden?.has(pane.elementId)) continue;
+        if (pane.quad.length < 3 || hidden?.has(pane.elementId)) continue;
+        // DRAWN AS IT CUTS THE WALL (user, 2026-10-23): the quad is the file's OverallWidth × OverallHeight, and a
+        // polygon window (the ADU's gable triangles) cuts only part of it — its rectangle stood 0.46 m through the
+        // roof. The row's hole lying inside the rectangle is the opening's own cut; none (a notch) keeps the rectangle
+        const qb = pane.quad.map(uv);
+        const lo = [Math.min(...qb.map((p) => p[0])) - 0.01, Math.min(...qb.map((p) => p[1])) - 0.01];
+        const hi = [Math.max(...qb.map((p) => p[0])) + 0.01, Math.max(...qb.map((p) => p[1])) + 0.01];
+        const cut = row.holes.find((h) => h.length >= 3 && h.every((p) => { const w = uv(p); return w[0] >= lo[0]! && w[0] <= hi[0]! && w[1] >= lo[1]! && w[1] <= hi[1]!; }));
+        const q = cut ?? pane.quad;
         const pr = ((pane.rgba >>> 24) & 255) / 255, pg = ((pane.rgba >>> 16) & 255) / 255, pb = ((pane.rgba >>> 8) & 255) / 255;
-        for (let i = 1; i + 1 < q.length; i++) {
-          for (const p of [q[0]!, q[i]!, q[i + 1]!]) {
+        const qt = earcut(q.flatMap(uv), undefined, 2);
+        for (let t = 0; t + 2 < qt.length; t += 3) {
+          for (const p of [q[qt[t]!]!, q[qt[t + 1]!]!, q[qt[t + 2]!]!]) {
             if (pane.glass) { glassPos.push(p[0], p[1], p[2]); glassCol.push(pr, pg, pb); }
             else { fillPos.push(p[0], p[1], p[2]); fillCol.push(pr, pg, pb); }
           }

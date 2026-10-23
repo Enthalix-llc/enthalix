@@ -93,8 +93,12 @@ function niceTop(v: number): number { if (!(v > 0)) return 1; const p = 10 ** Ma
  *  data) and Bill (total) costs" — then "show Standard w/o and w/ PV, Calibrated w/o and w/ PV, and Billed w/o and w/ PV"): by month, each
  *  side as the house without the panels and as it is — BEM's design run priced by the card; BOM's calibration run priced by the same card
  *  over each bill's own dates; each bill's total as billed and, without the panels, that total moved by the card's price of what they made */
-export function BomCostView({ priced, calibrated = null, withoutPv, applied, why, statements = [] }: { priced: Priced | null; calibrated?: Priced | null;
-  withoutPv?: { standard: Priced | null; calibrated: Priced | null; bills: BillNoPv[] | null }; applied: boolean; why: string | null; statements?: Statement[] }): ReactNode {
+export type BomCostProps = { priced: Priced | null; calibrated?: Priced | null;
+  withoutPv?: { standard: Priced | null; calibrated: Priced | null; bills: BillNoPv[] | null }; applied: boolean; why: string | null; statements?: Statement[] };
+
+/** THE VIEW IS THE CHART (user, 2026-10-23: "The chart is the item to show in view, the tables in the view should be referenced in the
+ *  right column under 5. Cost Tables") — the months' cost, w/o PV dark behind, w/ PV light in front; the tables are BomCostTables */
+export function BomCostView({ priced, calibrated = null, withoutPv, applied, why }: BomCostProps): ReactNode {
   const [ref, { w, h }] = useSize<HTMLDivElement>();
   const [hover, setHover] = useState<string | null>(null);
   if (!priced) return <div className="runGraphs"><div className="runGraphEmpty">{why ?? "pick the tariff in UTILITY below and Apply it"}</div></div>;
@@ -129,34 +133,11 @@ export function BomCostView({ priced, calibrated = null, withoutPv, applied, why
   const y = (v: number): number => T + ph - (v / top) * ph;
   const slot = pw / 12, bw = Math.min(26, (slot * 0.84) / Math.max(1, groups.length));
   const ticks = Array.from({ length: 6 }, (_, i) => (top * i) / 5);
-  const sumRun = (Q: Priced | null | undefined): number | null => (Q?.run ? Q.run.reduce((t, l) => t + l.total, 0) : null);
-  const sumCal = (Q: Priced | null | undefined): { usd: number; n: number } => { const ok = Q?.paired.filter((x) => x.covered) ?? []; return { usd: ok.reduce((t, x) => t + x.model.total, 0), n: ok.length }; };
-  const stdW = sumRun(P), stdNo = sumRun(withoutPv?.standard), cW = sumCal(calibrated), cNo = sumCal(withoutPv?.calibrated);
-  const billedYear = P.bills.reduce((t, b) => t + (b.bill.costUsd ?? 0), 0);
-  const noOk = (withoutPv?.bills ?? []).filter((x) => x.usd !== null);
-  const noWhy = (withoutPv?.bills ?? []).find((x) => x.usd === null)?.why ?? "";
-  const eq = equivalentPerKwh(P.bills.map((b) => b.bill)), eqNo = equivalentWithoutPv(withoutPv?.bills ?? []);
-  const missing = [...(P.run ?? []), ...P.bills.map((b) => b.line)].some((l) => l.pcaMissing);
-  const pair = (no: string | null, w: string | null): string => `${no ?? "—"} w/o · ${w ?? "—"} w/ PV`;
   return (
     <div className="runGraphs">
-      <div className="bomEquiv" title={eq ? `the ${eq.n} bills' total ${usd(eq.usd)} ÷ the ${k0(eq.kwh)} kWh the grid delivered over them (each bill's Consumption: its net and what it sent to the grid)` : "no bill states its total"}>
-        <b>Equivalent $/kWh w/ PV {eq ? `$${eq.perKwh.toFixed(3)}` : "—"}</b>
-        {eq && <span className="dim">w/ PV · {usd(eq.usd)} billed ÷ {k0(eq.kwh)} kWh delivered · {eq.n} bills</span>}
-      </div>
-      <div className="bomEquiv" title={eqNo ? `without the panels (an estimate): the ${eqNo.n} bills' totals moved by the card's price of what the panels made, ${usd(eqNo.usd)} ÷ the ${k0(eqNo.kwh)} kWh the grid would have delivered (each bill's net plus the panels' measured production)` : `without the panels: ${noWhy || "no bill can be estimated"}`}>
-        <b>Equivalent $/kWh w/o PV {eqNo ? `$${eqNo.perKwh.toFixed(3)}` : "—"}</b>
-        <span className="dim">{eqNo ? `estimate · ${usd(eqNo.usd)} ÷ ${k0(eqNo.kwh)} kWh the grid would have delivered · ${eqNo.n} bills` : noWhy}</span>
-      </div>
       <div className="runGraph" style={{ flex: "1 1 0" }}>
         <div className="runGraphHead">
           ENERGY &amp; COST · {P.card.name}{applied ? "" : " · NOT APPLIED — the run carries no tariff"}
-          {stdW !== null && <span className="runKey"><i style={{ background: "#1f5fae", borderColor: "#8fc0f5" }} />Standard {pair(stdNo === null ? null : usd(stdNo), usd(stdW))} /yr</span>}
-          {calibrated ? <span className="runKey"><i style={{ background: "#5e33a8", borderColor: "#c4a7ef" }} />Calibrated {pair(usd(cNo.usd), usd(cW.usd))} over {cW.n} bill period{cW.n === 1 ? "" : "s"}</span>
-            : <span className="runKey dim">Calibrated: run the calibration year in the column (4 · calibration)</span>}
-          {P.bills.length > 0 && <span className="runKey"><i style={{ background: "#b8401f", borderColor: "#f6a88b" }} />Billed {usd(billedYear)} w/ PV over {P.bills.length} bills{noOk.length ? ` · w/o PV ${usd(noOk.reduce((t, x) => t + x.usd!, 0))} over ${noOk.length} (estimate)` : ""}</span>}
-          {P.bills.length > 0 && noOk.length < P.bills.length && noWhy && <span className="runKey dim">Billed w/o PV: {noWhy}</span>}
-          {missing && P.card.pca && <span className="runKey dim">the PCA is not typed — left out of every total (type it from a bill in the column)</span>}
           {hover && <span className="runKey">{hover}</span>}
         </div>
         <div className="runGraphBody" ref={ref}>
@@ -187,10 +168,46 @@ export function BomCostView({ priced, calibrated = null, withoutPv, applied, why
         </div>
         <div className="runLegend">{series.map((s) => <span key={s.id}><i style={{ background: s.color }} />{s.label}</span>)}<span className="dim">· w/o PV dark behind, w/ PV light in front</span></div>
       </div>
+    </div>
+  );
+}
+
+/** 5 · COST TABLES, the column (user, 2026-10-23): the Equivalent $/kWh at the top, the tables the view used to carry, and under them
+ *  the Standard · Calibrated · Billed totals */
+export function BomCostTables({ priced, calibrated = null, withoutPv, why, statements = [] }: BomCostProps): ReactNode {
+  if (!priced) return <div className="idfInfo">{why ?? "pick the tariff in UTILITY below and Apply it"}</div>;
+  const P = priced;
+  const sumRun = (Q: Priced | null | undefined): number | null => (Q?.run ? Q.run.reduce((t, l) => t + l.total, 0) : null);
+  const sumCal = (Q: Priced | null | undefined): { usd: number; n: number } => { const ok = Q?.paired.filter((x) => x.covered) ?? []; return { usd: ok.reduce((t, x) => t + x.model.total, 0), n: ok.length }; };
+  const stdW = sumRun(P), stdNo = sumRun(withoutPv?.standard), cW = sumCal(calibrated), cNo = sumCal(withoutPv?.calibrated);
+  const billedYear = P.bills.reduce((t, b) => t + (b.bill.costUsd ?? 0), 0);
+  const noOk = (withoutPv?.bills ?? []).filter((x) => x.usd !== null);
+  const noWhy = (withoutPv?.bills ?? []).find((x) => x.usd === null)?.why ?? "";
+  const eq = equivalentPerKwh(P.bills.map((b) => b.bill)), eqNo = equivalentWithoutPv(withoutPv?.bills ?? []);
+  const missing = [...(P.run ?? []), ...P.bills.map((b) => b.line)].some((l) => l.pcaMissing);
+  const pair = (no: string | null, w: string | null): string => `${no ?? "—"} w/o · ${w ?? "—"} w/ PV`;
+  return (
+    <div className="bomCostCol">
+      <div className="bomEquiv" title={eq ? `the ${eq.n} bills' total ${usd(eq.usd)} ÷ the ${k0(eq.kwh)} kWh the grid delivered over them (each bill's Consumption: its net and what it sent to the grid)` : "no bill states its total"}>
+        <b>Equivalent $/kWh w/ PV {eq ? `$${eq.perKwh.toFixed(3)}` : "—"}</b>
+        {eq && <span className="dim">w/ PV · {usd(eq.usd)} billed ÷ {k0(eq.kwh)} kWh delivered · {eq.n} bills</span>}
+      </div>
+      <div className="bomEquiv" title={eqNo ? `without the panels (an estimate): the ${eqNo.n} bills' totals moved by the card's price of what the panels made, ${usd(eqNo.usd)} ÷ the ${k0(eqNo.kwh)} kWh the grid would have delivered (each bill's net plus the panels' measured production)` : `without the panels: ${noWhy || "no bill can be estimated"}`}>
+        <b>Equivalent $/kWh w/o PV {eqNo ? `$${eqNo.perKwh.toFixed(3)}` : "—"}</b>
+        <span className="dim">{eqNo ? `estimate · ${usd(eqNo.usd)} ÷ ${k0(eqNo.kwh)} kWh the grid would have delivered · ${eqNo.n} bills` : noWhy}</span>
+      </div>
       {P.paired.length > 0 && <CompareTable P={P} />}
       {P.run && <CostTable title={`THE RUN · by calendar month · ${P.runMeters.join(" + ")}${P.runPartial.length ? ` · left out, the run holds only part of: ${P.runPartial.join(", ")}` : ""}`} lines={P.run} engine={P.engine} engineAnnual={P.engineAnnual} />}
       {statements.length > 0 && <StatementsTable P={P} statements={statements} />}
       {P.bills.length > 0 && <CostTable title="THE BILLS · by their periods" lines={P.bills.map((b) => b.line)} billed={P.bills.map((b) => b.bill.costUsd ?? null)} />}
+      <div className="bomTotals">
+          {stdW !== null && <span className="runKey"><i style={{ background: "#1f5fae", borderColor: "#8fc0f5" }} />Standard {pair(stdNo === null ? null : usd(stdNo), usd(stdW))} /yr</span>}
+          {calibrated ? <span className="runKey"><i style={{ background: "#5e33a8", borderColor: "#c4a7ef" }} />Calibrated {pair(usd(cNo.usd), usd(cW.usd))} over {cW.n} bill period{cW.n === 1 ? "" : "s"}</span>
+            : <span className="runKey dim">Calibrated: run the calibration year in the column (4 · calibration)</span>}
+          {P.bills.length > 0 && <span className="runKey"><i style={{ background: "#b8401f", borderColor: "#f6a88b" }} />Billed {usd(billedYear)} w/ PV over {P.bills.length} bills{noOk.length ? ` · w/o PV ${usd(noOk.reduce((t, x) => t + x.usd!, 0))} over ${noOk.length} (estimate)` : ""}</span>}
+          {P.bills.length > 0 && noOk.length < P.bills.length && noWhy && <span className="runKey dim">Billed w/o PV: {noWhy}</span>}
+          {missing && P.card.pca && <span className="runKey dim">the PCA is not typed — left out of every total (type it from a bill in the column)</span>}
+      </div>
     </div>
   );
 }

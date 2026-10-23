@@ -108,7 +108,7 @@ import { ConstructionReading } from "./modules/bem/view/ConstructionReading.js";
 import { ieccFor, codeCatalogue, catalogueKindOf, type IdfModel } from "./modules/bem/core/bemIdf.js";
 import { parseTariffs, withSample, cardInForce } from "./modules/bom/core/tariff.js";
 import SAMPLE_TARIFF_JSON from "./modules/bom/reference/sample-tariff.json?raw";
-import { BomCostView, BomFrame, TariffDetails, WeatherMaker, priceBoth, type BomRail, type BomCardSel } from "./modules/bom/view/BomCost.js";
+import { BomCostView, BomCostTables, BomFrame, TariffDetails, WeatherMaker, priceBoth, type BomRail, type BomCardSel } from "./modules/bom/view/BomCost.js";
 import { withLayers, nextAddedSeq, climateZoneOf, type BemLedger, type SiteRuling, type ConstructionRuling, type GroundRuling, type LayerPick, type LayerCustom, type SystemsRuling, type GenerationRuling, type GainRulings } from "./modules/bem/core/bemDb.js";
 import { SCHEDULE_FILES, parseScheduleObjects, profileFor, readProfiles, fitsRole, scheduleFileName, ROLE_KIND, ROLE_LABELS, CODE_DEFAULT_SCHEDULE, DEFAULT_PROFILE_REF, type ScheduleRole, type ScheduleRef } from "./modules/bem/core/schedules.js";
 import { ScheduleCalendar, type CalAt } from "./modules/bem/view/ScheduleCalendar.js";
@@ -3532,13 +3532,19 @@ export function App(): React.ReactElement {
         // data/, or first opened before the store) is given the closest of its project's other versions — the lineage only,
         // nothing carried, since it has rulings of its own
         let parent: RankedParent | null = null;
+        // A VERSION MADE FROM THIS ONE IS NEVER ITS PARENT (user, 2026-10-23): reopening the current file after an older one
+        // had offered the older one — recorded as made FROM this file — as its parent, the store refused the cycle and the
+        // refusal read as "NOT SAVED". The descendants are read from the store's own parent links
+        const all = proj ? await window.projects.versions(proj.globalId) : [];
+        const parentOf = new Map(all.map((x) => [x.sha, x.parentSha ?? null] as const));
+        const descends = (s: string): boolean => { for (let a = parentOf.get(s) ?? null, n = 0; a && n < 10000; n++) { if (a === sha) return true; a = parentOf.get(a) ?? null; } return false; };
         if (side.sidecar && !here?.parentSha) {
           try { const v0 = await window.projects.registerVersion({ ...record, parentSha: side.sidecar.parentSha256, madeBy: side.sidecar.madeBy, note: `named by ${picked.name}.lineage.json` }); if (v0.parentSha) { setProjectNote({ tone: "info", text: `${picked.name}: ${projWord} · this version ${sha.slice(0, 12)}, made by ${v0.madeBy} from ${v0.parentSha.slice(0, 12)}.${sideNote} Its own rulings are loaded.` }); } }
           catch (e) { console.warn(`[bim] the lineage file's parent was not recorded: ${e instanceof Error ? e.message : String(e)}`); }
         } else if (proj && !here?.parentSha) {
           const others: VersionCandidate[] = [];
-          for (const v of await window.projects.versions(proj.globalId)) {
-            if (v.sha === sha || !v.hasIndex) continue;
+          for (const v of all) {
+            if (v.sha === sha || !v.hasIndex || descends(v.sha)) continue;
             const idx = (await window.projects.versionIndex(v.sha)) as FileIndex | null;
             if (idx) others.push({ sha: v.sha, fileName: v.fileName, madeBy: v.madeBy, createdAt: v.createdAt, index: idx, ledgers: v.ledgers });
           }
@@ -4428,6 +4434,7 @@ export function App(): React.ReactElement {
               statements={bomStatements} format={bomStatements.formats[0] ?? DEFAULT_BILL_FORMAT}
               onStatements={changeStatements} onFormat={() => setBillFormatOpen(true)}
               onDock={(d) => toggleSection(d)} isOpen={(d) => open.has(d)} onPrint={() => printAs(`BOM · Energy & Cost — ${projectName}`)}
+              costTables={<BomCostTables statements={bomStatements.bills} priced={pricedBom} calibrated={pricedCal} withoutPv={{ standard: pricedStdNo, calibrated: pricedCalNo, bills: billNoPv }} applied={(!!bomTariff && pricedBom?.card.id === bomTariff.card) || (!bomTariff && !!pricedBom?.card.sample)} why={!bem ? "no run yet — run the model on BEM › RUN; its months are priced here" : !tariffRead?.usable.length ? "no tariff card is readable (references/tariffs/)" : null} />}
               calibrationRun={(() => {
                 const bills = [...bomImports.flatMap((i) => i.bills), ...statementBills(bomStatements)].filter((b) => !bomExcluded.has(`${b.account}|${b.periodStart}`));
                 const span = bills.length ? { a: bills.reduce((m, b) => (b.periodStart < m ? b.periodStart : m), bills[0]!.periodStart), b: bills.reduce((m, b) => (b.periodEnd > m ? b.periodEnd : m), bills[0]!.periodEnd) } : null;

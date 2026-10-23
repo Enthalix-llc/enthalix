@@ -32,13 +32,13 @@ export function Step(p: { head: string; tip?: string; children?: React.ReactNode
 /** A ROLL-UP (user, 2026-09-15: "sections need to roll up to save column space"): a Step folded behind its head, one
  *  click open or closed, the open set remembered per column under `store`; folded, a one-line summary stands in for
  *  the body so the number is still on the screen. View state, written nowhere but the browser. */
-export function Fold(p: { id: string; store: string; head: string; summary?: React.ReactNode; defaultOpen?: boolean; children?: React.ReactNode }): React.ReactElement {
+export function Fold(p: { id: string; store: string; head: string; summary?: React.ReactNode; defaultOpen?: boolean; title?: string; children?: React.ReactNode }): React.ReactElement {
   const read = (): Record<string, boolean> => { try { const v = JSON.parse(window.localStorage.getItem(p.store) ?? "{}") as unknown; return v && typeof v === "object" ? (v as Record<string, boolean>) : {}; } catch { return {}; } };
   const [open, setOpen] = useState<boolean>(() => { const v = read(); return p.id in v ? !!v[p.id] : (p.defaultOpen ?? true); });
   const toggle = (): void => setOpen((o) => { const n = !o; try { const v = read(); v[p.id] = n; window.localStorage.setItem(p.store, JSON.stringify(v)); } catch { /* view state only */ } return n; });
   return (
     <div className={`step fold${open ? " open" : ""}`}>
-      <button type="button" className="stepHead foldHead" onClick={toggle} title={open ? "fold this section" : "unfold this section"}>
+      <button type="button" className="stepHead foldHead" onClick={toggle} title={`${p.title ? `${p.title}\n\n` : ""}${open ? "fold this section" : "unfold this section"}`}>
         <span className="foldArrow">{open ? "▾" : "▸"}</span>{p.head}
       </button>
       {!open && p.summary !== undefined && <div className="foldSummary">{p.summary}</div>}

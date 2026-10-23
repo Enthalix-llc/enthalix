@@ -13,6 +13,10 @@ import type { BomImport, BomOutcome } from "../pipeline.js";
 import type { BillColumnMap } from "../core/csvRead.js";
 import type { BillFormat, StatementsLedger } from "../core/statement.js";
 import { BomStatements } from "./BomStatements.js";
+import { Fold } from "../../bem/view/bemUi.js";
+
+/** the column's sections roll up (user, 2026-10-23); which are folded is view state */
+const STORE = "bom-col-folds";
 
 export interface BomColumnProps {
   /** where the site is (SITE's location): the address the file states, the county and state — for Search… (2026-10-16) */
@@ -40,6 +44,8 @@ export interface BomColumnProps {
   onStatements: (next: StatementsLedger) => void; onFormat: () => void;
   /** BOM's own run on the actual year, the panels' measured PV, the three pairs (2026-10-09) */
   calibrationRun?: React.ReactNode;
+  /** 5 · cost tables (2026-10-23): the Equivalent $/kWh, the tables, the totals — the view is the chart alone */
+  costTables?: React.ReactNode;
 }
 
 const FIELDS: Array<{ key: keyof BillColumnMap; label: string; required: boolean }> = [
@@ -81,16 +87,12 @@ export function BomColumn(p: BomColumnProps): React.ReactElement {
       <div className="barHead">BOM · OPERATIONS</div>
       <button className="qaBtn" onClick={p.onPrint} title="the tariff, the bills against the model over each bill's own days, the run's months and the bills priced, the months' cost — through the system print dialog (Save as PDF is in it)">Print / Save PDF…</button>
 
-      <div className="step">
-        <div className="stepHead" title="occupancy, lighting and equipment run on the schedules picked in BEM › SCHEDULES; the thermostat is the energy code's, all year, unless typed on a zone's card in ZONES">1 · schedules</div>
-      </div>
-      <div className="step">
-        <div className="stepHead" title="the tariff: UTILITY below — select a card for its charges, the PCA and Apply; until you apply one, the Sample card prices the run. The PV is on BEM › SYSTEMS › ELECTRICAL">2 · tariff &amp; PV</div>
+      <Fold id="schedules" store={STORE} head="1 · schedules" title="occupancy, lighting and equipment run on the schedules picked in BEM › SCHEDULES; the thermostat is the energy code's, all year, unless typed on a zone's card in ZONES" />
+      <Fold id="tariff" store={STORE} head="2 · tariff & PV" title="the tariff: UTILITY below — select a card for its charges, the PCA and Apply; until you apply one, the Sample card prices the run. The PV is on BEM › SYSTEMS › ELECTRICAL">
         <UtilitySearch place={p.place} />
-      </div>
+      </Fold>
 
-      <div className="step">
-        <div className="stepHead">3 · bills &amp; sensors</div>
+      <Fold id="bills" store={STORE} head="3 · bills & sensors">
         <div className="kv"><span>weather</span><b className={o?.epw?.kind === "AMY" ? "src-file" : "src-code"}>{p.epwLine}</b></div>
         <BomStatements led={p.statements} format={p.format} busy={p.busy} onChange={p.onStatements} onFormat={p.onFormat} />
         <button className="qaBtn" onClick={p.onImport} disabled={p.busy} title="another utility's bills as a CSV export">Import bills CSV…</button>
@@ -124,10 +126,9 @@ export function BomColumn(p: BomColumnProps): React.ReactElement {
         </label>
         {p.imports.length > 0 && <button className="apply" onClick={p.onRecompute} disabled={p.busy || !p.bemStamp}>{p.busy ? "…" : "Compare with the run"}</button>}
         {p.imports.length > 0 && <button className={`qaBtn${p.isOpen("bom-bills") ? " on" : ""}`} onClick={() => p.onDock("bom-bills")}>bills table</button>}
-      </div>
+      </Fold>
 
-      <div className="step">
-        <div className="stepHead">4 · calibration</div>
+      <Fold id="calibration" store={STORE} head="4 · calibration">
         {p.calibrationRun}
         {cal && <div className="stepHead">against BEM's run (typical year)</div>}
         {!cal && <div className="idfInfo">{p.bemStamp ? "against BEM's run: import bills, then compare" : "against BEM's run: run the BEM first"}</div>}
@@ -142,7 +143,11 @@ export function BomColumn(p: BomColumnProps): React.ReactElement {
             <div className="idfInfo">bom.db content {String(o?.bomMeta.get("content_sha256") ?? "").slice(0, 12)}</div>
           </>
         )}
-      </div>
+      </Fold>
+
+      <Fold id="costs" store={STORE} head="5 · cost tables">
+        {p.costTables}
+      </Fold>
     </div>
   );
 }
