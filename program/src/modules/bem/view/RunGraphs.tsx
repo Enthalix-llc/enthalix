@@ -24,16 +24,20 @@ export const TIME_SCALES: TimeScale[] = ["day", "week", "month", "year"];
 /** the outside temperature (user, 2026-10-03): each day's high, low and average, on a temperature axis on the right */
 export type TempLine = "high" | "low" | "avg";
 /** PEAK in two parts (user, 2026-10-03): peak conditioning, heating and cooling, per system and per zone */
-export type PeakPart = "system" | "zone";
+/** "space" (user, 2026-10-23): each space's design air flow for heating and cooling, from its design load across the coil's ΔT */
+export type PeakPart = "system" | "zone" | "space";
 /** `pick` (2026-10-12): the point left-clicked on the Annual graph — a day of the year, and its hour on the day and week scales; `pick2` the
  *  point right-clicked (user: "Left click on chart sets one point and right click on chart sets second point so that a range is selected") —
  *  the frame sums the point, or the range between the two */
 export type GraphPoint = { day: number; hour: number | null };
 export interface RunGraphState { section: RunGraphSection; annual: AnnualSeries[]; peak: PeakKind[]; scale: TimeScale; start: number; temps: TempLine[]; peakParts: PeakPart[]; pick?: GraphPoint | null; pick2?: GraphPoint | null;
+  /** PER SPACE (user, 2026-10-23): the coil's ΔT, °F, cooling and heating (20 and 30 unless typed) — the air flow is the space's design
+   *  load across it; and the zones whose spaces are drawn, absent = All */
+  dtCoolF?: number; dtHeatF?: number; spaceZones?: string[] | null;
   /** the lines' checkboxes under the Annual graph unfolded (user, 2026-10-16: "a collapsing view of the checkbox plotting values so the graph
    *  has more space") — folded unless opened */
   checksOpen?: boolean }
-export const RUN_GRAPH_DEFAULT: RunGraphState = { section: "annual", annual: ["use", "heating", "cooling", "ventilation", "renewable", "purchased", "net"], peak: ["heating", "cooling"], scale: "year", start: 0, temps: [], peakParts: ["system", "zone"] };
+export const RUN_GRAPH_DEFAULT: RunGraphState = { section: "annual", annual: ["use", "heating", "cooling", "ventilation", "renewable", "purchased", "net"], peak: ["heating", "cooling"], scale: "year", start: 0, temps: [], peakParts: ["system", "zone", "space"], dtCoolF: 20, dtHeatF: 30, spaceZones: null };
 
 /** what each Annual line sums: the engine's own meters, the ones the run has. Heating and cooling read the electric meter (real
  *  equipment) and the district one (ideal loads), whichever the run wrote; VENTILATION is the ventilation fans' own end-use
@@ -65,6 +69,7 @@ export const ANNUAL_SERIES: Array<{ id: AnnualSeries; label: string; color: stri
 export const PEAK_KINDS: Array<{ id: PeakKind; label: string }> = [{ id: "heating", label: "Heating" }, { id: "cooling", label: "Cooling" }];
 export const PEAK_PARTS: Array<{ id: PeakPart; label: string; title: string }> = [
   { id: "system", label: "Per system", title: "each system's (each heat pump card on SYSTEMS) peak heating and cooling on the design days — its units' coils summed at the instant they peak together, each unit's share stacked" },
+  { id: "space", label: "Per space", title: "each space's design air flow, cooling and heating — its design sensible load (the engine's space sizing) across the coil's ΔT typed below: CFM = Btu/h ÷ (1.08 × ΔT °F)" },
   { id: "zone", label: "Per zone", title: "each zone's design-day peak, stacked by load component (the engine's Zone Component Load Summary), with its design air flow" },
 ];
 export const TEMP_LINES: Array<{ id: TempLine; label: string; color: string }> = [
@@ -362,6 +367,95 @@ function TimeControls({ scale, start, onWindow }: { scale: TimeScale; start: num
   );
 }
 
+/** the coil ΔT defaults (user, 2026-10-23): cooling 20 °F, heating 30 °F */
+export const DT_DEFAULT_F: Record<PeakKind, number> = { cooling: 20, heating: 30 };
+export const dtOf = (state: RunGraphState, k: PeakKind): number => (k === "cooling" ? state.dtCoolF : state.dtHeatF) ?? DT_DEFAULT_F[k];
+type SpaceRow = { name: string; zone: string; coolW: number; heatW: number };
+/** each space in the run with its zone (the model's spacesByZone, matched by the engine's name in capitals), in the zones' order */
+export function spaceRowsOf(bem: BemOutcome, spacesByZone: Record<string, string[]>): SpaceRow[] {
+  const placed = new Set<string>(), out: SpaceRow[] = [];
+  for (const [zone, rooms] of Object.entries(spacesByZone)) for (const room of rooms) {
+    const l = bem.loads.spaces.get(room.toUpperCase());
+    if (!l) continue;
+    placed.add(room.toUpperCase()); out.push({ name: room, zone, coolW: l.designCoolingW, heatW: l.designHeatingW });
+  }
+  for (const [k, l] of bem.loads.spaces) if (!placed.has(k)) out.push({ name: k, zone: "—", coolW: l.designCoolingW, heatW: l.designHeatingW });
+  return out;
+}
+/** the air that carries a sensible load across ΔT: CFM = Btu/h ÷ (1.08 × ΔT °F); metric L/s = W ÷ (1.207 × ΔT K) — 1.2 kg/m³ air at 1.006 kJ/kg·K */
+const flowOf = (w: number, dtF: number, imperial: boolean): number => (dtF > 0 ? (imperial ? (w * W_TO_BTUH) / (1.08 * dtF) : w / (1.2072 * (dtF * 5) / 9)) : 0);
+
+/** PEAK AIR FLOW PER SPACE (user, 2026-10-23: "graphs for Per Space for Cooling and Heating CFM, where coil difference in temperature (dT)
+ *  has an input box … a slide bar for scrolling through spaces … a Zone dropdown"): one graph per load, a bar per space, the spaces of the
+ *  zones picked in the frame; one slide bar under them moves both over the spaces */
+export function SpaceFlowGraphs({ rows, kinds, state, imperial }: { rows: SpaceRow[]; kinds: PeakKind[]; state: RunGraphState; imperial: boolean }): ReactNode {
+  const [ref, { w }] = useSize<HTMLDivElement>();
+  const [start, setStart] = useState(0);
+  const unit = imperial ? "CFM" : "L/s";
+  const shown = state.spaceZones ? rows.filter((r) => state.spaceZones!.includes(r.zone)) : rows;
+  const L = 56, R = 12, T = 18, B = 92, H = 300, pw = Math.max(10, w - L - R), ph = H - T - B;
+  const n = Math.max(1, Math.min(shown.length, Math.floor(pw / 44)));
+  const s0 = Math.max(0, Math.min(start, shown.length - n));
+  const view = shown.slice(s0, s0 + n);
+  const COLOR: Record<PeakKind, string> = { heating: "#e8603c", cooling: "#3c8ce8" };
+  const graph = (k: PeakKind): ReactNode => {
+    const dt = dtOf(state, k), dtWords = imperial ? `${dt} °F` : `${((dt * 5) / 9).toFixed(1)} K`;
+    const flow = (r: SpaceRow): number => flowOf(k === "cooling" ? r.coolW : r.heatW, dt, imperial);
+    const max = Math.max(0, ...shown.map(flow));          // one scale over every shown space, so a scroll does not rescale
+    const tk = niceTicks(max, 4), top = tk[tk.length - 1] || 1;
+    const y = (v: number): number => T + ph - (v / top) * ph;
+    const slot = pw / n, bw = Math.min(34, slot * 0.7);
+    return (
+      <div key={k} className="runGraph" style={{ flex: "0 0 auto" }}>
+        <div className="runGraphHead" title={`each space's design ${k} load (sensible, the engine's space sizing on the ${k === "cooling" ? "summer" : "winter"} design day) across the coil's ΔT ${dtWords}: ${imperial ? "CFM = Btu/h ÷ (1.08 × ΔT)" : "L/s = W ÷ (1.207 × ΔT)"} — each space at its own peak (non-coincident), so their sum can exceed the zone's design load; ΔT is typed in the frame below`}>
+          PEAK AIR FLOW · PER SPACE · {k === "cooling" ? "COOLING" : "HEATING"} · {unit} · ΔT {dtWords}
+          <span className="runKey dim">{shown.length} spaces{state.spaceZones ? ` · ${state.spaceZones.length} zone${state.spaceZones.length === 1 ? "" : "s"}` : " · all zones"} · Σ {Math.round(shown.reduce((t, r) => t + flow(r), 0)).toLocaleString()} {unit}</span>
+        </div>
+        <div className="runGraphBody" style={{ height: H, flex: "0 0 auto" }}>
+          <svg width={w} height={H}>
+            {tk.map((t) => (
+              <g key={t}>
+                <line x1={L} x2={L + pw} y1={y(t)} y2={y(t)} className={t === 0 ? "axisLine" : "gridLine"} />
+                <text x={L - 6} y={y(t) + 3} textAnchor="end" className="axisText">{fmtTick(t)}</text>
+              </g>
+            ))}
+            <text x={12} y={T + ph / 2} transform={`rotate(-90 12 ${T + ph / 2})`} textAnchor="middle" className="axisText">{unit}</text>
+            {view.map((r, i) => {
+              const cx = L + slot * i + slot / 2, v = flow(r), lw = k === "cooling" ? r.coolW : r.heatW;
+              const zoneStart = i === 0 || view[i - 1]!.zone !== r.zone;
+              return (
+                <g key={`${r.zone}|${r.name}`}>
+                  {zoneStart && <><line x1={cx - slot / 2} x2={cx - slot / 2} y1={T - 8} y2={T + ph} className="gridLine" /><text x={cx - slot / 2 + 3} y={T - 6} className="axisText dim">{r.zone}</text></>}
+                  <rect x={cx - bw / 2} y={y(v)} width={bw} height={Math.max(0.5, y(0) - y(v))} fill={COLOR[k]}>
+                    <title>{`${r.name} · ${r.zone}\n${k} ${Math.round(v)} ${unit} — design load ${imperial ? `${Math.round(lw * W_TO_BTUH).toLocaleString()} Btu/h` : `${Math.round(lw)} W`} across ΔT ${dtWords}`}</title>
+                  </rect>
+                  <text x={cx} y={y(v) - 3} textAnchor="middle" className="axisText strong">{Math.round(v)}</text>
+                  <text x={cx} y={T + ph + 10} textAnchor="end" transform={`rotate(-40 ${cx} ${T + ph + 10})`} className="axisText">{r.name.length > 20 ? `${r.name.slice(0, 19)}…` : r.name}</text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      </div>
+    );
+  };
+  return (
+    <div ref={ref} className="spaceFlow">
+      {shown.length === 0 ? <div className="runGraphEmpty">{rows.length ? "no space in the zones picked — Zones in the frame below" : "this run has no space sizing — Run again"}</div> : kinds.map(graph)}
+      {shown.length > n && (
+        <div className="runTime">
+          <div className="runScroll" title="slide through the spaces">
+            <button className="runStep" disabled={s0 <= 0} onClick={() => setStart(Math.max(0, s0 - n))} title="back one page of spaces">‹</button>
+            <input className="spaceSlide" type="range" min={0} max={shown.length - n} step={1} value={s0} onChange={(e) => setStart(Number(e.target.value))} />
+            <button className="runStep" disabled={s0 + n >= shown.length} onClick={() => setStart(Math.min(shown.length - n, s0 + n))} title="forward one page of spaces">›</button>
+          </div>
+          <span className="runScale">{s0 + 1}–{s0 + view.length} of {shown.length}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** PEAK CONDITIONING PER STRUCTURE (user, 2026-10-12: "Peak conditioning in MBH per system needs to be per structure (ADU and House) and have
  *  only one label under the columns per set"): each structure's design-day peak — its units' coils summed at the instant the SUM is largest
  *  (structurePeaks, the RUN column's Structure Peak) — heating and cooling side by side, each bar stacked by the unit's rate at that instant;
@@ -609,9 +703,11 @@ export function PeakGraph({ loads, kind, imperial, size, flows, basis = "engine"
 }
 
 /** THE VIEW: the active section's graphs */
-export function RunGraphs({ bem, state, imperial, modelSha, onState, structures }: { bem: BemOutcome | null; state: RunGraphState; imperial: boolean; modelSha: string | null; onState: (s: RunGraphState) => void;
+export function RunGraphs({ bem, state, imperial, modelSha, onState, structures, spacesByZone }: { bem: BemOutcome | null; state: RunGraphState; imperial: boolean; modelSha: string | null; onState: (s: RunGraphState) => void;
   /** the sheet's structures and their units (the RUN column's Structure Peak) — PEAK's per-structure part */
-  structures?: Array<{ name: string; units: string[]; unitZones?: Record<string, string[]> }> }): ReactNode {
+  structures?: Array<{ name: string; units: string[]; unitZones?: Record<string, string[]> }>;
+  /** the model's zones and their spaces — PEAK's per-space part */
+  spacesByZone?: Record<string, string[]> }): ReactNode {
   if (!bem) return <div className="runGraphs"><div className="runGraphEmpty">no run yet — Run in the column, and its results are graphed here</div></div>;
   const stale = modelSha && bem.run.modelSha256 && bem.run.modelSha256 !== modelSha;
   const flowsOf = (k: PeakKind): Map<string, number> => new Map([...bem.loads.zones].map(([z, l]) => [z.toUpperCase(), k === "heating" ? l.designHeatingFlowM3s : l.designCoolingFlowM3s] as const).filter(([, v]) => v > 0));
@@ -631,9 +727,10 @@ export function RunGraphs({ bem, state, imperial, modelSha, onState, structures 
             {state.checksOpen && <AnnualChecks state={state} onState={onState} bem={bem} />}
           </div>
         </>
-        : state.peak.length === 0 || parts.length === 0 ? <div className="runGraphEmpty">check a part (per system, per zone) and Heating or Cooling in the frame below</div>
+        : state.peak.length === 0 || parts.length === 0 ? <div className="runGraphEmpty">check a part (per system, per space, per zone) and Heating or Cooling in the frame below</div>
         : <>
             {parts.includes("system") && <StructurePeakGraph structures={structurePeaks(structures ?? [], coilRows(bem.sizingDetails), bem.coilRates ?? { design: [], year: [] }, () => "")} kinds={state.peak} imperial={imperial} />}
+            {parts.includes("space") && <SpaceFlowGraphs rows={spaceRowsOf(bem, spacesByZone ?? {})} kinds={state.peak} state={state} imperial={imperial} />}
             {parts.includes("zone") && state.peak.map((k) => <PeakGraph key={k} {...peakLoadsOf(bem)} kind={k} imperial={imperial} flows={flowsOf(k)} tall />)}
           </>}
     </div>
@@ -722,9 +819,26 @@ export function AnnualSums({ state, bem, imperial }: { state: RunGraphState; bem
 }
 
 /** THE FRAME UNDER THE GRAPHS: Annual's sums; Peak's parts and loads */
-export function RunGraphFrame({ state, onState, bem, imperial = false }: { state: RunGraphState; onState: (s: RunGraphState) => void; bem: BemOutcome | null; imperial?: boolean }): ReactNode {
+export function RunGraphFrame({ state, onState, bem, imperial = false, spacesByZone = {} }: { state: RunGraphState; onState: (s: RunGraphState) => void; bem: BemOutcome | null; imperial?: boolean;
+  /** the model's zones (PER SPACE's Zones drop-down) */ spacesByZone?: Record<string, string[]> }): ReactNode {
   const toggle = <T extends string>(list: T[], v: T): T[] => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
   const parts = state.peakParts ?? RUN_GRAPH_DEFAULT.peakParts;
+  const [zonesOpen, setZonesOpen] = useState(false);
+  const zones = Object.keys(spacesByZone);
+  const picked = state.spaceZones ?? null;
+  const pickZone = (z: string): void => { const cur = picked ?? zones; const next = toggle(cur, z); onState({ ...state, spaceZones: next.length === zones.length ? null : next }); };
+  // ΔT typed in the units shown (°F, or K when metric), kept in °F
+  const dtIn = (k: PeakKind): ReactNode => {
+    const f = dtOf(state, k), shown = imperial ? f : Number(((f * 5) / 9).toFixed(1));
+    return (
+      <label key={k} title={`the ${k} coil's air temperature difference, entering to leaving — the per-space air flow is the design load across it (default ${imperial ? `${DT_DEFAULT_F[k]} °F` : `${((DT_DEFAULT_F[k] * 5) / 9).toFixed(1)} K`})`}>
+        {k === "cooling" ? "Cooling" : "Heating"} ΔT
+        <input type="number" className="dtIn" min={1} step={imperial ? 1 : 0.5} value={shown}
+          onChange={(e) => { const v = Number(e.target.value); if (!(v > 0)) return; const fv = imperial ? v : (v * 9) / 5; onState({ ...state, [k === "cooling" ? "dtCoolF" : "dtHeatF"]: Number(fv.toFixed(2)) }); }} />
+        {imperial ? "°F" : "K"}
+      </label>
+    );
+  };
   return (
     <div className="runFrame">
       {state.section === "annual" && (
@@ -750,6 +864,23 @@ export function RunGraphFrame({ state, onState, bem, imperial = false }: { state
                 </label>
               ))}
             </div>
+            {parts.includes("space") && (
+              <div className="runChecks"><span className="runGroup">per space · coil ΔT and zones</span>
+                {(["cooling", "heating"] as PeakKind[]).map(dtIn)}
+                <span className="zoneDrop">
+                  <button className="qaBtn" onClick={() => setZonesOpen((o) => !o)} title="the zones whose spaces the per-space graphs draw">
+                    Zones: {picked ? `${picked.length} of ${zones.length}` : "All"} ▾
+                  </button>
+                  {zonesOpen && <>
+                    <div className="menuScrim" onPointerDown={() => setZonesOpen(false)} />
+                    <div className="zoneDropMenu">
+                      <label><input type="checkbox" checked={!picked} onChange={() => onState({ ...state, spaceZones: picked ? null : [] })} />All</label>
+                      {zones.map((z) => <label key={z}><input type="checkbox" checked={!picked || picked.includes(z)} onChange={() => pickZone(z)} />{z} <em>{spacesByZone[z]!.length}</em></label>)}
+                    </div>
+                  </>}
+                </span>
+              </div>
+            )}
           </>
         )}
       </div>

@@ -4174,7 +4174,7 @@ export function App(): React.ReactElement {
         )}
         {graphView && (
           <div className="paneHtml paneMapSlot runPane">
-            <RunGraphs bem={bem} state={runGraph} imperial={imperial} modelSha={bemModel?.modelSha ?? null} onState={setRunGraph} structures={runStructures} />
+            <RunGraphs bem={bem} state={runGraph} imperial={imperial} modelSha={bemModel?.modelSha ?? null} onState={setRunGraph} structures={runStructures} spacesByZone={bemModel?.report.model.spacesByZone} />
           </div>
         )}
         {calView && (
@@ -4363,7 +4363,7 @@ export function App(): React.ReactElement {
           {module === "bem" && tab === "bem-run" && graphView && (
             <section>
               <h4 title={runGraph.section === "annual" ? "the lines the graph draws, summed over the window in view and at the points clicked" : "the parts and loads the view draws"}>RUN · {runGraph.section === "annual" ? "ANNUAL — the lines summed" : "PEAK"}{bem ? ` · run ${bem.stamp}` : " · no run yet"}</h4>
-              <RunGraphFrame state={runGraph} onState={setRunGraph} bem={bem} imperial={imperial} />
+              <RunGraphFrame state={runGraph} onState={setRunGraph} bem={bem} imperial={imperial} spacesByZone={bemModel?.report.model.spacesByZone} />
             </section>
           )}
           {module === "bem" && tab === "bem-schedules" && (

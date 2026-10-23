@@ -1043,6 +1043,14 @@ button.apply.mini { padding: 1px 8px; font-size: 11px; }
 .runScaleWords { display: inline-flex; gap: 8px; }
 .runScaleWords b { font-weight: 400; cursor: pointer; }
 .runScaleWords b.on { color: var(--sel); font-weight: 700; }
+/* PER SPACE (2026-10-23): the spaces' slide bar, the coil ΔT boxes, the Zones drop-down */
+.spaceFlow { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.spaceSlide { flex: 1 1 auto; min-width: 0; }
+.runChecks input.dtIn { width: 54px; background: #0c0e14; color: var(--text); border: 1px solid #33405a; border-radius: 3px; padding: 1px 4px; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
+.zoneDrop { position: relative; display: inline-flex; }
+.zoneDropMenu { position: absolute; z-index: 41; bottom: 100%; left: 0; margin-bottom: 4px; min-width: 180px; max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; background: #12161f; border: 1px solid #33405a; border-radius: 5px; box-shadow: 0 8px 24px #000a; }
+.zoneDropMenu label { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.zoneDropMenu em { color: var(--dim); font-style: normal; font-size: 11px; margin-left: auto; }
 
 /* RUN · THE PRINTED REPORT (RunReport.tsx, 2026-10-02): hidden on screen; under print it is the only thing on the page */
 .printReport { display: none; }
