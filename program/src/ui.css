@@ -46,6 +46,9 @@ body { background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, 
 .gate { margin-left: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; font-size: 12px;
   padding: 3px 10px; border-radius: 4px; background: #1b2130; }
 .gate.ok { color: #4ade80; } .gate.bad { color: #f87171; }
+/* CLOSE IFC… at the bar's right end (2026-10-23); the gate, when shown, sits beside it */
+.topbar .closeIfc { margin-left: auto; }
+.topbar .closeIfc ~ .gate { margin-left: 0; }
 .body { flex: 1; display: flex; min-height: 0; }
 .panes { flex: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: 0; min-width: 0; position: relative; }
 /* the collapsed IFC pane keeps a real rectangle (the camera element every drag is

@@ -297,6 +297,8 @@ export function App(): React.ReactElement {
   /** the selected LAYER of the selected type (its seq) — a band in the DETAIL view or a row under it (2026-09-08) */
   const [layerSel, setLayerSel] = useState<number | null>(null);
   /** the right-click menu on a DETAIL band or row (2026-09-09): delete · add a layer · add a sub-item · restore */
+  /** CLOSE IFC… (user, 2026-10-23): the drop-down under the button — All, the house, each file beside it */
+  const [closeMenu, setCloseMenu] = useState<{ right: number; top: number } | null>(null);
   const [layerMenu, setLayerMenu] = useState<{ x: number; y: number; seq: number; label: string; deleted: boolean; added: boolean; custom: boolean; parts: boolean } | null>(null);
   const layerSelRef = useRef(layerSel); layerSelRef.current = layerSel;
   const [materialsVersion, setMaterialsVersion] = useState(0);
@@ -3673,6 +3675,17 @@ export function App(): React.ReactElement {
     if (!picked) return;
     await loadPicked(picked);
   }, [loadPicked]);
+  /** CLOSE IFC… · ALL (user, 2026-10-23, asked first): the house and the files beside it leave the window, which starts empty — the
+   *  corrections ledger written now, the BEM drafts by the pagehide flush; the reopen key forgotten so the reload opens nothing */
+  const closeAll = useCallback(async () => {
+    setCloseMenu(null);
+    const name = nameRef.current || "the house";
+    if (!window.confirm(`Close ${name} and the files beside it?\n\nYour rulings are on disk; Open IFC… brings the house back.`)) return;
+    if (shaRef.current && runRef.current) await window.bim.saveCorrections(shaRef.current, ledgerJson(shaRef.current));
+    try { window.sessionStorage.removeItem(OPEN_FILE_KEY); } catch { /* the reopen is a convenience */ }
+    window.location.reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // DELETE FROM THE IFC. The user rules that an element is not there; the
   // source file is rewritten losslessly (the previous bytes backed up beside
@@ -3862,6 +3875,11 @@ export function App(): React.ReactElement {
           title={explain ? "Explain is on: rest the mouse on a section's header to read what it is — click to turn it off" : "Explain: rest the mouse on a section's header to read what it is"}>
           Explain
         </button>
+        <button className="closeIfc" disabled={busy || !loadedAt}
+          onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setCloseMenu({ right: window.innerWidth - r.right, top: r.bottom + 4 }); }}
+          title="close the house file and the files beside it, or one file beside it">
+          Close IFC… ▾
+        </button>
         {gate && <span className={`gate ${gate.ok ? "ok" : "bad"}`}>{gate.ok ? "✓" : "✗"} {gate.text}</span>}
       </div>
       {armed && (
@@ -3878,6 +3896,22 @@ export function App(): React.ReactElement {
           <i> {armedSpace.label}</i>
           <button onClick={() => { armedSpaceRef.current = null; setArmedSpace(null); }}>cancel</button>
         </div>
+      )}
+      {closeMenu && (
+        <>
+          <div className="menuScrim" onPointerDown={() => setCloseMenu(null)} />
+          <div className="ctxMenu" style={{ right: closeMenu.right, top: closeMenu.top }}>
+            <div className="ctxHead">close IFC</div>
+            <button onClick={() => void closeAll()} title="the house and every file beside it — the window starts empty (asks first)">All</button>
+            <button onClick={() => void closeAll()} title="the house file — the files beside it close with it (asks first)">{nameRef.current} <span className="ctxDim">· the house, closes all</span></button>
+            {siteFiles.filter((f) => f.projected).map((f) => (
+              <button key={f.name} onClick={() => { setCloseMenu(null); void onProjectFile(f.name, false); }}
+                title="leave this file out of the model: its terrain and shading elements leave idf.db and the view (the ledger's siteFiles) — project it again from its right-click menu on SITE">
+                {f.name} <span className="ctxDim">· leave out of the model</span>
+              </button>
+            ))}
+          </div>
+        </>
       )}
       {layerMenu && (
         <>
