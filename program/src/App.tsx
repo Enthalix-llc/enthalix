@@ -1110,6 +1110,15 @@ export function App(): React.ReactElement {
   // hours as the house without panels (its use bought, nothing sold) — the run itself untouched; the bills moved by the card's price of
   // the panels' measured production bought instead
   const NEVER = "9999-12-31";
+  // EACH METER ITS OWN ACCOUNT (user, 2026-10-23: "The BOM should offer utility cost per meter"): the ELECTRICAL sheet's meters, each
+  // one's hourly series from the run (its Meter:Custom, by the name written) priced on the same card as a service of its own
+  const pricedMeters = useMemo(() => {
+    if (!bomPricing || !bem) return [];
+    return (bemModel?.report.meters ?? []).flatMap((m) => {
+      const s = m.emitted ? (bem.hourly ?? []).find((h) => h.name.toUpperCase() === m.emitted.toUpperCase()) : undefined;
+      return s ? [{ name: m.name, zones: m.zones, priced: priceBoth(bomPricing.card, bomPricing.tt, [{ ...s, name: "Electricity:Facility" }], [], []) }] : [];
+    });
+  }, [bomPricing, bem, bemModel]);
   const pricedStdNo = useMemo(() => (bomPricing && bem ? priceBoth(bomPricing.card, bomPricing.tt, pvOffBefore((bem.hourly ?? []) as HourSeries[], NEVER), bomPricing.bills, []) : null), [bomPricing, bem]);
   const pricedCalNo = useMemo(() => (bomPricing && calRun ? priceBoth(bomPricing.card, bomPricing.tt, pvOffBefore(calRun.hourly, NEVER), bomPricing.bills, []) : null), [bomPricing, calRun]);
   const billNoPv = useMemo(() => {
@@ -4507,7 +4516,7 @@ export function App(): React.ReactElement {
               statements={bomStatements} format={bomStatements.formats[0] ?? DEFAULT_BILL_FORMAT}
               onStatements={changeStatements} onFormat={() => setBillFormatOpen(true)}
               onDock={(d) => toggleSection(d)} isOpen={(d) => open.has(d)} onPrint={() => printAs(`BOM · Energy & Cost — ${projectName}`)}
-              costTables={<BomCostTables statements={bomStatements.bills} priced={pricedBom} calibrated={pricedCal} withoutPv={{ standard: pricedStdNo, calibrated: pricedCalNo, bills: billNoPv }} pv={hasPv} applied={(!!bomTariff && pricedBom?.card.id === bomTariff.card) || (!bomTariff && !!pricedBom?.card.sample)} why={!bem ? "no run yet — run the model on BEM › RUN; its months are priced here" : !tariffRead?.usable.length ? "no tariff card is readable (references/tariffs/)" : null} />}
+              costTables={<BomCostTables meters={pricedMeters} statements={bomStatements.bills} priced={pricedBom} calibrated={pricedCal} withoutPv={{ standard: pricedStdNo, calibrated: pricedCalNo, bills: billNoPv }} pv={hasPv} applied={(!!bomTariff && pricedBom?.card.id === bomTariff.card) || (!bomTariff && !!pricedBom?.card.sample)} why={!bem ? "no run yet — run the model on BEM › RUN; its months are priced here" : !tariffRead?.usable.length ? "no tariff card is readable (references/tariffs/)" : null} />}
               calibrationRun={(() => {
                 const bills = [...bomImports.flatMap((i) => i.bills), ...statementBills(bomStatements)].filter((b) => !bomExcluded.has(`${b.account}|${b.periodStart}`));
                 const span = bills.length ? { a: bills.reduce((m, b) => (b.periodStart < m ? b.periodStart : m), bills[0]!.periodStart), b: bills.reduce((m, b) => (b.periodEnd > m ? b.periodEnd : m), bills[0]!.periodEnd) } : null;
@@ -4521,7 +4530,7 @@ export function App(): React.ReactElement {
           )}
           {module === "bom" && billFormatOpen && <BillFormatDialog format={bomStatements.formats[0] ?? DEFAULT_BILL_FORMAT} onSave={saveBillFormat} onCancel={() => setBillFormatOpen(false)} />}
           {module === "bom" && (
-            <BomReport pv={hasPv} priced={pricedBom} tariff={bomTariff} project={(pathRef.current.split(/[\\/]/).pop() ?? "").replace(/\.ifc$/i, "")} runStamp={bem?.stamp ?? null}
+            <BomReport pv={hasPv} meters={pricedMeters} priced={pricedBom} tariff={bomTariff} project={(pathRef.current.split(/[\\/]/).pop() ?? "").replace(/\.ifc$/i, "")} runStamp={bem?.stamp ?? null}
               weather={`${(bem?.run.epw ?? bemEpw ?? "").split(/[\\/]/).pop() || "the weather file"} · ${epwLine}`} />
           )}
             {tab === "bem-run" && open.has("bem-results") && bem && <BemResultsPanel bem={bem} selectedZone={selZone} onZone={setSelZone} imperial={imperial} />}

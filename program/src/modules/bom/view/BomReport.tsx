@@ -7,15 +7,16 @@
 // months and the bills priced; the months' $ as columns. Every number is what BOM's screen shows.
 
 import { createPortal } from "react-dom";
-import { CompareTable, CostTable, pairWords, type Priced } from "./BomCost.js";
+import { CompareTable, CostTable, MeterCosts, pairWords, type Priced, type MeterPriced } from "./BomCost.js";
 import type { BomLedger } from "../core/bomDb.js";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const usd = (v: number): string => `$${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const PAGE_W = 700;
 
-export function BomReport({ priced: P, tariff, project, runStamp, weather, pv = true }: { priced: Priced | null; tariff: BomLedger["tariff"] | undefined; project: string; runStamp: string | null; weather: string;
-  /** a renewable system (2026-10-23): without one, no net metering, kWh out or credit in the report */ pv?: boolean }): React.ReactElement {
+export function BomReport({ priced: P, tariff, project, runStamp, weather, pv = true, meters = [] }: { priced: Priced | null; tariff: BomLedger["tariff"] | undefined; project: string; runStamp: string | null; weather: string;
+  /** a renewable system (2026-10-23): without one, no net metering, kWh out or credit in the report */ pv?: boolean;
+  /** the meters, each its own account (2026-10-23) */ meters?: MeterPriced[] }): React.ReactElement {
   const C = P?.card.charges;
   const applied = !!P && (tariff?.card === P.card.id || (!tariff && !!P.card.sample));   // the sample is the run's card when none is applied
   const pca = tariff?.pca;
@@ -44,6 +45,7 @@ export function BomReport({ priced: P, tariff, project, runStamp, weather, pv = 
       {P && <MonthBars P={P} />}
       {P && P.paired.length > 0 && <section><h2>The bills against the model</h2><CompareTable P={P} /></section>}
       {P && P.paired.length === 0 && <p>no bills imported — the run is priced alone. {pairWords(P)}</p>}
+      {P && meters.length > 0 && <section><h2>The meters, each its own account</h2><MeterCosts meters={meters} building={P.run ? P.run.reduce((t, l) => t + l.total, 0) : null} card={P.card.name} pv={pv} /></section>}
       {P?.run && <section><h2>The run, by month</h2><CostTable pv={pv} title={`${P.runMeters.join(" + ")}${P.runPartial.length ? ` · left out, the run holds only part of: ${P.runPartial.join(", ")}` : ""}`} lines={P.run} engine={P.engine} engineAnnual={P.engineAnnual} /></section>}
       {P && P.bills.length > 0 && <section><h2>The bills, priced</h2><CostTable pv={pv} title="by their periods" lines={P.bills.map((b) => b.line)} billed={P.bills.map((b) => b.bill.costUsd ?? null)} /></section>}
     </div>

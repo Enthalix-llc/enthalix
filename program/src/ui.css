@@ -1252,4 +1252,6 @@ body.explaining .explainHover { outline: 1px dashed #7fd0a0; outline-offset: 1px
 .bomCostCol { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .bomCostCol .bomEquiv { padding: 2px 0; }
 .bomCostCol .bomTableWrap { overflow-x: auto; }
+.bomCostTable tr.clickRow { cursor: pointer; }
+.bomCostTable tr.clickRow:hover td { background: #161a22; }
 .bomTotals { display: flex; flex-direction: column; gap: 3px; font-size: 11px; }
