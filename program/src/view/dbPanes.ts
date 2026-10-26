@@ -17,6 +17,8 @@ export interface PickHit {
    *  shown, a room under the cursor beats the wall behind it — the user is
    *  editing spaces and must not pick a wall by accident (2026-09-03). */
   space?: number;
+  /** nothing under the cursor (reported for a right click only) */
+  empty?: true;
   /** a SITE ELEMENT under the cursor — a tree, a tie, the dock — when the site is drawn (2026-09-05) */
   /** a projected file's element: `expressId` is the model's key (offset per file), `fileExpressId` the id in its own file */
   siteElement?: { expressId: number; name: string; ifcClass: string; file: string; fileExpressId: number };
@@ -206,6 +208,8 @@ export function createDbPanes(canvas: HTMLCanvasElement): DbPanes {
       pickCb({ elementId: model.id, rowIndex: model.row, pane: right ? 3 : 2, button: button === 2 ? "right" : "left", clientX: x0, clientY: y0 });
       return;
     }
+    // nothing under the cursor: a right click is reported as an empty hit (it clears the selection)
+    if (button === 2) pickCb({ elementId: 0, rowIndex: -1, empty: true, pane: right ? 3 : 2, button: "right", clientX: x0, clientY: y0 });
   };
   const onDown = (ev: PointerEvent): void => {
     if (!ev.isTrusted || (ev.button !== 0 && ev.button !== 2)) return;

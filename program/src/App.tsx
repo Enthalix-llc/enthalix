@@ -2631,8 +2631,21 @@ export function App(): React.ReactElement {
     return `#${id}${el?.spaces.length ? ` ${el.spaces.join(" + ")}` : ""}${el ? ` · ${el.ifcClass}` : ""}`;
   };
 
+  // A RIGHT CLICK ON NOTHING CLEARS THE SELECTION (user, 2026-10-26: "In views, a right click should unselect any surface or
+  // space or zone selection"): surfaces, rooms, levels, zones, types, site and services elements, an armed extension, the menu.
+  // A right click ON something still opens its menu — the corrections live there.
+  const clearSelection = (): void => {
+    setMenu(null);
+    armedRef.current = null; setArmed(null); armedSpaceRef.current = null; setArmedSpace(null);
+    setSel(null); setSelRow(null); setSelSpace(null); setSelSpaceName(null); setSelLevel(null); setHi(null); setTableSpace(null);
+    setSelZone(null); selectType(null);
+    const hadSite = selSiteRef.current.size > 0;
+    selSiteRef.current = new Set(); setSelSite(new Set()); selMepRef.current = new Set(); setSelMep(new Set());
+    if (hadSite && showTerrainRef.current) applyTerrain(true);
+  };
   const pane1PickRef = useRef<(expressId: number, button: "left" | "right", x: number, y: number) => void>(() => undefined);
   pane1PickRef.current = (expressId, button, x, y) => {
+    if (expressId === 0) { if (button === "right") clearSelection(); return; }
     if (armedSpaceRef.current) return;      // a wall is not a room: ignored while arming
     if (button === "right") { setMenu({ x, y, elementId: expressId, key: null, label: elementLabel(expressId) }); return; }
     selectElement(expressId);
@@ -2675,6 +2688,7 @@ export function App(): React.ReactElement {
 
   const onPickRef = useRef<(hit: PickHit) => void>(() => undefined);
   onPickRef.current = (hit: PickHit): void => {
+    if (hit.empty) { if (hit.button === "right") clearSelection(); return; }
     // a SERVICES element (2026-09-10): selected in the view and the tables, never deleted — equipment is not shading
     if (hit.mepElement) {
       const me = hit.mepElement;

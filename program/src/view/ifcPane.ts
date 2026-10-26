@@ -140,6 +140,7 @@ export async function createIfcPane(container: HTMLElement): Promise<IfcPane> {
         }
       }
       if (best && pickCb) pickCb(best.id, button, ev.clientX, ev.clientY);
+      else if (pickCb && button === "right") pickCb(0, button, ev.clientX, ev.clientY);   // a right click on nothing: 0
     })();
   });
 
