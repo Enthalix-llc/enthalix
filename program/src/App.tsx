@@ -4459,7 +4459,11 @@ export function App(): React.ReactElement {
               onEpw={chooseEpw} onPickEpw={() => void pickEpw()} onApply={applySite} staged={siteStage ?? bemLedger?.staged?.site} onStage={setSiteStage}
               sun={sun} onSun={setSun} cycle={cycle} onCycle={setCycle} deciduous={deciduous} onDeciduous={setDeciduous} intensity={intensity} onIntensity={setIntensity}
               sunInfo={sunInfo} timeZone={bemModel?.weather?.header?.timeZone ?? null} siteWord={siteWord}
-              focus={siteFocus} onFocus={setSiteFocus} solar={solar} onSolar={setSolar} address={siteAddress} locPick={locPick} />
+              focus={siteFocus} solar={solar}
+              // the view is the last one asked for (user, 2026-10-26: the map did not show with Solar Studies on): the map or the
+              // stations turn the solar study off, and the solar study brings the model back
+              onFocus={(f) => { setSiteFocus(f); if (f !== "model") setSolar(false); }}
+              onSolar={(on) => { setSolar(on); if (on) setSiteFocus("model"); }} address={siteAddress} locPick={locPick} />
           )}
           {tab === "bem-constructions" && <BemConstructions groundFacts={detailGround && detailRow ? { g: detailGround, label: detailRow.label } : undefined} model={bemModel} imperial={imperial} rows={typeRows} ledger={bemLedger} library={libRef.current} libCensus={`${libCensus}${materialsCensus ? ` · materials.db: ${materialsCensus}` : ""}`} stage={consStage} onStage={stageCons} onRevert={() => { setConsStage(bemLedger?.constructions ?? {}); setConsGround(bemLedger?.ground); }} ground={consGround} onGround={setConsGround} onApply={applyConstructions} busy={bemBusy} selected={typeSel} onSelect={selectType} paint={consPaint} onPaint={setConsPaint} windowProducts={windowProducts} doorProducts={doorProducts} onFenNew={(key, label, unitAreaM2, count, section) => setFenDialog({ ...newFenDialog(key, label, section), unitAreaM2, unitCount: count, custom: true })}  onDoorGlazing={(ids, g) => void ruleDoorGlazing(ids, g)} doorGlazingRuled={doorGlazingRuled} />}
           {tab === "bem-schedules" && <BemSchedules model={bemModel} library={libRef.current} stage={schedStage} onStage={(role, ref) => setSchedStage((st) => { const n = { ...st }; if (ref) n[role] = ref; else delete n[role]; return n; })} onRevert={() => { setSchedStage(bemLedger?.schedules ?? {}); setHolStage(appliedHolidays(bemLedger)); setCopyStage({}); }} onApply={applySchedules} busy={bemBusy} ledger={bemLedger} imperial={imperial} card={schedCard} onCard={setSchedCard}
