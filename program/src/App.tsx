@@ -2638,7 +2638,7 @@ export function App(): React.ReactElement {
     setMenu(null);
     armedRef.current = null; setArmed(null); armedSpaceRef.current = null; setArmedSpace(null);
     setSel(null); setSelRow(null); setSelSpace(null); setSelSpaceName(null); setSelLevel(null); setHi(null); setTableSpace(null);
-    setSelZone(null); selectType(null);
+    setSelZone(null); setSelRooms(null); selectType(null);
     const hadSite = selSiteRef.current.size > 0;
     selSiteRef.current = new Set(); setSelSite(new Set()); selMepRef.current = new Set(); setSelMep(new Set());
     if (hadSite && showTerrainRef.current) applyTerrain(true);
@@ -2646,6 +2646,7 @@ export function App(): React.ReactElement {
   const pane1PickRef = useRef<(expressId: number, button: "left" | "right", x: number, y: number) => void>(() => undefined);
   pane1PickRef.current = (expressId, button, x, y) => {
     if (expressId === 0) { if (button === "right") clearSelection(); return; }
+    if (button === "right" && moduleRef.current === "bem" && tabRef.current === "bem-zones" && (selZoneRef.current || selRoomsRef.current || selSpaceNameRef.current)) { clearSelection(); return; }
     if (armedSpaceRef.current) return;      // a wall is not a room: ignored while arming
     if (button === "right") { setMenu({ x, y, elementId: expressId, key: null, label: elementLabel(expressId) }); return; }
     selectElement(expressId);
@@ -2689,6 +2690,9 @@ export function App(): React.ReactElement {
   const onPickRef = useRef<(hit: PickHit) => void>(() => undefined);
   onPickRef.current = (hit: PickHit): void => {
     if (hit.empty) { if (hit.button === "right") clearSelection(); return; }
+    // ZONES (user, 2026-10-26: "deselect zones if already highlighted with right click in view"): a right click on the
+    // model while a zone or room is lit clears it — the surface menu only when nothing is lit
+    if (moduleRef.current === "bem" && tabRef.current === "bem-zones" && hit.button === "right" && (selZoneRef.current || selRoomsRef.current || selSpaceNameRef.current)) { clearSelection(); return; }
     // a SERVICES element (2026-09-10): selected in the view and the tables, never deleted — equipment is not shading
     if (hit.mepElement) {
       const me = hit.mepElement;
