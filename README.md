@@ -2,10 +2,11 @@
 
 **Where the model meets the meter.**
 
-BIM-BEM-BOM is open-source building energy modelling software, organised as
-**BIM-BEM-BOM**: the building information model (IFC) in, the building energy
-model (EnergyPlus) out, and the building's measured operation compared back
-against the model.
+BIM-BEM-BOM is open-source building energy modelling software offered by
+**Enthalix LLC**. The program is BIM-BEM-BOM; Enthalix is the company. Its
+name is its three parts: the building information model (IFC) in, the building
+energy model (EnergyPlus) out, and the building operations model, the
+building's measured operation compared back against the model.
 
 > **Status: public preview.** Runs on macOS, Windows and Linux, from source or
 > from an installer you build (`pnpm dist`), with EnergyPlus 26.1. Developed on
@@ -60,4 +61,4 @@ with or endorsed by the US Department of Energy.
 
 ---
 
-Maintained by Enthalix LLC. Name first recorded here on 23 September 2026.
+BIM-BEM-BOM is offered and maintained by Enthalix LLC. The Enthalix name was first recorded here on 23 September 2026.
