@@ -2,7 +2,7 @@
   "name": "enthalix",
   "version": "0.2.0",
   "private": true,
-  "description": "Enthalix: building models (IFC) into EnergyPlus energy models, compared with the building's measured operation",
+  "description": "BIM-BEM-BOM (Enthalix LLC): building models (IFC) into EnergyPlus energy models, compared with the building's measured operation",
   "license": "Apache-2.0",
   "author": {
     "name": "Enthalix LLC",
@@ -48,7 +48,7 @@
   },
   "build": {
     "appId": "com.enthalix.app",
-    "productName": "Enthalix",
+    "productName": "BIM-BEM-BOM",
     "copyright": "Copyright 2026 Enthalix LLC",
     "directories": {
       "output": "../release",
@@ -70,6 +70,7 @@
     ],
     "mac": {
       "target": "dmg",
+      "artifactName": "BIM-BEM-BOM-${version}-${arch}.${ext}",
       "category": "public.app-category.productivity"
     },
     "win": {
@@ -77,7 +78,8 @@
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "BIM-BEM-BOM-Setup-${version}.${ext}"
     },
     "linux": {
       "target": [
@@ -85,7 +87,12 @@
         "deb"
       ],
       "category": "Science",
-      "maintainer": "Enthalix LLC <342208247+Enthalix-dev@users.noreply.github.com>"
+      "maintainer": "Enthalix LLC <342208247+Enthalix-dev@users.noreply.github.com>",
+      "executableName": "bim-bem-bom",
+      "artifactName": "BIM-BEM-BOM-${version}.${ext}"
+    },
+    "deb": {
+      "artifactName": "bim-bem-bom_${version}_${arch}.${ext}"
     }
   },
   "pnpm": {

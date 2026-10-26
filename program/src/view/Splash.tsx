@@ -37,9 +37,9 @@ export function Splash(): ReactNode {
             <polygon fill="var(--accent-bim)" points="324,128 440,222 378,440 350,440 404,244 324,176" />
             <path fill="var(--accent-bem)" d="M88,462 Q270,436 450,462 L450,476 Q270,456 92,492 Z" />
           </svg>
-          Enthalix
+          BIM-BEM-BOM
         </h1>
-        <div className="splashSub">BIM-BEM-BOM — Building Information Model · Building Energy Model · Building Operations Model · where the model meets the meter · public preview</div>
+        <div className="splashSub">Building Information Model · Building Energy Model · Building Operations Model · where the model meets the meter · by Enthalix LLC · public preview</div>
 
         <section>
           <h2>Purpose</h2>
@@ -62,7 +62,7 @@ export function Splash(): ReactNode {
             <li>Each contributor grants a patent license; it ends for anyone who brings a patent claim over the work</li>
             <li>"Enthalix" and its logo are trademarks of Enthalix LLC; the license grants no right to use them (TRADEMARKS.md)</li>
             <li>Provided "AS IS", without warranties or conditions of any kind, and with no liability for damages</li>
-            <li>Powered by EnergyPlus, installed separately under its own license; Enthalix is not affiliated with or endorsed by the US
+            <li>Powered by EnergyPlus, installed separately under its own license; BIM-BEM-BOM is not affiliated with or endorsed by the US
               Department of Energy. Every other component and data source keeps its own terms — THIRD-PARTY-NOTICES.md. The Open-Meteo
               archive's free API is for non-commercial use only</li>
           </ul>
@@ -87,7 +87,7 @@ export function Splash(): ReactNode {
             <li>EnergyPlus, installed separately — run <code>pnpm setup:check</code> to see what is installed and what is missing (SETUP.md)</li>
             <li>A weather file from EnergyPlus's weather repository (picked on the map in BEM › SITE), or one you obtained</li>
             <li>The energy code your project is under: its climate zone for your county and its values, read from the code's own text
-              (free to read at codes.iccsafe.org) — until then, the DOE/PNNL prototype values for IECC 2006–2024 that ship with Enthalix</li>
+              (free to read at codes.iccsafe.org) — until then, the DOE/PNNL prototype values for IECC 2006–2024 that ship with BIM-BEM-BOM</li>
             <li>Materials: EnergyPlus's datasets, the openstudio-standards catalogue, and your own entries</li>
             <li>Your utility's tariff, transcribed from its published schedule; your bills (typed or CSV) and a PV production export</li>
           </ul>

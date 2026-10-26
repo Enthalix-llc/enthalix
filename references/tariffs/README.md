@@ -1,6 +1,6 @@
 # Tariffs
 
-Enthalix prices the simulated year, and your utility bills, with your utility's
+BIM-BEM-BOM prices the simulated year, and your utility bills, with your utility's
 own rate schedule. Every utility publishes its own, and you transcribe yours once.
 
 Until you apply a card of your own, a **Sample** card prices the run. It ships

@@ -1,6 +1,6 @@
 # Material references
 
-Enthalix builds its materials library (`data/materials.db`) from these
+BIM-BEM-BOM builds its materials library (`data/materials.db`) from these
 sources:
 
 - **EnergyPlus's DataSets**, read from your EnergyPlus installation: the ASHRAE
@@ -25,7 +25,7 @@ Columns: `opus_id`, `opus_name`, `category`, `keywords` (separated by `;`),
 
 ## Window and door ratings
 
-No manufacturer or NFRC ratings ship with Enthalix. To model a specific
+No manufacturer or NFRC ratings ship with BIM-BEM-BOM. To model a specific
 product, look up its certified U-factor, SHGC and VT in the
 [NFRC Certified Products Directory](https://search.nfrc.org/) or in the
 manufacturer's literature, and type them in the window dialog with that source.

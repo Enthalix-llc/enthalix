@@ -223,5 +223,5 @@ export function keepInCalendars(prev: UserCalendars, kind: "holidays" | "seasons
   return { ...prev, [kind]: [...prev[kind].filter((x) => x.id.toLowerCase() !== lc), { id: def.id.trim(), days: [...new Set(def.days)].sort((a, b) => a - b) }] };
 }
 export const calendarsText = (c: UserCalendars): string => `${JSON.stringify({
-  note: "YOUR holiday lists and seasons (Enthalix, BEM › SCHEDULES, the frame under the calendar): days of the engine's year " + ENGINE_CALENDAR.year + ", 1 = Jan 1. Read by every project.",
+  note: "YOUR holiday lists and seasons (BIM-BEM-BOM, BEM › SCHEDULES, the frame under the calendar): days of the engine's year " + ENGINE_CALENDAR.year + ", 1 = Jan 1. Read by every project.",
   holidays: c.holidays, seasons: c.seasons }, null, 2)}\n`;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Enthalix LLC
 //
-// THE SETUP CHECK: what Enthalix needs, what is on this computer, and where to get what is missing — each part from its own
+// THE SETUP CHECK: what BIM-BEM-BOM needs, what is on this computer, and where to get what is missing — each part from its own
 // publisher, under its own terms. It INSTALLS NOTHING and changes nothing: it reads, and says. Run it from program/:
 //
 //   pnpm setup:check

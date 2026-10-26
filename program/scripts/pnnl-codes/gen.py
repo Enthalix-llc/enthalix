@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 Enthalix LLC
-# pnnl.json -> pnnl-editions.csv + pnnl-values.csv (the energy-code CSV format Enthalix reads)
+# pnnl.json -> pnnl-editions.csv + pnnl-values.csv (the energy-code CSV format BIM-BEM-BOM reads)
 # Usage: python3 -I gen.py <pnnl.json> <out dir>
 import csv, io, json, sys, os
 

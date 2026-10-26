@@ -25,7 +25,7 @@
 
 export const GEOKISS = {
   source: "GroundTempResIP-SI14.xlsm (geokiss.com free design software), sheet AnnualGroundTemperatures — SoilTemp() = Kusuda–Achenbach with π 3.1416",
-  file: "GroundTempResIP-SI14.xlsm (geokiss.com, free design software — not included with Enthalix)",
+  file: "GroundTempResIP-SI14.xlsm (geokiss.com, free design software — not included with BIM-BEM-BOM)",
   /** the sheet's soil: k 1.45 Btu/h·ft·°F · ρ 100 lb/ft³ · cp 0.215 Btu/lb·°F → α = 24 k / (ρ cp) ft²/day */
   soil: { kBtuHFtF: 1.45, rhoLbFt3: 100, cpBtuLbF: 0.215 },
   alphaFt2Day: 24 * 1.45 / (100 * 0.215),

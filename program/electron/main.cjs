@@ -16,6 +16,9 @@ const explainWindow = require("./explainWindow.cjs");   // the Explain help in a
 // ENTHALIX_HOME names another folder for all of them (a test run, a portable copy)
 const HOME_DIR = process.env.ENTHALIX_HOME ? path.resolve(process.env.ENTHALIX_HOME) : null;
 if (HOME_DIR) app.setPath("userData", path.join(HOME_DIR, "chromium"));   // the window's own storage goes there too
+// installed, the window's storage stays in the Enthalix folder it has used since 0.1.0, whatever the product is called (BIM-BEM-BOM
+// since 2026-10-26), so a rename never resets the views a user set up
+else if (app.isPackaged) app.setPath("userData", path.join(app.getPath("appData"), "Enthalix"));
 const REPO_DIR = HOME_DIR ?? (app.isPackaged ? path.join(app.getPath("appData"), "Enthalix") : path.resolve(__dirname, "..", ".."));
 const SHIPPED_DIR = app.isPackaged ? process.resourcesPath : path.resolve(__dirname, "..", "..");
 const DATA_DIR = path.join(REPO_DIR, "data");
@@ -69,7 +72,7 @@ function recover(why) {
   console.error(`[bim] ${why} — ${crashTimes.length > 3 ? "NOT reloading: four crashes inside two minutes" : "reloading the page"}`);
   if (!mainWin || mainWin.isDestroyed()) return;
   if (crashTimes.length > 3) {
-    void mainWin.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(`<body style="background:#0f1117;color:#e6e6e6;font:14px system-ui;padding:40px"><h2>Enthalix stopped reloading</h2><p>The page crashed four times inside two minutes (last: ${why}). Your rulings and drafts are on disk. Quit and start the app again.</p></body>`));
+    void mainWin.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(`<body style="background:#0f1117;color:#e6e6e6;font:14px system-ui;padding:40px"><h2>BIM-BEM-BOM stopped reloading</h2><p>The page crashed four times inside two minutes (last: ${why}). Your rulings and drafts are on disk. Quit and start the app again.</p></body>`));
     return;
   }
   lastRecovery = { at: new Date().toISOString(), why };
@@ -137,7 +140,7 @@ function bundleStamp() {
 // honest, and an old build that looks like the app is not.
 function devDownPage(secs, lastErr, bundle) {
   const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-  return `<!doctype html><meta charset="utf-8"><title>Enthalix — the dev server did not answer</title>
+  return `<!doctype html><meta charset="utf-8"><title>BIM-BEM-BOM — the dev server did not answer</title>
 <style>body{margin:0;background:#0f1117;color:#e6e8ee;font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;padding:40px}
 h1{font-size:18px;margin:0 0 18px;color:#e9b44c}code{color:#7fd1c0}p{max-width:70ch;margin:0 0 12px}
 .b{border-left:3px solid #e9b44c;padding-left:14px;margin:18px 0}</style>
@@ -297,7 +300,7 @@ ipcMain.handle("bem:list-dir", async (_ev, dir, ext) => {
 // station files land under data/cache and are read
 // from there until the user asks for a fresh one. The main process fetches so
 // the renderer's origin never meets a CORS refusal.
-const UA = "Enthalix/0.1 (Electron desktop; +https://github.com/Enthalix-llc/enthalix)";   // the app and a contact, as OSMF and Wikimedia ask; never the user's e-mail
+const UA = "BIM-BEM-BOM/0.1 (Electron desktop; +https://github.com/Enthalix-llc/enthalix)";   // the app and a contact, as OSMF and Wikimedia ask; never the user's e-mail
 ipcMain.handle("bem:fetch-cached", async (_ev, url, cacheName, maxAgeDays) => {
   const dir = path.join(DATA_DIR, "cache");
   fs.mkdirSync(dir, { recursive: true });
@@ -505,12 +508,12 @@ ipcMain.handle("project:version-index", async (_ev, sha) => projects.versionInde
 ipcMain.handle("project:unassigned", async () => projects.unassigned());
 ipcMain.handle("project:register-version", async (_ev, v) => saveUser("project version", () => projects.registerVersion(v)));
 ipcMain.handle("project:export", async (ev, projectId, suggested) => {
-  const r = await dialog.showSaveDialog(...sheetOf(ev, { title: "Export the project", defaultPath: suggested || `${projectId}.bimproject`, filters: [{ name: "Enthalix project", extensions: ["bimproject"] }] }));
+  const r = await dialog.showSaveDialog(...sheetOf(ev, { title: "Export the project", defaultPath: suggested || `${projectId}.bimproject`, filters: [{ name: "BIM-BEM-BOM project", extensions: ["bimproject"] }] }));
   if (r.canceled || !r.filePath) return null;
   return { file: r.filePath, ...projects.exportProject(projectId, r.filePath) };
 });
 ipcMain.handle("project:import", async (ev) => {
-  const r = await dialog.showOpenDialog(...sheetOf(ev, { title: "Import a project", filters: [{ name: "Enthalix project", extensions: ["bimproject"] }], properties: ["openFile"] }));
+  const r = await dialog.showOpenDialog(...sheetOf(ev, { title: "Import a project", filters: [{ name: "BIM-BEM-BOM project", extensions: ["bimproject"] }], properties: ["openFile"] }));
   if (r.canceled || !r.filePaths.length) return null;
   return saveUser("project imported", () => ({ file: r.filePaths[0], ...projects.importProject(r.filePaths[0]) }));
 });
@@ -520,7 +523,7 @@ app.whenReady().then(async () => {
   try { await openProjects(); }
   catch (e) {
     // no store, no ledgers: say so plainly and load nothing rather than run with rulings that cannot be saved
-    dialog.showErrorBox("Enthalix — the project store could not be opened", `${STORE_FILE}\n\n${e instanceof Error ? e.message : String(e)}`);
+    dialog.showErrorBox("BIM-BEM-BOM — the project store could not be opened", `${STORE_FILE}\n\n${e instanceof Error ? e.message : String(e)}`);
     app.quit(); return;
   }
   // THE MAP TILES name the app (OSMF tile usage policy: "a clear, unique User-Agent string that names your app"): the tile images are

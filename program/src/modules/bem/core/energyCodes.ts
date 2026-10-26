@@ -91,7 +91,7 @@ export const PNNL_NOTICE = "Values from the Residential Prototype Building Model
   + "U.S. Department of Energy (DOE), energycodes.gov/prototype-building-models — information DOE publishes as public domain, used here with "
   + "acknowledgement to DOE and PNNL. The wall, ceiling, floor and basement-wall U-factors are those EnergyPlus computed for the prototypes' "
   + "assemblies, built to the edition's insulation R-values; the window, skylight, slab, air-leakage and thermostat values are the requirements "
-  + "the prototypes state. A model code as published, not a state's adopted code; Enthalix is not endorsed by DOE or PNNL.";
+  + "the prototypes state. A model code as published, not a state's adopted code; BIM-BEM-BOM is not endorsed by DOE or PNNL.";
 /** THE SHIPPED VALUES BESIDE THE USER'S (2026-10-15): the user's editions and values first — a row of theirs is read before a shipped
  *  one — then the shipped editions, marked, and their values; a state's adoptions and overrides are only ever the user's */
 export function mergeEnergyCodes(user: EnergyCodeData, shipped: EnergyCodeData): EnergyCodeData {

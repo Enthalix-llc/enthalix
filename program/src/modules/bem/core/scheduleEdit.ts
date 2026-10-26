@@ -205,7 +205,7 @@ export function writeUserFile(prev: { objects: IdfObject[]; notes: Map<string, s
   const notes = new Map(prev.notes);
   notes.set(lc(save.object.name), save.note);
   const text = [
-    "! schedules-user.idf — YOUR schedules: the day profiles you edited in Enthalix (BEM › SCHEDULES, the frame under the calendar).",
+    "! schedules-user.idf — YOUR schedules: the day profiles you edited in BIM-BEM-BOM (BEM › SCHEDULES, the frame under the calendar).",
     "! Every project's library reads this file beside the engine's own two. Each schedule is one Schedule:Compact; the type limits it names follow.",
     "",
     ...keep.map((o) => objectText(o)),

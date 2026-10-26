@@ -1,6 +1,6 @@
-# Setting up Enthalix
+# Setting up BIM-BEM-BOM
 
-Enthalix is a public preview. It runs on macOS, Windows and Linux, with
+BIM-BEM-BOM is a public preview. It runs on macOS, Windows and Linux, with
 EnergyPlus 26.1. It is developed on macOS (Apple silicon); every change is
 built and run on all three systems automatically (`.github/workflows/ci.yml`).
 
@@ -22,9 +22,9 @@ The check only reads; it installs nothing.
 | git | [git-scm.com](https://git-scm.com/) | to copy the repository |
 | EnergyPlus 26.1 | [EnergyPlus releases](https://github.com/NatLabRockies/EnergyPlus/releases) | Install it with its own installer, in its usual folder (below). To use another installation, set `ENERGYPLUS` to its `energyplus` program. |
 
-Where Enthalix looks for EnergyPlus:
+Where BIM-BEM-BOM looks for EnergyPlus:
 
-| System | EnergyPlus's download | Where Enthalix looks |
+| System | EnergyPlus's download | Where BIM-BEM-BOM looks |
 | --- | --- | --- |
 | macOS | `…-Darwin-macOS13-arm64.dmg` (Apple silicon) or `…-x86_64.dmg` (Intel) | `/Applications/EnergyPlus-*`, `/usr/local/bin`, `/opt/homebrew/bin` |
 | Windows | `…-Windows-x86_64.exe`, or `…-Windows-arm64.exe` on an ARM computer | `C:\EnergyPlusV*` and `Program Files` |
@@ -60,10 +60,10 @@ AppImage needs `libfuse2` on recent Ubuntu.
 
 **On Windows on ARM**, use the x64 installer built by the project's checks
 (Windows runs it on ARM). An ARM64 installer made with `pnpm dist` on an ARM
-computer currently installs without `Enthalix.exe` and its DLLs; the cause is
+computer currently installs without `BIM-BEM-BOM.exe` and its DLLs; the cause is
 not yet known.
 
-An installed Enthalix keeps your files in its app-data folder (see "Where your
+An installed BIM-BEM-BOM keeps your files in its app-data folder (see "Where your
 files are"). It still needs EnergyPlus installed separately.
 
 ### Known issue: Windows in Parallels on a Mac
@@ -71,7 +71,7 @@ files are"). It still needs EnergyPlus installed separately.
 In a Windows virtual machine under Parallels Desktop on Apple silicon, the
 EnergyPlus run can stop the whole virtual machine. It happens when EnergyPlus
 calculates shadows on the graphics card (SITE › shadows: PixelCounting, the
-default), through Parallels' 3D acceleration. Run Enthalix on macOS itself on
+default), through Parallels' 3D acceleration. Run BIM-BEM-BOM on macOS itself on
 such a Mac, or choose PolygonClipping under SITE › shadows (some buildings then
 report non-convex surfaces as Severe errors).
 
@@ -81,7 +81,7 @@ Use BIM › Open IFC… to open an IFC file. To try the program, open the sample
 building `samples/Duplex_A_20110907.ifc` (see `samples/README.md` for its source
 and licence).
 
-Enthalix reads the rooms (IfcSpace), the walls, slabs, roofs, windows and doors,
+BIM-BEM-BOM reads the rooms (IfcSpace), the walls, slabs, roofs, windows and doors,
 and the site's position (IfcSite). A room-based model from an architect's
 authoring tool works best.
 
@@ -99,7 +99,7 @@ beside it in `Weather/`.
 
 ## 4. The energy code
 
-Enthalix ships the DOE/PNNL residential prototype values for each IECC
+BIM-BEM-BOM ships the DOE/PNNL residential prototype values for each IECC
 edition (2006 to 2024), so a model runs from the start; a project reads the
 2021 edition until you choose another. They are the prototypes' values, not a
 state's code (see `references/energy-codes/README.md`). To use the code your
@@ -126,7 +126,7 @@ values that are missing.
   schedule (`references/tariffs/README.md`).
 - **Bills and PV:** type your bills in BOM, or import them as CSV, and import
   your PV system's daily production as CSV.
-- **Actual-year weather:** for the calibration year, Enthalix builds a weather
+- **Actual-year weather:** for the calibration year, BIM-BEM-BOM builds a weather
   file from the hourly readings of the NOAA station nearest the site, plus the
   sun and sky from the Open-Meteo archive. **Open-Meteo's free API is for
   non-commercial use only.** For paid work, use an actual-year weather file you
@@ -138,7 +138,7 @@ values that are missing.
 | What | Where |
 | --- | --- |
 | Projects and your decisions | `projects.sqlite` in the app-data folder: `~/Library/Application Support/Enthalix/` on macOS, `%APPDATA%\Enthalix\` on Windows, `~/.config/Enthalix/` on Linux |
-| Models, runs and your own tables | `data/` in the repository, never committed; in an installed Enthalix, `data/` in the app-data folder |
-| Weather files | `Weather/` in the repository, never committed; in an installed Enthalix, `Weather/` in the app-data folder |
-| All of these, elsewhere | set `ENTHALIX_HOME` to a folder, and Enthalix keeps `projects.sqlite`, `data/` and `Weather/` there |
+| Models, runs and your own tables | `data/` in the repository, never committed; in an installed BIM-BEM-BOM, `data/` in the app-data folder |
+| Weather files | `Weather/` in the repository, never committed; in an installed BIM-BEM-BOM, `Weather/` in the app-data folder |
+| All of these, elsewhere | set `ENTHALIX_HOME` to a folder, and BIM-BEM-BOM keeps `projects.sqlite`, `data/` and `Weather/` there |
 | Settings | `data/settings.json`, for example `{ "geocoderUrl": "https://…/search" }` to use another Nominatim-compatible geocoder |

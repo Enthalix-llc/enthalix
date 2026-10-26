@@ -13,4 +13,4 @@ walls, windows, doors, slabs and roof, sited in the United States.
   as that repository's LICENSE states. The file is included unmodified.
 - **SHA-256:** `b347a2c8aa8fff6db896a4417a9c50c22ac0ccd7c5cfc22b99b8d29336c606ed`
 
-To try Enthalix on it, start the app and use BIM › Open IFC… to open this file.
+To try BIM-BEM-BOM on it, start the app and use BIM › Open IFC… to open this file.

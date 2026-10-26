@@ -82,7 +82,7 @@ export function EnergyCodeEditor(p: { zone: string | null; edition: string | nul
       <div className="dialog codeDialog codeEditor" role="dialog" aria-label="the energy code's values" onPointerDown={(e) => e.stopPropagation()}>
         <div className="dialogHead">the energy code's values — as you read them in the code</div>
         <div className="muted" style={{ marginBottom: 8 }}>
-          The model's default constructions, its infiltration and the reference thermostat are built from these values. Enthalix ships the DOE/PNNL
+          The model's default constructions, its infiltration and the reference thermostat are built from these values. BIM-BEM-BOM ships the DOE/PNNL
           prototype values by IECC edition (read only here); to use the code your project is under as the code states it, read it (the IECC is free
           to read, read-only, at <a href={ZONE_TABLE_URL} target="_blank" rel="noreferrer">codes.iccsafe.org</a>) and enter its values as a code of your
           own, with the table or section each is from — or copy a prototype edition and change what differs. Saved to <code>data/energy-codes/</code>.
@@ -125,7 +125,7 @@ export function EnergyCodeEditor(p: { zone: string | null; edition: string | nul
             })}</tbody>
           </table>
           <div className="muted">stored as the code states them (U in Btu/h·ft²·°F, R in h·ft²·°F/Btu, depth in ft, thermostat in °F){p.imperial ? "" : " — typed here in metric, converted on save"}</div>
-          {readOnly && <div className="muted" title={PNNL_NOTICE}>shipped with Enthalix — DOE/PNNL Residential Prototype Building Models, energycodes.gov (public domain, with acknowledgement to DOE and PNNL). Read only: copy it into a code of your own to change a value.</div>}
+          {readOnly && <div className="muted" title={PNNL_NOTICE}>shipped with BIM-BEM-BOM — DOE/PNNL Residential Prototype Building Models, energycodes.gov (public domain, with acknowledgement to DOE and PNNL). Read only: copy it into a code of your own to change a value.</div>}
           {missing.length > 0 && <div className="src-user">not entered yet — the model cannot run until they are: {missing.join(", ")}</div>}
           {problems.length > 0 && <div className="bad">{problems.join(" · ")}</div>}
           {error && <div className="bad">not saved: {error}</div>}

@@ -1,10 +1,10 @@
 # Energy code values
 
-Enthalix reads the prescriptive values of the energy code your project is under:
+BIM-BEM-BOM reads the prescriptive values of the energy code your project is under:
 the envelope U-factors, the window SHGC, slab insulation, air leakage and the
 reference thermostat.
 
-**What ships with Enthalix:** the values of the DOE/PNNL Residential Prototype
+**What ships with BIM-BEM-BOM:** the values of the DOE/PNNL Residential Prototype
 Building Models ([energycodes.gov](https://www.energycodes.gov/prototype-building-models)),
 for each IECC edition from 2006 to 2024 and each climate zone, in
 `program/src/modules/bem/reference/`. They are public domain, and DOE and PNNL are
@@ -28,7 +28,7 @@ code they adopted. Enter the values as described below. A table of your own is
 read before the shipped values.
 
 If a value the model needs is missing from your table, the model is still
-built, but it cannot run; the app names the missing value. Enthalix never invents a value.
+built, but it cannot run; the app names the missing value. BIM-BEM-BOM never invents a value.
 
 ## Setting up
 
@@ -46,7 +46,7 @@ file it replaces beside it as a `.bak`. To edit the files directly instead:
    section); a row without them is refused.
 4. `state-adoptions.csv` and `state-overrides.csv` are optional. Use them to list
    a state's adoptions with their dates, and the values a state amended.
-5. Start Enthalix. In BEM › SITE, open the energy code, choose the edition, enter
+5. Start BIM-BEM-BOM. In BEM › SITE, open the energy code, choose the edition, enter
    the climate zone that your county's row in the code's climate-zone table
    states (IECC Table R301.1), and click Use.
 
@@ -70,7 +70,7 @@ file it replaces beside it as a `.bak`. To edit the files directly instead:
 | `coolingSetpointF` | °F | `all` | standard reference design cooling thermostat |
 
 A zone row is keyed by the zone number (`4`, not `4A`). For example, where the
-code's table has one row for "5 and Marine 4", enter it as zone `5`; Enthalix
+code's table has one row for "5 and Marine 4", enter it as zone `5`; BIM-BEM-BOM
 reads Marine 4 from it.
 
 ## Where each factor is in the IECC (residential)

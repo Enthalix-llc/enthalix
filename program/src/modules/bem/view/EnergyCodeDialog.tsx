@@ -77,11 +77,11 @@ export function EnergyCodeDialog(p: {
           ))}{!p.state && <span className="muted"> · the site is in no county yet — locate it on the map for the state's page</span>}</span>}
         </div>
         {!noTables && ownEditions.length === 0 && <div className="muted" style={{ margin: "6px 0 10px" }}>
-          No code table of your own is on record: the DOE/PNNL prototype values that ship with Enthalix are offered below, by IECC edition. To use
+          No code table of your own is on record: the DOE/PNNL prototype values that ship with BIM-BEM-BOM are offered below, by IECC edition. To use
           the code your project is under as the code states it, enter its values with Edit values… above.
         </div>}
         {noTables && <div className="bad" style={{ margin: "6px 0 10px" }}>
-          No energy code is on record. Enthalix ships no code tables: a code is its publisher's. Read the code your project is under — the
+          No energy code is on record. BIM-BEM-BOM ships no code tables: a code is its publisher's. Read the code your project is under — the
           IECC is free to read (read-only) at <a href={ZONE_TABLE_URL} target="_blank" rel="noreferrer">codes.iccsafe.org</a> — and enter
           its values in <code>data/energy-codes/</code>; the empty templates and how to fill them are in <code>references/energy-codes/README.md</code>.
           The app reads them when it starts.
@@ -114,7 +114,7 @@ export function EnergyCodeDialog(p: {
             <tr className="grp"><td colSpan={6}>model codes, as published — not a state's law; for a study or a comparison</td></tr>
             {ownEditions.map((e) => editionRow(e))}
             {ownEditions.length === 0 && <tr><td /><td colSpan={5} className="muted">none of your own — Edit values… enters one</td></tr>}
-            {shippedEditions.length > 0 && <tr className="grp"><td colSpan={6} title={PNNL_NOTICE}>DOE/PNNL residential prototype values, by IECC edition — shipped with Enthalix; not a state's law</td></tr>}
+            {shippedEditions.length > 0 && <tr className="grp"><td colSpan={6} title={PNNL_NOTICE}>DOE/PNNL residential prototype values, by IECC edition — shipped with BIM-BEM-BOM; not a state's law</td></tr>}
             {shippedEditions.map((e) => editionRow(e))}
           </tbody>
         </table>

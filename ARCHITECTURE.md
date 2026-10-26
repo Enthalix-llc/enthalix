@@ -1,6 +1,6 @@
-# How Enthalix is built
+# How BIM-BEM-BOM is built
 
-Enthalix is a desktop application made with Electron, React and TypeScript.
+BIM-BEM-BOM is a desktop application made with Electron, React and TypeScript.
 The interface is a web page (`program/src/`), and a small main process
 (`program/electron/`) does what a page cannot do: read and write files, run
 EnergyPlus, and download what the app needs.

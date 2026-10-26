@@ -9,7 +9,7 @@
       "sample": true,
       "effective": "a sample: example values, not a published schedule",
       "fuel": "electricity",
-      "note": "Shipped with Enthalix so a run can be priced before you have your utility's schedule. The values are an example of a residential cooperative rate (2025): a monthly access charge, a delivery charge per kWh, a small demand charge, and a supply charge per kWh that is higher in summer. They are not any utility's rates. Use Search… to find your own utility's schedule, and enter it as a card of your own.",
+      "note": "Shipped with BIM-BEM-BOM so a run can be priced before you have your utility's schedule. The values are an example of a residential cooperative rate (2025): a monthly access charge, a delivery charge per kWh, a small demand charge, and a supply charge per kWh that is higher in summer. They are not any utility's rates. Use Search… to find your own utility's schedule, and enter it as a card of your own.",
       "charges": {
         "accessUsdMonth": { "value": 31.0, "unit": "$/month", "cite": "sample: the monthly access (customer) charge", "url": "" },
         "deliveryUsdKwh": { "value": 0.02566, "unit": "$/kWh", "cite": "sample: the energy delivery charge, every kWh delivered", "url": "" },

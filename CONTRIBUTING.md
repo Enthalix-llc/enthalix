@@ -1,4 +1,4 @@
-# Contributing to Enthalix
+# Contributing to BIM-BEM-BOM
 
 Thank you for your interest. Feedback, bug reports and code are all welcome.
 
@@ -14,7 +14,7 @@ reports, please include:
 
 ## Contributing code
 
-Enthalix is licensed under the [Apache License 2.0](LICENSE). By contributing,
+BIM-BEM-BOM is licensed under the [Apache License 2.0](LICENSE). By contributing,
 you agree that your contribution is licensed under the same terms (section 5
 of the licence).
 

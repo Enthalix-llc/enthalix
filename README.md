@@ -1,8 +1,8 @@
-# Enthalix
+# BIM-BEM-BOM
 
 **Where the model meets the meter.**
 
-Enthalix is open-source building energy modelling software, organised as
+BIM-BEM-BOM is open-source building energy modelling software, organised as
 **BIM-BEM-BOM**: the building information model (IFC) in, the building energy
 model (EnergyPlus) out, and the building's measured operation compared back
 against the model.
@@ -29,7 +29,7 @@ then run `pnpm install` and `pnpm dev` in `program/`, and open the sample
 building in [`samples/`](samples/). To see what is installed and what is
 missing, run `pnpm setup:check`.
 
-Enthalix ships no copyrighted standards tables, weather files or manufacturer
+BIM-BEM-BOM ships no copyrighted standards tables, weather files or manufacturer
 data. You get each from its publisher, under its own terms; SETUP.md says where.
 For the energy code it ships public-domain reference values: those of the
 DOE/PNNL residential prototype models, for each IECC edition from 2006 to 2024.
@@ -51,11 +51,11 @@ report what works and what doesn't, and help shape where it goes next.
 
 ## Licence
 
-Enthalix is licensed under the [Apache License 2.0](LICENSE). See
+BIM-BEM-BOM is licensed under the [Apache License 2.0](LICENSE). See
 [NOTICE](NOTICE) and [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 "Enthalix" and the Enthalix logo are trademarks of Enthalix LLC; see
-[TRADEMARKS.md](TRADEMARKS.md). Enthalix uses EnergyPlus but is not affiliated
+[TRADEMARKS.md](TRADEMARKS.md). BIM-BEM-BOM uses EnergyPlus but is not affiliated
 with or endorsed by the US Department of Energy.
 
 ---

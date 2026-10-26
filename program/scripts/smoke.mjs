@@ -37,16 +37,16 @@ function findApp() {
   for (const d of dirs) {
     const base = path.join(rel, d);
     if (process.platform === "darwin" && d.startsWith("mac")) {
-      const app = path.join(base, "Enthalix.app");
-      const found = pick(path.join(app, "Contents", "MacOS", "Enthalix"), path.join(app, "Contents", "Resources"));
+      const app = path.join(base, "BIM-BEM-BOM.app");
+      const found = pick(path.join(app, "Contents", "MacOS", "BIM-BEM-BOM"), path.join(app, "Contents", "Resources"));
       if (found) return found;
     }
     if (process.platform === "win32" && d.startsWith("win") && d.endsWith("unpacked")) {
-      const found = pick(path.join(base, "Enthalix.exe"), path.join(base, "resources"));
+      const found = pick(path.join(base, "BIM-BEM-BOM.exe"), path.join(base, "resources"));
       if (found) return found;
     }
     if (process.platform === "linux" && d.startsWith("linux") && d.endsWith("unpacked")) {
-      const found = pick(path.join(base, "enthalix"), path.join(base, "resources"));
+      const found = pick(path.join(base, "bim-bem-bom"), path.join(base, "resources"));
       if (found) return found;
     }
   }
