@@ -151,13 +151,17 @@ h1{font-size:18px;margin:0 0 18px;color:#e9b44c}code{color:#7fd1c0}p{max-width:7
 <p>Then reload this window (${process.platform === "darwin" ? "⌘R" : "Ctrl+R"}).</p>`;
 }
 
-ipcMain.handle("bim:open-ifc", async () => {
-  const res = await dialog.showOpenDialog({
+// A FILE DIALOG BELONGS TO ITS WINDOW (user, 2026-10-26: "contain the IFC file selection window to the program window"): given the
+// window that asked, macOS shows the dialog as a sheet on it, and Windows and Linux centre it on the window and keep it in front
+const sheetOf = (ev, options) => { const w = BrowserWindow.fromWebContents(ev.sender); return w ? [w, options] : [options]; };
+
+ipcMain.handle("bim:open-ifc", async (ev) => {
+  const res = await dialog.showOpenDialog(...sheetOf(ev, {
     title: "Open IFC",
     defaultPath: REF_IFC,
     filters: [{ name: "IFC", extensions: ["ifc"] }],
     properties: ["openFile"],
-  });
+  }));
   if (res.canceled || res.filePaths.length === 0) return null;
   const p = res.filePaths[0];
   const bytes = fs.readFileSync(p);
@@ -254,13 +258,13 @@ ipcMain.handle("bem:read-text", async (_ev, p) => {
   try { return fs.readFileSync(p, "utf8"); } catch { return null; }
 });
 ipcMain.handle("bem:exists", async (_ev, p) => fs.existsSync(p));
-ipcMain.handle("bem:pick-epw", async () => {
-  const res = await dialog.showOpenDialog({
+ipcMain.handle("bem:pick-epw", async (ev) => {
+  const res = await dialog.showOpenDialog(...sheetOf(ev, {
     title: "Choose a weather file",
     defaultPath: WEATHER_DIR,
     filters: [{ name: "EnergyPlus weather", extensions: ["epw"] }],
     properties: ["openFile"],
-  });
+  }));
   return res.canceled || res.filePaths.length === 0 ? null : res.filePaths[0];
 });
 ipcMain.handle("bem:load-decisions", async (_ev, sha) => projects.loadLedger("bem", sha));
@@ -439,7 +443,7 @@ ipcMain.handle("bem:read-run-file", async (_ev, stamp, name) => {
 });
 /** THE ENGINE'S REPORT ON PAPER (user, 2026-10-08: "the energyplus report needs to be printable and savable in pdf"): the run's own
  *  eplustbl.htm loaded in a hidden window with no scripts, then printed through the system's dialog or written as a PDF where the user picks */
-ipcMain.handle("bem:report-out", async (_ev, stamp, mode, title) => {
+ipcMain.handle("bem:report-out", async (ev, stamp, mode, title) => {
   const file = path.join(runDir(stamp), "eplustbl.htm");
   if (!fs.existsSync(file)) return { error: `run ${stamp} has no eplustbl.htm` };
   const w = new BrowserWindow({ show: false, width: 1100, height: 1400, webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false, javascript: false } });
@@ -447,7 +451,7 @@ ipcMain.handle("bem:report-out", async (_ev, stamp, mode, title) => {
     await w.loadFile(file);
     const name = String(title || `EnergyPlus report ${stamp}`).replace(/[\\/:*?"<>|]/g, "-");
     if (mode === "pdf") {
-      const r = await dialog.showSaveDialog({ title: "Save the EnergyPlus report as PDF", defaultPath: path.join(app.getPath("documents"), `${name}.pdf`), filters: [{ name: "PDF", extensions: ["pdf"] }] });
+      const r = await dialog.showSaveDialog(...sheetOf(ev, { title: "Save the EnergyPlus report as PDF", defaultPath: path.join(app.getPath("documents"), `${name}.pdf`), filters: [{ name: "PDF", extensions: ["pdf"] }] }));
       if (r.canceled || !r.filePath) return { canceled: true };
       const pdf = await w.webContents.printToPDF({ printBackground: true, pageSize: "Letter", margins: { marginType: "default" } });
       fs.writeFileSync(r.filePath, pdf);
@@ -475,8 +479,8 @@ ipcMain.handle("bem:validate", async (_ev, idf) => {
 // ── THE BOM MODULE: a bill is a file the user picks; the raw import is
 //    copied under data/bom/imports/ so bom.db can be rebuilt from it, and
 //    the module's ledger lives beside it keyed to the IFC's sha
-ipcMain.handle("bom:pick-csv", async () => {
-  const res = await dialog.showOpenDialog({ title: "Import a utility bill CSV", filters: [{ name: "CSV", extensions: ["csv", "txt"] }], properties: ["openFile"] });
+ipcMain.handle("bom:pick-csv", async (ev) => {
+  const res = await dialog.showOpenDialog(...sheetOf(ev, { title: "Import a utility bill CSV", filters: [{ name: "CSV", extensions: ["csv", "txt"] }], properties: ["openFile"] }));
   if (res.canceled || res.filePaths.length === 0) return null;
   const p = res.filePaths[0];
   return { name: path.basename(p), path: p, text: fs.readFileSync(p, "utf8") };
@@ -500,13 +504,13 @@ ipcMain.handle("project:versions", async (_ev, projectId) => projects.versions(p
 ipcMain.handle("project:version-index", async (_ev, sha) => projects.versionIndex(sha));
 ipcMain.handle("project:unassigned", async () => projects.unassigned());
 ipcMain.handle("project:register-version", async (_ev, v) => saveUser("project version", () => projects.registerVersion(v)));
-ipcMain.handle("project:export", async (_ev, projectId, suggested) => {
-  const r = await dialog.showSaveDialog({ title: "Export the project", defaultPath: suggested || `${projectId}.bimproject`, filters: [{ name: "Enthalix project", extensions: ["bimproject"] }] });
+ipcMain.handle("project:export", async (ev, projectId, suggested) => {
+  const r = await dialog.showSaveDialog(...sheetOf(ev, { title: "Export the project", defaultPath: suggested || `${projectId}.bimproject`, filters: [{ name: "Enthalix project", extensions: ["bimproject"] }] }));
   if (r.canceled || !r.filePath) return null;
   return { file: r.filePath, ...projects.exportProject(projectId, r.filePath) };
 });
-ipcMain.handle("project:import", async () => {
-  const r = await dialog.showOpenDialog({ title: "Import a project", filters: [{ name: "Enthalix project", extensions: ["bimproject"] }], properties: ["openFile"] });
+ipcMain.handle("project:import", async (ev) => {
+  const r = await dialog.showOpenDialog(...sheetOf(ev, { title: "Import a project", filters: [{ name: "Enthalix project", extensions: ["bimproject"] }], properties: ["openFile"] }));
   if (r.canceled || !r.filePaths.length) return null;
   return saveUser("project imported", () => ({ file: r.filePaths[0], ...projects.importProject(r.filePaths[0]) }));
 });
