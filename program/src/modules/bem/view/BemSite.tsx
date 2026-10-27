@@ -130,7 +130,10 @@ export function BemSite(p: BemSiteProps): React.ReactElement {
           </select>
         </label>
       </Step>
-      <Fold id="location" store={STORE} head="location — the IfcSite" summary={p.site ? `lat ${p.site.latitude.toFixed(4)} · lon ${p.site.longitude.toFixed(4)}${stage.location ? " · located on the map" : ""}` : "not stated"}>
+      {/* FOLDED, THE POSITION IS ROLLED UP (user, 2026-10-27: "roll up the lat and lon coordinates when the location bar ... is
+          clicked", so a real house can be shown as an example without disclosing where it is): the summary says a position is stated,
+          never the numbers; unfolding shows them */}
+      <Fold id="location" store={STORE} head="location — the IfcSite" summary={p.site ? `position stated${stage.location ? " · located on the map" : ""} — unfold to show` : "not stated"}>
         <KV k="site" src="file" v={p.site ? `lat ${p.site.latitude.toFixed(4)} · lon ${p.site.longitude.toFixed(4)}` : "not stated"} />
         <KV k="project elev" src="file" title="the project's elevation is set by its lowest occupied level (elevators and shafts are not occupied space — the user's rule); the IfcSite's own RefElevation is shown beside it; the weather station's elevation is its own, under the weather file"
           v={p.elevation ? `${fmtLen(p.elevation.elevM, p.imperial)} — ${p.elevation.from}${p.elevation.siteRefM !== null ? ` · IfcSite.RefElevation states ${fmtLen(p.elevation.siteRefM, p.imperial, 1)}` : ""}` : "—"} />
