@@ -249,7 +249,10 @@ export function createDbPanes(canvas: HTMLCanvasElement): DbPanes {
     // a canvas not on screen draws nothing — a hidden WebGL canvas fills the GPU process until it dies (view/ifcPane.ts says how it was measured)
     if (w === 0 || h === 0 || !(canvas.checkVisibility?.({ visibilityProperty: true }) ?? true)) return;
     const pw = single ? w : Math.floor(w / 2);
-    if (canvas.width !== Math.floor(w * renderer.getPixelRatio())) renderer.setSize(w, h, false);
+    // both sides checked (2026-10-27): a height-only change (the frame below or the status line moving) left the drawing at its old
+    // height, stretched into the new box, so the IDF view no longer matched the IFC view beside it until a width change reset it
+    const pr = renderer.getPixelRatio();
+    if (canvas.width !== Math.floor(w * pr) || canvas.height !== Math.floor(h * pr)) renderer.setSize(w, h, false);
     const draw: ReadonlyArray<readonly [THREE.PerspectiveCamera, THREE.Scene, number]> =
       single ? [[cam3, scene3, 0]] : [[cam2, scene2, 0], [cam3, scene3, pw]];
     for (const [cam, scene, x] of draw) {
