@@ -8,10 +8,16 @@ name is its three parts: the building information model (IFC) in, the building
 energy model (EnergyPlus) out, and the building operations model, the
 building's measured operation compared back against the model.
 
-> **Status: public preview.** Runs on macOS, Windows and Linux, from source or
-> from an installer you build (`pnpm dist`), with EnergyPlus 26.1. Developed on
-> macOS; every change is built and run on all three systems automatically.
-> Results are simulation estimates, not code-compliance documentation.
+> **Status: public preview.** Runs on macOS, Windows and Linux, from the
+> installers on the [Releases](https://github.com/Enthalix-llc/enthalix/releases)
+> page or from source, with EnergyPlus 26.1. Developed on macOS; every change is
+> built and run on all three systems automatically. Results are simulation
+> estimates, not code-compliance documentation.
+
+## See it in action
+
+A narrated video walkthrough: the Duplex sample through BIM, every BEM tab and
+the BOM, then an actual house. <https://youtu.be/MwWHeHbkUAE> (10/30/26)
 
 ## What it does
 
